@@ -34,6 +34,13 @@ export interface GeminiAccount {
   status: 'active' | 'cooldown' | 'exhausted' | 'disabled';
   cooldownUntil: number;
   priority: number;
+  // Atomic cumulative metrics
+  totalRequests: number;
+  totalPromptTokens: number;
+  totalCompletionTokens: number;
+  totalTokensSaved: number;
+  estimatedCostUSD: number;
+  lastDispatched?: string;
 }
 
 export class AccountPoolManager {
@@ -61,9 +68,13 @@ export class AccountPoolManager {
         const raw = fs.readFileSync(this.accountsFile, 'utf-8');
         const data: GeminiAccount[] = JSON.parse(raw);
         data.forEach(acc => {
-          // Normalize default provider and authType if missing from earlier schema
           acc.provider = acc.provider || 'gemini';
           acc.authType = acc.authType || 'api_key';
+          acc.totalRequests = acc.totalRequests || 0;
+          acc.totalPromptTokens = acc.totalPromptTokens || 0;
+          acc.totalCompletionTokens = acc.totalCompletionTokens || 0;
+          acc.totalTokensSaved = acc.totalTokensSaved || 0;
+          acc.estimatedCostUSD = acc.estimatedCostUSD || 0;
           this.accounts.set(acc.id, acc);
         });
         return;
@@ -104,7 +115,12 @@ export class AccountPoolManager {
       windowResetTime: Date.now() + 7 * 24 * 3600 * 1000,
       status: 'active',
       cooldownUntil: 0,
-      priority: 1
+      priority: 1,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
     };
 
     // 2. Paid Gemini Pro Subscription 1 (5h Rolling Bucket)
@@ -125,7 +141,12 @@ export class AccountPoolManager {
       windowResetTime: Date.now() + 3.5 * 3600 * 1000,
       status: 'active',
       cooldownUntil: 0,
-      priority: 2
+      priority: 2,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
     };
 
     // 3. Paid Gemini Pro Subscription 2 (5h Rolling Bucket - Auto-Rotation Target)
@@ -133,7 +154,7 @@ export class AccountPoolManager {
       id: 'acc-paid-pro-2',
       name: 'Google AI Pro (Subscription #2)',
       provider: 'gemini',
-      authType: 'oauth_bearer', // Supports OAuth Bearer for Gemini 3.8 Flash High & internal tiers
+      authType: 'oauth_bearer',
       tier: 'paid_pro',
       apiKey: process.env.GEMINI_OAUTH_TOKEN || 'DEMO_OAUTH_BEARER_TOKEN',
       defaultModel: 'gemini-3.8-flash',
@@ -146,7 +167,12 @@ export class AccountPoolManager {
       windowResetTime: Date.now() + 4.8 * 3600 * 1000,
       status: 'active',
       cooldownUntil: 0,
-      priority: 2
+      priority: 2,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
     };
 
     // 4. OmniRoute Gateway / External Backup Provider
@@ -168,7 +194,12 @@ export class AccountPoolManager {
       windowResetTime: Date.now() + 24 * 3600 * 1000,
       status: 'active',
       cooldownUntil: 0,
-      priority: 3
+      priority: 3,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
     };
 
     this.accounts.set(demoFree1.id, demoFree1);
@@ -300,10 +331,22 @@ export class AccountPoolManager {
     }
   }
 
-  public recordConsumption(accountId: string, tokensUsed: number) {
+  public recordConsumption(
+    accountId: string,
+    promptTokens: number,
+    completionTokens: number,
+    tokensSaved: number = 0
+  ) {
     const acc = this.accounts.get(accountId);
     if (acc) {
-      acc.rollingTokensUsed += tokensUsed;
+      const turnTokens = promptTokens + completionTokens;
+      acc.rollingTokensUsed += turnTokens;
+      acc.totalRequests += 1;
+      acc.totalPromptTokens += promptTokens;
+      acc.totalCompletionTokens += completionTokens;
+      acc.totalTokensSaved += tokensSaved;
+      acc.estimatedCostUSD = Number(((acc.totalPromptTokens + acc.totalCompletionTokens) * 0.000003).toFixed(4));
+      acc.lastDispatched = new Date().toLocaleTimeString();
       acc.currentRpm += 1;
       setTimeout(() => {
         if (acc.currentRpm > 0) acc.currentRpm -= 1;

@@ -185,12 +185,23 @@ async function handleAccount(subArgs: string[]) {
 
   switch (action) {
     case 'list':
-      console.log(`\x1b[1m\x1b[36mConfigured AI Accounts in MeshManager:\x1b[0m`);
+      console.log(`\x1b[1m\x1b[36m========================================================================================================\x1b[0m`);
+      console.log(`\x1b[1m Account ID         Service/Provider Tier       Requests  Input Tokens  Output Tokens  Total Tokens  Saved    Cost (USD)  Status\x1b[0m`);
+      console.log(`\x1b[1m\x1b[36m========================================================================================================\x1b[0m`);
       manager.getAccounts().forEach(acc => {
-        const pct = Math.round((acc.rollingTokensUsed / acc.rollingWindowLimit) * 100);
-        const virtualPin = `${acc.id}/${acc.defaultModel}`;
-        console.log(` • [${acc.id}] ${acc.name.padEnd(30)} | Pin: ${virtualPin.padEnd(35)} | Model: ${acc.defaultModel.padEnd(16)} | Quota: ${pct}% | Status: ${acc.status}`);
+        const idCol = acc.id.padEnd(18);
+        const provCol = (acc.provider || 'gemini').toUpperCase().padEnd(16);
+        const tierCol = acc.tier.padEnd(10);
+        const reqCol = String(acc.totalRequests || 0).padStart(8);
+        const inCol = String((acc.totalPromptTokens || 0).toLocaleString()).padStart(13);
+        const outCol = String((acc.totalCompletionTokens || 0).toLocaleString()).padStart(14);
+        const totCol = String(((acc.totalPromptTokens || 0) + (acc.totalCompletionTokens || 0)).toLocaleString()).padStart(13);
+        const savedCol = String((acc.totalTokensSaved || 0).toLocaleString()).padStart(8);
+        const costCol = `$${(acc.estimatedCostUSD || 0).toFixed(4)}`.padStart(11);
+        const statusCol = ` [${acc.status}]`;
+        console.log(` ${idCol} ${provCol} ${tierCol} ${reqCol} ${inCol} ${outCol} ${totCol} ${savedCol} ${costCol} ${statusCol}`);
       });
+      console.log(`\x1b[1m\x1b[36m========================================================================================================\x1b[0m`);
       break;
 
     case 'add':
@@ -216,7 +227,12 @@ async function handleAccount(subArgs: string[]) {
         windowResetTime: Date.now() + (tier?.startsWith('paid') ? 5 * 3600 * 1000 : 7 * 24 * 3600 * 1000),
         status: 'active',
         cooldownUntil: 0,
-        priority: 1
+        priority: 1,
+        totalRequests: 0,
+        totalPromptTokens: 0,
+        totalCompletionTokens: 0,
+        totalTokensSaved: 0,
+        estimatedCostUSD: 0
       };
       manager.addAccount(newAcc);
       console.log(`\x1b[32m[✓] Account '${id}' successfully added and saved to ~/.meshmanager/accounts.json!\x1b[0m`);

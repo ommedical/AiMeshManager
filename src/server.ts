@@ -195,7 +195,12 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
   }
 
   const completionTokens = 48;
-  accountManager.recordConsumption(targetAccount.id, optimization.optimizedTokensEstimate + completionTokens);
+  accountManager.recordConsumption(
+    targetAccount.id,
+    optimization.optimizedTokensEstimate,
+    completionTokens,
+    optimization.tokensSaved
+  );
 
   // 5. Record IDE Accounting
   recordIDEAccounting(
@@ -339,7 +344,12 @@ app.post('/api/accounts', (req: Request, res: Response) => {
     windowResetTime: Date.now() + (tier?.startsWith('paid') ? 5 * 3600 * 1000 : 7 * 24 * 3600 * 1000),
     status: 'active',
     cooldownUntil: 0,
-    priority: priority ? Number(priority) : 1
+    priority: priority ? Number(priority) : 1,
+    totalRequests: 0,
+    totalPromptTokens: 0,
+    totalCompletionTokens: 0,
+    totalTokensSaved: 0,
+    estimatedCostUSD: 0
   };
 
   accountManager.addAccount(newAccount);

@@ -481,17 +481,18 @@
       </div>
     </div>
 
-    <!-- TAB 2: IDE Token Accounting -->
+    <!-- TAB 2: Token Accounting (IDE-wise & Account-wise) -->
     <div id="tab-accounting" class="tab-content">
+      <!-- Table 1: IDE-wise Token Accounting -->
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <span>💰</span> Per-IDE Request & Token Accounting Ledger
+            <span>💻</span> Per-IDE Request & Token Accounting Ledger
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Tracks token split across editors</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Client Breakdown</span>
         </div>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-          Shows granular token and request accounting per development tool (Cursor, Antigravity, VS Code, Windsurf) so you know exactly which IDE is consuming what.
+          Shows token and request consumption categorized by client development editor (Cursor, Antigravity, VS Code, Windsurf).
         </p>
         <div style="overflow-x: auto;">
           <table class="data-table">
@@ -512,6 +513,42 @@
               <tr>
                 <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No per-IDE requests recorded yet. Make a request via Cursor, Antigravity, or VS Code!</td>
               </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Table 2: Account & Service-wise Token Consumption Matrix -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🛡️</span> Atomic Account & Service-Wise Token Consumption Matrix
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Upstream Provider Accounting</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Shows granular token consumption, 5-hour rolling quotas, and RPM utilization for each specific AI account & service provider in your mesh.
+        </p>
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Account ID & Name</th>
+                <th>Provider</th>
+                <th>Subscription Tier</th>
+                <th>Requests Handled</th>
+                <th>Input Tokens</th>
+                <th>Output Tokens</th>
+                <th>Total Consumed</th>
+                <th>5h / Weekly Headroom</th>
+                <th>Tokens Saved</th>
+                <th>Est. Cost (USD)</th>
+                <th>RPM Status</th>
+                <th>Last Dispatched</th>
+              </tr>
+            </thead>
+            <tbody id="account-accounting-tbody">
+              <!-- Populated dynamically via JS -->
             </tbody>
           </table>
         </div>
@@ -673,28 +710,59 @@
 
     async function loadAccounting() {
       try {
+        // 1. Populate IDE Accounting
         const res = await fetch('/api/ide-accounting');
         const records = await res.json();
         const tbody = document.getElementById('ide-accounting-tbody');
-        if (!records || records.length === 0) return;
+        if (records && records.length > 0) {
+          tbody.innerHTML = '';
+          records.forEach(rec => {
+            const totalTokens = rec.promptTokens + rec.completionTokens;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><strong>${rec.ideName}</strong></td>
+              <td>${rec.requests.toLocaleString()}</td>
+              <td>${rec.promptTokens.toLocaleString()}</td>
+              <td>${rec.completionTokens.toLocaleString()}</td>
+              <td><strong style="color: var(--accent);">${totalTokens.toLocaleString()}</strong></td>
+              <td style="color: var(--success);">${rec.tokensSaved.toLocaleString()}</td>
+              <td>$${rec.costEstimatedUSD}</td>
+              <td style="color: #cbd5e1;">${rec.primaryAccount}</td>
+              <td>${rec.lastActive}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
 
-        tbody.innerHTML = '';
-        records.forEach(rec => {
-          const totalTokens = rec.promptTokens + rec.completionTokens;
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td><strong>${rec.ideName}</strong></td>
-            <td>${rec.requests.toLocaleString()}</td>
-            <td>${rec.promptTokens.toLocaleString()}</td>
-            <td>${rec.completionTokens.toLocaleString()}</td>
-            <td><strong style="color: var(--accent);">${totalTokens.toLocaleString()}</strong></td>
-            <td style="color: var(--success);">${rec.tokensSaved.toLocaleString()}</td>
-            <td>$${rec.costEstimatedUSD}</td>
-            <td style="color: #cbd5e1;">${rec.primaryAccount}</td>
-            <td>${rec.lastActive}</td>
-          `;
-          tbody.appendChild(row);
-        });
+        // 2. Populate Atomic Account & Service Accounting
+        const accRes = await fetch('/api/accounts');
+        const accounts = await accRes.json();
+        const accTbody = document.getElementById('account-accounting-tbody');
+        if (accounts && accounts.length > 0) {
+          accTbody.innerHTML = '';
+          accounts.forEach(acc => {
+            const headroom = Math.max(0, acc.rollingWindowLimit - acc.rollingTokensUsed);
+            const totalConsumed = (acc.totalPromptTokens || 0) + (acc.totalCompletionTokens || 0);
+            const tagClass = acc.tier.startsWith('paid') ? 'tag-paid' : 'tag-free';
+            const tierLabel = acc.tier.startsWith('paid') ? 'PAID PRO (5h Rolling)' : 'FREE (Weekly)';
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td><strong>${acc.name}</strong> <span style="font-size: 0.7rem; color: #94a3b8;">(${acc.id})</span></td>
+              <td><span class="tag tag-provider">${acc.provider ? acc.provider.toUpperCase() : 'GEMINI'}</span></td>
+              <td><span class="tag ${tagClass}">${tierLabel}</span></td>
+              <td>${(acc.totalRequests || 0).toLocaleString()}</td>
+              <td>${(acc.totalPromptTokens || 0).toLocaleString()}</td>
+              <td>${(acc.totalCompletionTokens || 0).toLocaleString()}</td>
+              <td><strong style="color: var(--accent);">${totalConsumed.toLocaleString()}</strong></td>
+              <td style="color: #38bdf8;">${(headroom / 1000).toFixed(0)}k left (${(acc.rollingTokensUsed / 1000).toFixed(0)}k used)</td>
+              <td style="color: var(--success);">${(acc.totalTokensSaved || 0).toLocaleString()}</td>
+              <td>$${acc.estimatedCostUSD || '0.0000'}</td>
+              <td>${acc.currentRpm} / ${acc.maxRpm} RPM <span style="color: ${acc.status === 'active' ? 'var(--success)' : 'var(--warning)'}">[${acc.status.toUpperCase()}]</span></td>
+              <td>${acc.lastDispatched || 'Never'}</td>
+            `;
+            accTbody.appendChild(row);
+          });
+        }
       } catch (e) {}
     }
 
