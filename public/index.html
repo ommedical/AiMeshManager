@@ -321,15 +321,25 @@
     .btn-danger-small:hover { background: rgba(239, 68, 68, 0.15); }
 
     /* Switch */
-    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      min-width: 44px;
+      max-width: 44px;
+      flex-shrink: 0;
+    }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
       background-color: rgba(255, 255, 255, 0.15); transition: 0.3s; border-radius: 34px;
+      box-sizing: border-box;
     }
     .slider:before {
       position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px;
       background-color: white; transition: 0.3s; border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
     }
     input:checked + .slider { background: linear-gradient(135deg, var(--primary), var(--accent)); }
     input:checked + .slider:before { transform: translateX(20px); }
@@ -413,7 +423,7 @@
       padding: 1.25rem;
     }
     .ide-card.uninstalled { opacity: 0.7; border-style: dashed; }
-    .ide-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .ide-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem; }
     .ide-title { font-weight: 600; font-size: 1rem; }
     .ide-code-box {
       background: rgba(0, 0, 0, 0.45);
@@ -936,7 +946,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Authentication Type</label>
-          <select id="modal-acc-auth" class="form-input">
+          <select id="modal-acc-auth" class="form-input" onchange="updateModalAuthHelp()">
             <option value="api_key">API Key (Standard Bearer)</option>
             <option value="oauth_bearer">OAuth 2.0 Bearer (Flash 3.8 / Preview)</option>
             <option value="session_cookie">Session Cookie</option>
@@ -966,8 +976,11 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">API Key or OAuth Bearer Token</label>
+        <label class="form-label" id="modal-key-label">API Key or OAuth Bearer Token</label>
         <input type="password" id="modal-acc-key" class="form-input" placeholder="AIzaSy... or sk-... or Bearer Token" />
+        <div id="modal-auth-help" style="font-size: 0.76rem; color: #94a3b8; margin-top: 0.45rem; line-height: 1.45; background: rgba(0,0,0,0.25); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);">
+          💡 <strong>Google Gemini Note:</strong> Paste your API Key from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent); text-decoration: underline;">Google AI Studio</a>. AI Studio API keys work directly for Free, Pro, and Ultra tiers without hourly OAuth token expiration.
+        </div>
       </div>
       <div id="modal-verify-status" style="font-size: 0.8rem; margin-bottom: 1rem; font-family: var(--mono);"></div>
       <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
@@ -1514,45 +1527,76 @@
       }
     }
 
-    async function verifyModalKey() {
-      const key = document.getElementById('modal-acc-key').value;
+    function updateModalAuthHelp() {
       const prov = document.getElementById('modal-acc-provider').value;
-      const endpoint = document.getElementById('modal-acc-endpoint').value;
+      const auth = document.getElementById('modal-acc-auth').value;
+      const help = document.getElementById('modal-auth-help');
+      if (!help) return;
+
+      if (auth === 'oauth_bearer') {
+        help.innerHTML = `ℹ️ <strong>OAuth 2.0 Bearer:</strong> Paste your temporary Google OAuth access token (<code>ya29...</code>) generated via Google Cloud CLI (<code>gcloud auth print-access-token</code>). <em>Note: Google OAuth tokens expire every 60 minutes. For permanent setup without hourly expiration, select "API Key" and use a key from Google AI Studio.</em>`;
+      } else if (prov === 'gemini') {
+        help.innerHTML = `💡 <strong>Google Gemini Note:</strong> Paste your permanent API Key from <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent); text-decoration: underline;">Google AI Studio</a>. AI Studio API keys work directly for Free, Pro, and Ultra tiers without hourly OAuth token expiration.`;
+      } else if (prov === 'openrouter') {
+        help.innerHTML = `💡 Paste your OpenRouter API Key (<code>sk-or-v1-...</code>) from <a href="https://openrouter.ai/keys" target="_blank" style="color: var(--accent); text-decoration: underline;">openrouter.ai/keys</a>.`;
+      } else if (prov === 'ollama' || prov === 'lmstudio') {
+        help.innerHTML = `💻 Local engine selected. No API Key required (you may leave blank or type 'local').`;
+      } else {
+        help.innerHTML = `💡 Paste your standard API key for ${prov.toUpperCase()} (e.g. <code>sk-...</code>).`;
+      }
+    }
+
+    async function verifyModalKey() {
+      const key = document.getElementById('modal-acc-key').value.trim();
+      const prov = document.getElementById('modal-acc-provider').value;
+      const endpoint = document.getElementById('modal-acc-endpoint') ? document.getElementById('modal-acc-endpoint').value.trim() : '';
       const statusBox = document.getElementById('modal-verify-status');
-      statusBox.innerHTML = `<span style="color: var(--accent);">Checking with ${prov.toUpperCase()}...</span>`;
-      const res = await fetch('/api/accounts/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: key, provider: prov, endpointUrl: endpoint })
-      });
-      const data = await res.json();
-      statusBox.innerHTML = `<span style="color: ${data.valid ? 'var(--success)' : 'var(--danger)'};">${data.valid ? '✅ ' : '❌ '}${data.message}</span>`;
+
+      if (!key) {
+        statusBox.innerHTML = `<span style="color: var(--warning);">⚠️ Please enter your API Key or OAuth Bearer Token above before verifying. For Google Gemini, obtain an API key at <a href="https://aistudio.google.com/" target="_blank" style="color: var(--accent); text-decoration: underline;">aistudio.google.com</a>.</span>`;
+        return;
+      }
+
+      statusBox.innerHTML = `<span style="color: var(--accent);">⏳ Checking with ${prov.toUpperCase()}...</span>`;
+      try {
+        const res = await fetch('/api/accounts/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey: key, provider: prov, endpointUrl: endpoint || undefined })
+        });
+        const data = await res.json();
+        statusBox.innerHTML = `<span style="color: ${data.valid ? 'var(--success)' : 'var(--danger)'};">${data.valid ? '✅ ' : '❌ '}${data.message}</span>`;
+      } catch (err) {
+        statusBox.innerHTML = `<span style="color: var(--danger);">❌ Verification failed: ${err.message}</span>`;
+      }
     }
 
     function onModalProviderChange(prov) {
       const epInput = document.getElementById('modal-acc-endpoint');
-      if (!epInput) return;
-      if (prov === 'openrouter') {
-        epInput.value = 'https://openrouter.ai/api/v1';
-      } else if (prov === 'omniroute') {
-        epInput.value = 'https://www.omniroute.online/v1';
-      } else if (prov === 'meta') {
-        epInput.value = 'https://api.meta.ai/v1';
-      } else if (prov === 'deepseek') {
-        epInput.value = 'https://api.deepseek.com/v1';
-      } else if (prov === 'openai') {
-        epInput.value = 'https://api.openai.com/v1';
-      } else if (prov === 'ollama') {
-        epInput.value = 'http://127.0.0.1:11434/v1';
-      } else if (prov === 'lmstudio') {
-        epInput.value = 'http://127.0.0.1:1234/v1';
-      } else {
-        epInput.value = '';
+      if (epInput) {
+        if (prov === 'openrouter') {
+          epInput.value = 'https://openrouter.ai/api/v1';
+        } else if (prov === 'omniroute') {
+          epInput.value = 'https://www.omniroute.online/v1';
+        } else if (prov === 'meta') {
+          epInput.value = 'https://api.meta.ai/v1';
+        } else if (prov === 'deepseek') {
+          epInput.value = 'https://api.deepseek.com/v1';
+        } else if (prov === 'openai') {
+          epInput.value = 'https://api.openai.com/v1';
+        } else if (prov === 'ollama') {
+          epInput.value = 'http://127.0.0.1:11434/v1';
+        } else if (prov === 'lmstudio') {
+          epInput.value = 'http://127.0.0.1:1234/v1';
+        } else {
+          epInput.value = '';
+        }
       }
+      updateModalAuthHelp();
     }
 
     async function submitAccountForm() {
-      const id = document.getElementById('modal-acc-id').value.trim();
+      const rawId = document.getElementById('modal-acc-id').value.trim();
       const name = document.getElementById('modal-acc-name').value.trim();
       const provider = document.getElementById('modal-acc-provider').value;
       const authType = document.getElementById('modal-acc-auth').value;
@@ -1561,9 +1605,17 @@
       const apiKey = document.getElementById('modal-acc-key').value.trim();
       const endpointUrl = document.getElementById('modal-acc-endpoint') ? document.getElementById('modal-acc-endpoint').value.trim() : '';
 
-      if (!id || !name) {
+      if (!rawId || !name) {
         alert('Please fill in Account Identifier and Name');
         return;
+      }
+
+      // Sanitize ID so spaces or special characters don't break pins, URLs, or DOM element IDs
+      const id = rawId.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+
+      if (!apiKey && provider !== 'ollama' && provider !== 'lmstudio') {
+        const proceed = confirm(`No API Key or Bearer Token was entered for '${name}'.\n\nTo make actual model completions, an API Key from ${provider === 'gemini' ? 'Google AI Studio (https://aistudio.google.com/)' : provider} is required.\n\nClick OK to save as an unconfigured template, or Cancel to enter your key now.`);
+        if (!proceed) return;
       }
 
       if (editingAccountId) {
@@ -1575,6 +1627,7 @@
         });
         if (res.ok) {
           closeAddAccountModal();
+          switchTab('accounts');
           loadAccounts();
           loadStats();
         } else {
@@ -1590,6 +1643,7 @@
         });
         if (res.ok) {
           closeAddAccountModal();
+          switchTab('accounts');
           loadAccounts();
           loadStats();
         } else {
