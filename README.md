@@ -501,28 +501,38 @@ These three core files provide production reliability, continuous integration ve
   # Output: Summary: 17 Passed, 0 Failed of 17 Tests (100% Pass)
   ```
 
-### 2. `Dockerfile` (Containerized Lightweight Deployment)
-* **What it does:** Multi-stage Docker recipe based on `node:20-alpine`.
+### 2. `Dockerfile` (Containerized Lightweight Deployment: Docker & Podman)
+* **What it does:** Multi-stage OCI-compliant container recipe based on `node:20-alpine`.
 * **Architecture:**
   * **Stage 1 (Builder):** Compiles TypeScript source code to optimized JavaScript.
   * **Stage 2 (Runner):** Strips dev dependencies, keeping image footprint to ~60MB.
   * **Healthcheck:** Automatic container health monitoring via `wget http://localhost:20128/api/stats`.
-* **How to build & run:**
+* **Run with Docker:**
   ```bash
   docker build -t aimeshmanager .
   docker run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager --name aimeshmanager aimeshmanager
   ```
+* **Run with Podman (Rootless & Open-Source):**
+  ```bash
+  podman build -t aimeshmanager .
+  podman run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager:Z --name aimeshmanager aimeshmanager
+  ```
 
 ### 3. `docker-compose.yml` (Single-Command Daemon Orchestration)
-* **What it does:** Declarative multi-container configuration for launching AiMeshManager with persistent storage and auto-restart policies.
+* **What it does:** Declarative multi-container configuration for launching AiMeshManager with persistent storage and auto-restart policies. Works identically with Docker Compose and Podman Compose.
 * **Key Configuration:**
   * Service: `aimeshmanager` (container: `aimeshmanager-mesh`)
   * Port binding: `20128:20128`
   * Restart policy: `always` (auto-recovers after workstation reboot)
   * Volume mount: `~/.aimeshmanager:/root/.aimeshmanager` (preserves accounts across upgrades)
-* **How to launch:**
+* **Launch with Docker Compose:**
   ```bash
   docker compose up -d
+  ```
+* **Launch with Podman Compose:**
+  ```bash
+  podman compose up -d
+  # (or: podman-compose up -d)
   ```
 
 ---
@@ -566,19 +576,50 @@ mesh <command>
 
 ## 🚀 Installation & Quickstart
 
-```bash
-# 1. Automatic Dependency Installation & Build
-npm install
-npm run build
+You can run AiMeshManager **natively on your computer** (zero Docker or Podman required) or inside a container.
 
-# 2. Launch AiMeshManager (Auto-installs dependencies on first start if missing)
-node dist/cli.js start --daemon
-# Or via global CLI:
-# aimeshmanager start --daemon
+### Method 1: Native Run (Zero Docker or Podman Needed) — Recommended
+No container runtime required. Runs directly on Node.js across Windows, macOS, Linux, WSL, or Android Termux.
 
-# 3. Open the Web Control Center
-# In your browser: http://localhost:20128
-```
+1. **Clone or Download the Repository:**
+   ```bash
+   git clone https://github.com/your-username/antigravity_multi_auth.git
+   cd antigravity_multi_auth
+   ```
+2. **Launch AiMeshManager (1-Command):**
+   ```bash
+   npm start
+   ```
+   > ⚡ **Self-Bootstrapping:** If `node_modules` is not yet installed, AiMeshManager automatically detects missing packages and runs `npm install` for you before launching!
+3. **Run as a Background Daemon (Optional):**
+   ```bash
+   node dist/cli.js start --daemon
+   # Check status: node dist/cli.js status
+   # Stop daemon:  node dist/cli.js stop
+   ```
+4. **Global CLI Installation (Optional):**
+   ```bash
+   npm install -g .
+   # Now run anywhere:
+   aimeshmanager start --daemon
+   ```
+5. **Open the Control Center:**
+   Open `http://localhost:20128` in your browser.
+
+---
+
+### Method 2: Containerized Run (Podman or Docker)
+
+* **With Podman (Rootless):**
+  ```bash
+  podman compose up -d
+  # Or: podman build -t aimeshmanager . && podman run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager:Z aimeshmanager
+  ```
+* **With Docker:**
+  ```bash
+  docker compose up -d
+  # Or: docker build -t aimeshmanager . && docker run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager aimeshmanager
+  ```
 
 ---
 
