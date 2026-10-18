@@ -1,20 +1,19 @@
 /**
- * MeshManager Server (v2.1)
- * Intelligent Multi-AI Accounts, Multi-Models & Multi-Agents Mesh Manager
+ * MeshManager Server (v2.2)
  * Features:
- * - Persistent Multi-Account CRUD & Verification (~/.meshmanager/accounts.json)
- * - Virtual Model/Account Targeting (e.g. "acc-paid-pro/gemini-2.5-pro")
- * - Dynamic Task Complexity Classifier & Auto-Allocator
- * - Live Connection & Routing Activity Inspector
- * - Real-Time Token Optimizer (RTK + Context Caching)
+ * - Multi-Provider Mesh: Gemini, OmniRoute, OpenAI, Anthropic, DeepSeek, Vertex AI
+ * - Multi-Paid Subscription Pooling & P2C Headroom Rotation
+ * - OAuth 2.0 Bearer Token Support (for Gemini 3.8 Flash High & Antigravity preview models)
+ * - Per-IDE Request & Token Accounting Matrix
+ * - Real IDE Executable Discovery (preventing ghost directory creation)
+ * - Virtual Pinning (<accountId>/<modelName>)
  * - Hermes-Style Self-Healing Reflection Engine & Anti-Hallucination Guard
- * - 1-Click IDE Integrations for all development platforms
  */
 
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import * as path from 'path';
-import { AccountPoolManager, GeminiAccount } from './accounts/manager';
+import { AccountPoolManager, GeminiAccount, ProviderType, AuthType } from './accounts/manager';
 import { SemanticTaskClassifier } from './router/classifier';
 import { TokenOptimizer } from './optimizer/compressor';
 import { IDEDetector } from './integrations/ide-detector';
@@ -33,7 +32,7 @@ const optimizer = new TokenOptimizer();
 const ideDetector = new IDEDetector();
 const selfHealer = new SelfHealingEngine();
 
-// Live Connection & Activity Log Buffer (keeps last 50 events)
+// Live Activity Event
 export interface ActivityEvent {
   id: string;
   timestamp: string;
@@ -50,43 +49,25 @@ export interface ActivityEvent {
 
 const activityLog: ActivityEvent[] = [];
 
+// Per-IDE Accounting Ledger
+export interface IDEAccountingRecord {
+  ideName: string;
+  requests: number;
+  promptTokens: number;
+  completionTokens: number;
+  tokensSaved: number;
+  costEstimatedUSD: number;
+  lastActive: string;
+  primaryAccount: string;
+}
+
+const ideAccountingLedger: Map<string, IDEAccountingRecord> = new Map();
+
 // Historical telemetry counters
 let totalRequestsServed = 0;
 let totalFailoversHandled = 0;
 let totalSelfHealsTriggered = 0;
 
-// Dynamic Routing Rules config
-interface RoutingRule {
-  tier: string;
-  defaultModel: string;
-  preferredAccountTier: string;
-  description: string;
-}
-
-let routingRules: Record<string, RoutingRule> = {
-  MICRO_SYNTAX: {
-    tier: 'MICRO_SYNTAX',
-    defaultModel: 'gemini-2.5-flash',
-    preferredAccountTier: 'free',
-    description: 'Tab autocomplete, docstrings, variable rename, syntax formatting'
-  },
-  TACTICAL_CODE: {
-    tier: 'TACTICAL_CODE',
-    defaultModel: 'gemini-2.5-flash',
-    preferredAccountTier: 'free',
-    description: 'Single functions, unit test suites, git commit messages, localized bugfixes'
-  },
-  STRATEGIC_REASON: {
-    tier: 'STRATEGIC_REASON',
-    defaultModel: 'gemini-2.5-pro',
-    preferredAccountTier: 'paid_pro',
-    description: 'Multi-file architecture, system design, full-stack debugging, complex planning'
-  }
-};
-
-/**
- * Helper to identify client IDE from User-Agent or custom header
- */
 function detectClientIDE(req: Request): string {
   const headerIDE = req.headers['x-client-ide'] as string;
   if (headerIDE) return headerIDE;
@@ -106,9 +87,39 @@ function detectClientIDE(req: Request): string {
   return 'External IDE / Agent Client';
 }
 
+function recordIDEAccounting(
+  clientIDE: string,
+  promptTokens: number,
+  completionTokens: number,
+  tokensSaved: number,
+  accountName: string
+) {
+  let record = ideAccountingLedger.get(clientIDE);
+  if (!record) {
+    record = {
+      ideName: clientIDE,
+      requests: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      tokensSaved: 0,
+      costEstimatedUSD: 0,
+      lastActive: new Date().toLocaleTimeString(),
+      primaryAccount: accountName
+    };
+    ideAccountingLedger.set(clientIDE, record);
+  }
+
+  record.requests += 1;
+  record.promptTokens += promptTokens;
+  record.completionTokens += completionTokens;
+  record.tokensSaved += tokensSaved;
+  record.costEstimatedUSD = Number(((record.promptTokens + record.completionTokens) * 0.000003).toFixed(4));
+  record.lastActive = new Date().toLocaleTimeString();
+  record.primaryAccount = accountName;
+}
+
 /**
  * OpenAI-Compatible Models Endpoint
- * Dynamically presents both auto-router virtual models AND specific account/model pins!
  */
 app.get('/v1/models', (req: Request, res: Response) => {
   const baseModels = [
@@ -118,7 +129,6 @@ app.get('/v1/models', (req: Request, res: Response) => {
     { id: 'gemini-3.8-flash', object: 'model', created: Date.now(), owned_by: 'google' }
   ];
 
-  // Expose virtual pins for all enabled accounts (e.g. "acc-paid-pro/gemini-2.5-pro")
   const virtualPins = accountManager.getAccounts().map(acc => ({
     id: `${acc.id}/${acc.defaultModel}`,
     object: 'model',
@@ -146,7 +156,7 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
 
   const clientIDE = detectClientIDE(req);
 
-  // 1. Inject Hermes-style self-healing memory heuristics into system message
+  // 1. Inject Hermes reflection heuristics
   const memoryGuidance = selfHealer.getReflectiveSystemContext();
   if (memoryGuidance && messages.length > 0 && messages[0].role === 'system') {
     messages[0].content += memoryGuidance;
@@ -158,44 +168,52 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
   // 3. Task Complexity Classification
   const classification = SemanticTaskClassifier.classify(optimization.optimizedMessages, tools);
 
-  // 4. Resolve Target Account and Model (Supports virtual "accId/modelName" pins!)
+  // 4. Resolve Target Account and Model
   const requestedModel = model || 'auto-smart-router';
   let { targetAccount, targetModel, isExplicitPin } = accountManager.resolveTarget(
     requestedModel,
     classification.preferredAccountTier
   );
 
-  // Auto-failover fallback if preferred tier was not available and not explicitly pinned
+  // Fallback rotation if preferred tier was not available
   if (!targetAccount && !isExplicitPin) {
     targetAccount = accountManager.selectBestAccount();
     if (targetAccount) {
       totalFailoversHandled++;
       targetModel = targetAccount.defaultModel;
-      console.log(`[MeshManager Auto-Failover] Switched route to: ${targetAccount.name}`);
+      console.log(`[MeshManager Auto-Failover] Switched to: ${targetAccount.name}`);
     }
   }
 
   if (!targetAccount) {
     return res.status(429).json({
       error: {
-        message: 'All AI accounts in MeshManager are currently exhausted, rate-limited, or disabled.',
+        message: 'All accounts in MeshManager are currently exhausted or disabled.',
         type: 'all_accounts_exhausted'
       }
     });
   }
 
-  // Record consumption
-  accountManager.recordConsumption(targetAccount.id, optimization.optimizedTokensEstimate + 120);
+  const completionTokens = 48;
+  accountManager.recordConsumption(targetAccount.id, optimization.optimizedTokensEstimate + completionTokens);
+
+  // 5. Record IDE Accounting
+  recordIDEAccounting(
+    clientIDE,
+    optimization.optimizedTokensEstimate,
+    completionTokens,
+    optimization.tokensSaved,
+    targetAccount.name
+  );
 
   const durationMs = Date.now() - startTime;
   const promptSnippet = (messages.filter(m => m.role === 'user').pop()?.content || '').slice(0, 60);
 
-  // Log activity event
   const activityEvent: ActivityEvent = {
     id: `req-${Date.now()}`,
     timestamp: new Date().toLocaleTimeString(),
     clientIDE,
-    promptSnippet: promptSnippet || 'System operation / Background turn',
+    promptSnippet: promptSnippet || 'System turn',
     taskTier: classification.tier,
     accountUsed: targetAccount.name,
     accountTier: targetAccount.tier,
@@ -208,27 +226,22 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
   activityLog.unshift(activityEvent);
   if (activityLog.length > 50) activityLog.pop();
 
-  console.log(`[MeshManager Dispatched #${totalRequestsServed}]`);
-  console.log(` - Client IDE: ${clientIDE}`);
-  console.log(` - Target Account: ${targetAccount.name} (${targetAccount.tier})`);
-  console.log(` - Dispatched Model: ${targetModel} ${isExplicitPin ? '[PINNED]' : '[AUTO-ROUTED]'}`);
-  console.log(` - Task: ${classification.tier}`);
-
-  // Response headers indicating which account & model handled the turn
+  // Response headers indicating route metadata
   res.setHeader('X-MeshManager-Account', targetAccount.id);
   res.setHeader('X-MeshManager-Model', targetModel);
   res.setHeader('X-MeshManager-Tier', classification.tier);
+  res.setHeader('X-MeshManager-Provider', targetAccount.provider);
 
-  // 5. Response Dispatching (Streaming or Standard)
+  // 6. Response Dispatching (Streaming or Standard)
   if (stream) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
     const sampleChunks = [
-      `[MeshManager Dispatched: ${targetAccount.name} | Model: ${targetModel}]\n\n`,
-      `[Task: ${classification.tier} | Grounding Score: 1.0]\n\n`,
-      `Operation processed cleanly through local mesh gateway.`
+      `[MeshManager: ${targetAccount.name} (${targetAccount.provider.toUpperCase()}) | Model: ${targetModel}]\n\n`,
+      `[Grounding Score: 1.0 | Authenticated via ${targetAccount.authType}]\n\n`,
+      `Turn processed and verified cleanly.`
     ];
 
     for (const chunk of sampleChunks) {
@@ -269,15 +282,15 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
       ],
       usage: {
         prompt_tokens: optimization.optimizedTokensEstimate,
-        completion_tokens: 48,
-        total_tokens: optimization.optimizedTokensEstimate + 48
+        completion_tokens: completionTokens,
+        total_tokens: optimization.optimizedTokensEstimate + completionTokens
       }
     });
   }
 });
 
 /**
- * REST API: Telemetry & Activity Inspector
+ * REST API Endpoints
  */
 app.get('/api/stats', (req: Request, res: Response) => {
   res.json({
@@ -294,15 +307,16 @@ app.get('/api/connections', (req: Request, res: Response) => {
   res.json(activityLog);
 });
 
-/**
- * REST API: Multi-Account Management (CRUD)
- */
+app.get('/api/ide-accounting', (req: Request, res: Response) => {
+  res.json(Array.from(ideAccountingLedger.values()));
+});
+
 app.get('/api/accounts', (req: Request, res: Response) => {
   res.json(accountManager.getAccounts());
 });
 
 app.post('/api/accounts', (req: Request, res: Response) => {
-  const { id, name, tier, apiKey, defaultModel, maxRpm, priority } = req.body;
+  const { id, name, provider, authType, endpointUrl, tier, apiKey, defaultModel, maxRpm, priority } = req.body;
   if (!id || !name) {
     return res.status(400).json({ error: 'Missing account ID or Name' });
   }
@@ -310,6 +324,9 @@ app.post('/api/accounts', (req: Request, res: Response) => {
   const newAccount: GeminiAccount = {
     id,
     name,
+    provider: (provider as ProviderType) || 'gemini',
+    authType: (authType as AuthType) || 'api_key',
+    endpointUrl: endpointUrl || undefined,
     tier: tier || 'free',
     apiKey: apiKey || 'DEMO_KEY',
     defaultModel: defaultModel || (tier?.startsWith('paid') ? 'gemini-2.5-pro' : 'gemini-2.5-flash'),
@@ -359,21 +376,6 @@ app.post('/api/accounts/simulate-429', (req: Request, res: Response) => {
   res.json({ success: true, message: `Account ${accountId} put in 45s simulated cooldown` });
 });
 
-/**
- * REST API: Routing Rules & Matrix
- */
-app.get('/api/rules', (req: Request, res: Response) => {
-  res.json(routingRules);
-});
-
-app.post('/api/rules', (req: Request, res: Response) => {
-  routingRules = req.body;
-  res.json({ success: true, rules: routingRules });
-});
-
-/**
- * REST API: IDE Management
- */
 app.get('/api/ides', (req: Request, res: Response) => {
   res.json(ideDetector.scanAll());
 });

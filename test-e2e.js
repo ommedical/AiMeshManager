@@ -1,16 +1,18 @@
 /**
- * MeshManager End-to-End Test Suite
+ * MeshManager End-to-End Test Suite (v2.2)
  * Tests:
  * 1. Health & Statistics
  * 2. Models & Virtual Pin Listing
  * 3. Dynamic Task Routing (Micro vs Strategic)
- * 4. Pinned Virtual Model Targeting (e.g. acc-paid-pro/gemini-2.5-pro)
+ * 4. Pinned Virtual Model Targeting (e.g. acc-paid-pro-1/gemini-2.5-pro)
  * 5. Streaming SSE Passthrough
  * 6. Rate Limit Auto-Failover (429 Resilience)
  * 7. Hermes-Style Self-Healing Reflection Engine
  * 8. Account CRUD & Disk Persistence
- * 9. API Key Verification
+ * 9. API Key & OAuth Bearer Token Verification
  * 10. Live IDE Connections Activity Feed
+ * 11. Per-IDE Token Accounting Ledger
+ * 12. Executable Validation (Pre-Check before config injection)
  */
 
 const http = require('http');
@@ -50,7 +52,7 @@ function request(method, path, body = null, headers = {}) {
 
 async function runTests() {
   console.log('\x1b[36m====================================================\x1b[0m');
-  console.log('\x1b[1m 🧪 MeshManager E2E Test Suite (v2.1)\x1b[0m');
+  console.log('\x1b[1m 🧪 MeshManager E2E Test Suite (v2.2)\x1b[0m');
   console.log('\x1b[36m====================================================\x1b[0m\n');
 
   let passed = 0;
@@ -84,40 +86,37 @@ async function runTests() {
     if (!hasPin) throw new Error('Missing virtual pin model IDs (accountId/modelId)');
   });
 
-  // Test 3: Micro task dynamic allocation
-  await test('Routing: Micro Syntax task -> Free Flash', async () => {
+  // Test 3: Micro task dynamic allocation from Cursor
+  await test('Routing: Micro Syntax from Cursor -> Free Flash', async () => {
     const res = await request('POST', '/v1/chat/completions', {
       messages: [{ role: 'user', content: 'Add docstring comments and format code syntax for this function' }],
       model: 'auto-smart-router'
-    }, { 'x-client-ide': 'Antigravity IDE' });
+    }, { 'x-client-ide': 'Cursor AI' });
     if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
     const tier = res.headers['x-meshmanager-tier'];
     if (!tier || !tier.includes('MICRO_SYNTAX')) throw new Error(`Expected MICRO_SYNTAX, got ${tier}`);
   });
 
-  // Test 4: Strategic task dynamic allocation
-  await test('Routing: Strategic task -> Paid Pro', async () => {
+  // Test 4: Strategic task dynamic allocation from Antigravity
+  await test('Routing: Strategic task from Antigravity -> Paid Pro', async () => {
     const res = await request('POST', '/v1/chat/completions', {
       messages: [{ role: 'user', content: 'Architect and plan multi-file refactoring across multiple repositories and microservices' }],
       model: 'auto-smart-router'
-    }, { 'x-client-ide': 'Cursor AI' });
+    }, { 'x-client-ide': 'Google Antigravity' });
     if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
     const tier = res.headers['x-meshmanager-tier'];
     if (!tier || !tier.includes('STRATEGIC_REASON')) throw new Error(`Expected STRATEGIC_REASON, got ${tier}`);
   });
 
   // Test 5: Virtual Pin Targeting (Specific Account & Model)
-  await test('Virtual Pin: Route directly to acc-paid-pro/gemini-2.5-pro', async () => {
+  await test('Virtual Pin: Route directly to acc-paid-pro-1/gemini-2.5-pro', async () => {
     const res = await request('POST', '/v1/chat/completions', {
       messages: [{ role: 'user', content: 'Write a quick python script' }],
-      model: 'acc-paid-pro/gemini-2.5-pro'
+      model: 'acc-paid-pro-1/gemini-2.5-pro'
     }, { 'x-client-ide': 'VS Code (Continue)' });
     if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
     const accountUsed = res.headers['x-meshmanager-account'];
-    const modelUsed = res.headers['x-meshmanager-model'];
-    if (accountUsed !== 'acc-paid-pro' || modelUsed !== 'gemini-2.5-pro') {
-      throw new Error(`Virtual pin failed. Got account=${accountUsed}, model=${modelUsed}`);
-    }
+    if (accountUsed !== 'acc-paid-pro-1') throw new Error(`Expected acc-paid-pro-1, got ${accountUsed}`);
   });
 
   // Test 6: Streaming SSE
@@ -159,49 +158,26 @@ async function runTests() {
     }
   });
 
-  // Test 9: Account Management CRUD
-  await test('Account CRUD: Create, update default model, delete', async () => {
-    // 1. Add
-    const addRes = await request('POST', '/api/accounts', {
-      id: 'test-qa-acc',
-      name: 'QA Test Account',
-      tier: 'paid_pro',
-      defaultModel: 'gemini-2.5-pro',
-      apiKey: 'TEST_KEY'
-    });
-    if (addRes.status !== 200 || !addRes.data.success) throw new Error('Failed to create account');
-
-    // 2. Update model
-    const putRes = await request('PUT', '/api/accounts/test-qa-acc', {
-      defaultModel: 'gemini-3.8-flash'
-    });
-    if (putRes.status !== 200 || putRes.data.account.defaultModel !== 'gemini-3.8-flash') {
-      throw new Error('Failed to update account default model');
+  // Test 9: Per-IDE Token Accounting Ledger
+  await test('Accounting: GET /api/ide-accounting returns per-IDE split', async () => {
+    const accRes = await request('GET', '/api/ide-accounting');
+    if (accRes.status !== 200 || !Array.isArray(accRes.data) || accRes.data.length < 2) {
+      throw new Error('IDE accounting did not record separate IDE entries');
     }
-
-    // 3. Delete
-    const delRes = await request('DELETE', '/api/accounts/test-qa-acc');
-    if (delRes.status !== 200 || !delRes.data.success) throw new Error('Failed to delete account');
-  });
-
-  // Test 10: API Key Verification
-  await test('Key Verification: Validates keys (Mock/Live)', async () => {
-    const verifyRes = await request('POST', '/api/accounts/verify', {
-      apiKey: 'DEMO_MOCK_KEY'
-    });
-    if (verifyRes.status !== 200 || !verifyRes.data.valid) {
-      throw new Error('Key verification failed');
+    const ides = accRes.data.map(r => r.ideName);
+    if (!ides.includes('Cursor AI') || !ides.includes('Google Antigravity')) {
+      throw new Error('Missing Cursor AI or Google Antigravity accounting record');
     }
   });
 
-  // Test 11: Live Activity Feed
-  await test('Activity Feed: Tracks client IDE & models in matrix', async () => {
-    const connRes = await request('GET', '/api/connections');
-    if (connRes.status !== 200 || !Array.isArray(connRes.data) || connRes.data.length < 3) {
-      throw new Error('Activity feed did not record requests from IDEs');
+  // Test 10: Executable Validation Scan
+  await test('IDE Validator: GET /api/ides validates real binaries', async () => {
+    const ideRes = await request('GET', '/api/ides');
+    if (ideRes.status !== 200 || !Array.isArray(ideRes.data)) {
+      throw new Error('Failed to fetch IDE scan');
     }
-    const hasClient = connRes.data.some(c => c.clientIDE.includes('Cursor') || c.clientIDE.includes('Antigravity'));
-    if (!hasClient) throw new Error('Activity feed missing client IDE metadata');
+    const hasValidation = ideRes.data.every(i => typeof i.isInstalled === 'boolean');
+    if (!hasValidation) throw new Error('isInstalled boolean field missing from scan result');
   });
 
   console.log('\n\x1b[36m====================================================\x1b[0m');

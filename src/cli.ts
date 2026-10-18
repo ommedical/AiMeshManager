@@ -202,6 +202,8 @@ async function handleAccount(subArgs: string[]) {
       const newAcc: GeminiAccount = {
         id,
         name,
+        provider: 'gemini',
+        authType: 'api_key',
         tier: (tier === 'paid_pro' || tier === 'paid_ultra') ? tier : 'free',
         defaultModel: defaultModel || (tier?.startsWith('paid') ? 'gemini-2.5-pro' : 'gemini-2.5-flash'),
         apiKey: apiKey || 'DEMO_KEY',

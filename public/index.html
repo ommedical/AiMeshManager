@@ -40,7 +40,7 @@
       line-height: 1.5;
     }
 
-    .container { max-width: 1320px; margin: 0 auto; }
+    .container { max-width: 1360px; margin: 0 auto; }
 
     /* Header */
     header {
@@ -191,7 +191,7 @@
     /* Account Grid */
     .accounts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
       gap: 1.25rem;
     }
 
@@ -207,9 +207,10 @@
     .account-card.disabled { opacity: 0.55; }
 
     .account-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-    .account-name-wrap { display: flex; flex-direction: column; gap: 0.2rem; }
+    .account-name-wrap { display: flex; flex-direction: column; gap: 0.3rem; }
     .account-title { font-weight: 600; font-size: 1.05rem; }
 
+    .badge-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
     .tag {
       display: inline-block;
       font-size: 0.7rem;
@@ -222,6 +223,8 @@
     }
     .tag-free { background: rgba(6, 182, 212, 0.15); color: var(--accent); border: 1px solid rgba(6, 182, 212, 0.3); }
     .tag-paid { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .tag-provider { background: rgba(255, 255, 255, 0.08); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.15); }
+    .tag-auth { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 
     .account-control-row { display: flex; align-items: center; gap: 0.5rem; }
 
@@ -298,6 +301,7 @@
     }
     input:checked + .slider { background: linear-gradient(135deg, var(--primary), var(--accent)); }
     input:checked + .slider:before { transform: translateX(20px); }
+    input:disabled + .slider { opacity: 0.3; cursor: not-allowed; }
 
     /* Table Styles */
     .data-table {
@@ -340,7 +344,7 @@
       border: 1px solid var(--card-border);
       border-radius: 20px;
       width: 90%;
-      max-width: 540px;
+      max-width: 580px;
       padding: 2rem;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     }
@@ -349,7 +353,7 @@
     .modal-title { font-size: 1.3rem; font-weight: 700; }
     .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
 
-    .form-group { margin-bottom: 1.25rem; }
+    .form-group { margin-bottom: 1.15rem; }
     .form-label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: #cbd5e1; }
     .form-input {
       width: 100%;
@@ -358,7 +362,7 @@
       color: var(--text);
       font-family: var(--font);
       font-size: 0.9rem;
-      padding: 0.7rem 1rem;
+      padding: 0.65rem 1rem;
       border-radius: 10px;
       outline: none;
     }
@@ -367,7 +371,7 @@
     /* IDE Grid */
     .ide-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
       gap: 1.25rem;
     }
     .ide-card {
@@ -376,6 +380,7 @@
       border-radius: 14px;
       padding: 1.25rem;
     }
+    .ide-card.uninstalled { opacity: 0.7; border-style: dashed; }
     .ide-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
     .ide-title { font-weight: 600; font-size: 1rem; }
     .ide-code-box {
@@ -416,7 +421,8 @@
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Live Activity & Telemetry</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">🛡️ AI Accounts & Model Pool (<span id="acc-count-badge">3</span>)</button>
+      <button class="tab-btn" onclick="switchTab('accounting')">💰 IDE Token Accounting</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">🛡️ AI Accounts & Multi-Model Mesh (<span id="acc-count-badge">4</span>)</button>
       <button class="tab-btn" onclick="switchTab('ides')">🔌 1-Click IDE Connect Center</button>
       <button class="tab-btn" onclick="switchTab('simulator')">🧠 Dynamic Task Simulator</button>
     </div>
@@ -475,12 +481,49 @@
       </div>
     </div>
 
-    <!-- TAB 2: AI Accounts & Models Mesh Pool -->
+    <!-- TAB 2: IDE Token Accounting -->
+    <div id="tab-accounting" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>💰</span> Per-IDE Request & Token Accounting Ledger
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Tracks token split across editors</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Shows granular token and request accounting per development tool (Cursor, Antigravity, VS Code, Windsurf) so you know exactly which IDE is consuming what.
+        </p>
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Client IDE / Tool</th>
+                <th>Requests</th>
+                <th>Input Tokens</th>
+                <th>Output Tokens</th>
+                <th>Total Tokens</th>
+                <th>Tokens Saved (RTK)</th>
+                <th>Est. Cost (USD)</th>
+                <th>Primary Account Used</th>
+                <th>Last Active</th>
+              </tr>
+            </thead>
+            <tbody id="ide-accounting-tbody">
+              <tr>
+                <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No per-IDE requests recorded yet. Make a request via Cursor, Antigravity, or VS Code!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: AI Accounts & Multi-Model Mesh -->
     <div id="tab-accounts" class="tab-content">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <span>🛡️</span> Configured Gemini Accounts & Virtual Model Pins
+            <span>🛡️</span> Pooled AI Accounts, Providers & Virtual Model Pins
           </div>
           <button class="btn-primary" onclick="openAddAccountModal()">+ Add New Account</button>
         </div>
@@ -490,17 +533,17 @@
       </div>
     </div>
 
-    <!-- TAB 3: 1-Click IDE Connect Center -->
+    <!-- TAB 4: 1-Click IDE Connect Center -->
     <div id="tab-ides" class="tab-content">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
             <span>🔌</span> 1-Click IDE & Application Connector
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Auto-Directory Creation Supported</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Real Installation Validation</span>
         </div>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-          Toggle to automatically connect your IDE to MeshManager. If an IDE directory does not yet exist, MeshManager will automatically create the folder and write the settings.
+          Toggle to connect installed IDEs. MeshManager validates executable installations to avoid creating empty ghost folders on your system.
         </p>
         <div class="ide-grid" id="ide-cards-grid">
           <!-- Populated dynamically via JS -->
@@ -508,17 +551,17 @@
       </div>
     </div>
 
-    <!-- TAB 4: Dynamic Task Simulator -->
+    <!-- TAB 5: Dynamic Task Simulator -->
     <div id="tab-simulator" class="tab-content">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
             <span>🧠</span> Dynamic Task Allocator & Router Simulator
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">OpenAI & Gemini Compatible</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Multi-Account & Multi-Provider</span>
         </div>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-          Test how MeshManager automatically evaluates task complexity, allocates models, compresses tokens, and verifies against hallucinations.
+          Test dynamic model allocation and multi-subscription rotation.
         </p>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
           <button class="btn-action-small" onclick="setSimPreset('doc')">📄 Docstring / Syntax Fix</button>
@@ -526,7 +569,7 @@
           <button class="btn-action-small" onclick="setSimPreset('arch')">🏛️ Multi-File Architecture</button>
         </div>
         <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-          <select id="sim-model-select" class="form-input" style="width: 280px; font-family: var(--mono); font-size: 0.85rem;">
+          <select id="sim-model-select" class="form-input" style="width: 320px; font-family: var(--mono); font-size: 0.82rem;">
             <option value="auto-smart-router">🤖 auto-smart-router (Dynamic Mode)</option>
           </select>
           <input type="text" id="sim-prompt-input" class="form-input" placeholder="Type or select a prompt to simulate..." />
@@ -549,35 +592,58 @@
       </div>
       <div class="form-group">
         <label class="form-label">Account Identifier (ID)</label>
-        <input type="text" id="modal-acc-id" class="form-input" placeholder="e.g. personal-gemini-pro" />
+        <input type="text" id="modal-acc-id" class="form-input" placeholder="e.g. personal-gemini-pro-1" />
       </div>
       <div class="form-group">
         <label class="form-label">Friendly Label / Name</label>
-        <input type="text" id="modal-acc-name" class="form-input" placeholder="e.g. Personal Google AI Pro" />
+        <input type="text" id="modal-acc-name" class="form-input" placeholder="e.g. Google AI Pro (Account #1)" />
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Service Provider</label>
+          <select id="modal-acc-provider" class="form-input">
+            <option value="gemini">Google Gemini</option>
+            <option value="omniroute">OmniRoute Gateway</option>
+            <option value="vertex">Google Vertex AI</option>
+            <option value="openai">OpenAI / Compatible</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="deepseek">DeepSeek</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Authentication Type</label>
+          <select id="modal-acc-auth" class="form-input">
+            <option value="api_key">API Key (Standard)</option>
+            <option value="oauth_bearer">OAuth 2.0 Bearer (Flash 3.8 / Preview)</option>
+            <option value="session_cookie">Session Cookie</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Subscription Tier</label>
+          <select id="modal-acc-tier" class="form-input">
+            <option value="free">Free Tier (15 RPM / Weekly Quota)</option>
+            <option value="paid_pro">Google AI Pro (120 RPM / 5h Rolling Bucket)</option>
+            <option value="paid_ultra">Ultra / Enterprise (High Concurrency)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Default Model</label>
+          <select id="modal-acc-model" class="form-input">
+            <option value="gemini-2.5-flash">gemini-2.5-flash (Fast, Free)</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Reasoning)</option>
+            <option value="gemini-3.8-flash">gemini-3.8-flash (High / Preview)</option>
+          </select>
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Subscription Tier</label>
-        <select id="modal-acc-tier" class="form-input">
-          <option value="free">Free Consumer Tier (15 RPM / Weekly Quota)</option>
-          <option value="paid_pro">Google AI Pro (120 RPM / 5-Hour Rolling Bucket)</option>
-          <option value="paid_ultra">Google AI Ultra / Enterprise (High Concurrency)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Default Model for this Account</label>
-        <select id="modal-acc-model" class="form-input">
-          <option value="gemini-2.5-flash">gemini-2.5-flash (Fast, Low Cost)</option>
-          <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Reasoning)</option>
-          <option value="gemini-3.8-flash">gemini-3.8-flash (Balanced)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Google Gemini API Key</label>
-        <input type="password" id="modal-acc-key" class="form-input" placeholder="AIzaSy..." />
+        <label class="form-label">API Key or OAuth Bearer Token</label>
+        <input type="password" id="modal-acc-key" class="form-input" placeholder="AIzaSy... or ya29..." />
       </div>
       <div id="modal-verify-status" style="font-size: 0.8rem; margin-bottom: 1rem; font-family: var(--mono);"></div>
       <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-        <button class="btn-action-small" onclick="verifyModalKey()">🔍 Verify Key with Google</button>
+        <button class="btn-action-small" onclick="verifyModalKey()">🔍 Verify Credential</button>
         <button class="btn-primary" onclick="submitAddAccount()">Save to Mesh</button>
       </div>
     </div>
@@ -602,6 +668,33 @@
         document.getElementById('val-failovers').innerText = data.totalFailovers.toLocaleString();
         document.getElementById('val-heals').innerText = data.totalSelfHeals.toLocaleString();
         document.getElementById('acc-count-badge').innerText = data.activeAccountsCount;
+      } catch (e) {}
+    }
+
+    async function loadAccounting() {
+      try {
+        const res = await fetch('/api/ide-accounting');
+        const records = await res.json();
+        const tbody = document.getElementById('ide-accounting-tbody');
+        if (!records || records.length === 0) return;
+
+        tbody.innerHTML = '';
+        records.forEach(rec => {
+          const totalTokens = rec.promptTokens + rec.completionTokens;
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>${rec.ideName}</strong></td>
+            <td>${rec.requests.toLocaleString()}</td>
+            <td>${rec.promptTokens.toLocaleString()}</td>
+            <td>${rec.completionTokens.toLocaleString()}</td>
+            <td><strong style="color: var(--accent);">${totalTokens.toLocaleString()}</strong></td>
+            <td style="color: var(--success);">${rec.tokensSaved.toLocaleString()}</td>
+            <td>$${rec.costEstimatedUSD}</td>
+            <td style="color: #cbd5e1;">${rec.primaryAccount}</td>
+            <td>${rec.lastActive}</td>
+          `;
+          tbody.appendChild(row);
+        });
       } catch (e) {}
     }
 
@@ -646,7 +739,6 @@
           const tierLabel = acc.tier.startsWith('paid') ? 'PAID PRO' : 'FREE TIER';
           const virtualPinId = `${acc.id}/${acc.defaultModel}`;
 
-          // Add to simulator select
           const opt = document.createElement('option');
           opt.value = virtualPinId;
           opt.innerText = `📌 Pin: ${acc.name} (${virtualPinId})`;
@@ -658,7 +750,11 @@
             <div class="account-header">
               <div class="account-name-wrap">
                 <div class="account-title">${acc.name}</div>
-                <span class="tag ${tagClass}">${tierLabel}</span>
+                <div class="badge-row">
+                  <span class="tag tag-provider">${acc.provider ? acc.provider.toUpperCase() : 'GEMINI'}</span>
+                  <span class="tag ${tagClass}">${tierLabel}</span>
+                  <span class="tag tag-auth">${acc.authType === 'oauth_bearer' ? 'OAUTH BEARER' : 'API KEY'}</span>
+                </div>
               </div>
               <div class="account-control-row">
                 <label class="switch">
@@ -710,20 +806,23 @@
 
         ides.forEach(ide => {
           const card = document.createElement('div');
-          card.className = 'ide-card';
+          card.className = `ide-card ${ide.isInstalled ? '' : 'uninstalled'}`;
           card.innerHTML = `
             <div class="ide-card-header">
-              <div class="ide-title">${ide.name}</div>
+              <div>
+                <div class="ide-title">${ide.name}</div>
+                <div style="font-size: 0.75rem; color: ${ide.isInstalled ? 'var(--success)' : 'var(--warning)'}; font-family: var(--mono); margin-top: 0.2rem;">
+                  ${ide.isInstalled ? (ide.isRoutedToProxy ? '● Connected to MeshManager' : '○ Installed (Direct Google)') : '⚠ Not Installed on this system'}
+                </div>
+              </div>
               <label class="switch">
-                <input type="checkbox" ${ide.isRoutedToProxy ? 'checked' : ''} onchange="toggleIDE('${ide.id}', this.checked)">
+                <input type="checkbox" ${ide.isRoutedToProxy ? 'checked' : ''} ${ide.isInstalled ? '' : 'disabled'} onchange="toggleIDE('${ide.id}', this.checked)">
                 <span class="slider"></span>
               </label>
             </div>
-            <div style="font-size: 0.8rem; color: ${ide.isRoutedToProxy ? 'var(--success)' : 'var(--text-muted)'}; font-family: var(--mono);">
-              ${ide.isRoutedToProxy ? '● Connected to MeshManager' : '○ Direct Connection'}
-            </div>
             <div class="ide-code-box">${ide.configSnippet}</div>
-            <div style="display: flex; justify-content: flex-end;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              ${ide.isInstalled ? '<span></span>' : `<a href="${ide.downloadUrl}" target="_blank" style="font-size: 0.75rem; color: var(--accent); text-decoration: none;">Download ${ide.name} &rarr;</a>`}
               <button class="btn-copy" onclick="copyText('${ide.configSnippet.replace(/'/g, "\\'")}')">Copy Config Snippet</button>
             </div>
           `;
@@ -799,6 +898,8 @@
     async function submitAddAccount() {
       const id = document.getElementById('modal-acc-id').value;
       const name = document.getElementById('modal-acc-name').value;
+      const provider = document.getElementById('modal-acc-provider').value;
+      const authType = document.getElementById('modal-acc-auth').value;
       const tier = document.getElementById('modal-acc-tier').value;
       const defaultModel = document.getElementById('modal-acc-model').value;
       const apiKey = document.getElementById('modal-acc-key').value;
@@ -811,7 +912,7 @@
       const res = await fetch('/api/accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, tier, defaultModel, apiKey })
+        body: JSON.stringify({ id, name, provider, authType, tier, defaultModel, apiKey })
       });
 
       if (res.ok) {
@@ -859,6 +960,7 @@
       loadStats();
       loadAccounts();
       loadConnections();
+      loadAccounting();
     }
 
     function copyText(str) {
@@ -871,8 +973,10 @@
     loadAccounts();
     loadIDEs();
     loadConnections();
+    loadAccounting();
     setInterval(loadStats, 5000);
     setInterval(loadConnections, 3000);
+    setInterval(loadAccounting, 5000);
   </script>
 </body>
 </html>
