@@ -602,7 +602,7 @@ No container runtime required. Runs directly on Node.js across Windows, macOS, L
 
 1. **Clone or Download the Repository:**
    ```bash
-   git clone https://github.com/your-username/AiMeshManager.git
+   git clone https://github.com/ommedical/AiMeshManager.git
    cd AiMeshManager
    ```
 2. **Launch AiMeshManager (1-Command):**
