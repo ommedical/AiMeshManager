@@ -748,7 +748,7 @@
           <div class="panel-title">
             <span>🧠</span> Dynamic Multi-Provider Model Performance & Knowledge Matrix
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Auto-Tiered Catalog</span>
+          <button class="btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.8rem;" onclick="syncCloudModels(this)">🔄 Sync Latest Cloud Models</button>
         </div>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
           AiMeshManager dynamically classifies and ranks models across all cloud and local providers into 3 intelligence tiers based on benchmark reasoning strength, context capacity, and cost profile.
@@ -1509,6 +1509,20 @@
           `;
         }).join('');
       } catch (e) {}
+    }
+
+    async function syncCloudModels(btn) {
+      if (btn) btn.innerText = 'Syncing...';
+      try {
+        const res = await fetch('/api/models/sync', { method: 'POST' });
+        const data = await res.json();
+        await loadModelKnowledge();
+        alert(`Cloud model sync complete! Discovered ${data.discoveredCount} new models. Total active models in mesh: ${data.totalKnownModels}.`);
+      } catch (e) {
+        alert('Model sync failed: ' + e.message);
+      } finally {
+        if (btn) btn.innerText = '🔄 Sync Latest Cloud Models';
+      }
     }
 
     // Initialize & polling

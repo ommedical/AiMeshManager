@@ -12,6 +12,7 @@
  */
 
 import * as http from 'http';
+import * as https from 'https';
 import { ProviderType } from '../accounts/manager';
 import { TaskTier } from '../router/classifier';
 
@@ -477,6 +478,122 @@ export class ModelKnowledgeRegistry {
         req.destroy();
         resolve({ online: false, data: '', latencyMs: 0 });
       });
+    });
+  }
+
+  /**
+   * Dynamically queries upstream provider catalogs (Google Gemini, OpenAI, DeepSeek)
+   * to discover newly announced models and register them into the knowledge registry.
+   */
+  public static async syncUpstreamModels(accounts: any[]): Promise<{ discoveredCount: number; newModels: string[] }> {
+    const newModels: string[] = [];
+
+    for (const acc of accounts) {
+      if (!acc.enabled || !acc.apiKey || acc.apiKey === 'DEMO_KEY' || String(acc.apiKey).startsWith('LOCAL_')) {
+        continue;
+      }
+
+      try {
+        if (acc.provider === 'gemini') {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${acc.apiKey}`;
+          const data = await this.fetchJsonHttps(url);
+          if (data && Array.isArray(data.models)) {
+            for (const m of data.models) {
+              const cleanId = (m.name || '').replace(/^models\//, '').trim();
+              if (cleanId && !this.knowledgeCatalog.has(cleanId.toLowerCase())) {
+                const isStrategic = cleanId.includes('pro') || cleanId.includes('thinking') || cleanId.includes('ultra');
+                const isMicro = cleanId.includes('nano') || cleanId.includes('small') || cleanId.includes('1.5-flash-8b');
+                const tier = isStrategic ? TaskTier.TIER_3_STRATEGIC : (isMicro ? TaskTier.TIER_1_MICRO : TaskTier.TIER_2_TACTICAL);
+                const intelligence = isStrategic ? 5 : (isMicro ? 2 : 3);
+
+                this.register({
+                  id: cleanId,
+                  name: m.displayName || cleanId,
+                  provider: 'gemini',
+                  tier,
+                  intelligenceLevel: intelligence,
+                  recommendedHeatMin: isStrategic ? 70 : (isMicro ? 0 : 30),
+                  recommendedHeatMax: isStrategic ? 100 : (isMicro ? 30 : 75),
+                  contextWindow: m.inputTokenLimit || 1000000,
+                  costProfile: acc.tier?.startsWith('paid') ? 'paid_pro' : 'free_cloud',
+                  isLocal: false,
+                  bestFor: 'Auto-synced from Google Gemini API (' + (m.displayName || cleanId) + ')',
+                  description: m.description || 'Dynamically discovered active model from Google Gemini API.'
+                });
+                newModels.push(cleanId);
+              }
+            }
+          }
+        } else if (acc.provider === 'openai') {
+          const url = `https://api.openai.com/v1/models`;
+          const data = await this.fetchJsonHttps(url, { 'Authorization': `Bearer ${acc.apiKey}` });
+          if (data && Array.isArray(data.data)) {
+            for (const m of data.data) {
+              const cleanId = (m.id || '').trim();
+              if (cleanId && (cleanId.startsWith('gpt-') || cleanId.startsWith('o1') || cleanId.startsWith('o3')) && !this.knowledgeCatalog.has(cleanId.toLowerCase())) {
+                const isStrategic = cleanId.startsWith('o1') || cleanId.startsWith('o3') || cleanId.includes('4o');
+                const tier = isStrategic ? TaskTier.TIER_3_STRATEGIC : TaskTier.TIER_2_TACTICAL;
+                this.register({
+                  id: cleanId,
+                  name: cleanId,
+                  provider: 'openai',
+                  tier,
+                  intelligenceLevel: isStrategic ? 5 : 3,
+                  recommendedHeatMin: isStrategic ? 70 : 30,
+                  recommendedHeatMax: isStrategic ? 100 : 75,
+                  contextWindow: 128000,
+                  costProfile: 'paid_pro',
+                  isLocal: false,
+                  bestFor: 'Auto-synced from OpenAI API (' + cleanId + ')',
+                  description: 'Dynamically discovered active model from OpenAI API.'
+                });
+                newModels.push(cleanId);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Soft fail per account
+      }
+    }
+
+    return { discoveredCount: newModels.length, newModels };
+  }
+
+  private static fetchJsonHttps(urlStr: string, headers: Record<string, string> = {}): Promise<any> {
+    return new Promise(resolve => {
+      try {
+        const u = new URL(urlStr);
+        const req = https.get(
+          {
+            hostname: u.hostname,
+            path: u.pathname + u.search,
+            headers: {
+              'User-Agent': 'AiMeshManager/2.2',
+              ...headers
+            },
+            timeout: 4000
+          },
+          res => {
+            let body = '';
+            res.on('data', chunk => (body += chunk));
+            res.on('end', () => {
+              try {
+                resolve(JSON.parse(body));
+              } catch (e) {
+                resolve(null);
+              }
+            });
+          }
+        );
+        req.on('error', () => resolve(null));
+        req.on('timeout', () => {
+          req.destroy();
+          resolve(null);
+        });
+      } catch (e) {
+        resolve(null);
+      }
     });
   }
 }

@@ -376,6 +376,17 @@ app.get('/api/models/knowledge', (req: Request, res: Response) => {
   res.json(ModelKnowledgeRegistry.getAllModels());
 });
 
+// 🔄 Dynamic Cloud Upstream Model Sync
+app.post('/api/models/sync', async (req: Request, res: Response) => {
+  const result = await ModelKnowledgeRegistry.syncUpstreamModels(accountManager.getAccounts());
+  res.json({
+    success: true,
+    discoveredCount: result.discoveredCount,
+    newModels: result.newModels,
+    totalKnownModels: ModelKnowledgeRegistry.getAllModels().length
+  });
+});
+
 // 💻 Local Model Server Detection (Ollama, LM Studio, vLLM)
 app.get('/api/local-models/detect', async (req: Request, res: Response) => {
   const localServers = await ModelKnowledgeRegistry.detectLocalServers();
@@ -936,4 +947,15 @@ app.listen(PORT, host, () => {
   console.log(` Network Isolation Mode:        ${securityManager.getConfig().mode.toUpperCase()} (Host: ${host})`);
   console.log(` Gateway Token Auth:            ${securityManager.getConfig().requireGatewayToken ? 'ENABLED' : 'DISABLED'}`);
   console.log(`=======================================================`);
+
+  // Auto-sync cloud upstream models and local engines dynamically in background
+  setTimeout(() => {
+    ModelKnowledgeRegistry.detectLocalServers().catch(() => {});
+    ModelKnowledgeRegistry.syncUpstreamModels(accountManager.getAccounts()).catch(() => {});
+  }, 1000).unref();
+
+  const syncTimer = setInterval(() => {
+    ModelKnowledgeRegistry.syncUpstreamModels(accountManager.getAccounts()).catch(() => {});
+  }, 6 * 3600 * 1000);
+  syncTimer.unref();
 });
