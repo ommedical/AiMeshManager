@@ -28,6 +28,9 @@
 ## 📖 Table of Contents
 1. [Overview & Core Philosophy](#-overview--core-philosophy)
 2. [Installation & Quickstart](#-installation--quickstart)
+   * [Method 1: Native Run (Zero Docker or Podman Needed)](#method-1-native-run-zero-docker-or-podman-needed--recommended)
+   * [Method 2: Containerized Run (Podman or Docker)](#method-2-containerized-run-podman-or-docker)
+   * [Method 3: Inbuilt 1-Command Self-Upgrade (For Existing Clones)](#method-3-inbuilt-1-command-self-upgrade-for-existing-clones)
 3. [Zero-Config Clean Slate & Multi-Account Management](#-zero-config-clean-slate--multi-account-management)
    * [Clean Slate Blank Startup by Default](#1-clean-slate-blank-startup-by-default-100-privacy)
    * [Interactive Account Management: Add, Edit, Delete, Toggle](#2-interactive-account-management-add-edit-delete-toggle)
@@ -136,6 +139,22 @@ Runs directly on Node.js (v18+) across Windows, macOS, Linux, WSL, or Android Te
    # Or direct run:
    docker build -t aimeshmanager . && docker run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager --name aimeshmanager aimeshmanager
    ```
+
+---
+
+### Method 3: Inbuilt 1-Command Self-Upgrade (For Existing Clones)
+
+If you already have an earlier clone of AiMeshManager on your machine (e.g. at `C:\Users\...\AiMeshManager`) and want to upgrade to the latest features:
+
+```bash
+# Direct CLI run inside your repository folder:
+node dist/cli.js upgrade
+
+# Or with global CLI (anywhere):
+aimeshmanager upgrade
+```
+
+> ⚡ **Auto-Healing Git Synchronization:** The inbuilt `upgrade` command automatically synchronizes with GitHub (`origin main`), auto-heals divergent commit histories, runs `npm install` for updated dependencies, and recompiles TypeScript (`npm run build`) in one single step.
 
 ---
 
@@ -679,38 +698,76 @@ aimeshmanager stats
 
 ## 💻 Complete CLI Command Reference
 
+All gateway operations can be executed via the command line through three convenient invocation methods:
+* **Direct Local Run**: `node dist/cli.js <command> [options]`
+* **Via npm Script**: `npm run cli -- <command> [options]`
+* **Global CLI**: `aimeshmanager <command>` *(or short aliases `aimm`, `meshmanager`, `mesh` after running `npm install -g .`)*
+
 ```bash
 aimeshmanager <command> [options]
 # Or short aliases:
 aimm <command>
 meshmanager <command>
 mesh <command>
+# Or direct:
+node dist/cli.js <command>
 ```
 
 | Command | Arguments | Action |
 | :--- | :--- | :--- |
-| **`start`** | `[--daemon, -d]` | Boots the gateway (run headless with `-d`). |
-| **`stop`** | — | Stops the background service cleanly. |
-| **`restart`** | — | Safely restarts the gateway service. |
-| **`status`** | — | Prints gateway PID, port, active accounts, and connected IDEs. |
-| **`swarm`** | `"<task>"` | Dispatches 4 parallel subagents (Planner, Coder, Linter, Critic) across accounts. |
-| **`antigravity setup`** | `[mock-adc]` | Generates Mock Google Cloud ADC to bypass Antigravity 2.0 service account login. |
-| **`purge`** | — | Cryptographically shreds stored credentials from disk and wipes memory. |
+| **`start`** | `[--daemon, -d]` | Boots the gateway. Automatically verifies `node_modules` and compiles TypeScript (`dist/`) before starting. Run headless in the background with `-d`. |
+| **`stop`** | — | Safely terminates the gateway using the 4-phase graceful shutdown engine (drains turns, flushes disk ledger, unlinks PID lockfile). |
+| **`restart`** | — | Safely stops and restarts the gateway service without `EADDRINUSE` port conflict errors. |
+| **`status`** | — | Prints gateway PID, port, active accounts, and connected IDE integration states. |
+| **`upgrade, update`** | — | **1-Command Self-Updater**: Auto-heals divergent git history, synchronizes with GitHub (`origin main`), runs `npm install`, and recompiles TypeScript (`npm run build`). |
+| **`swarm`** | `"<task>"` | Dispatches 4 parallel subagents (Planner, Coder, Linter, Critic) across accounts with unified workspace context. |
+| **`antigravity setup`** | `[mock-adc]` | Generates Mock Google Cloud ADC to bypass Antigravity 2.0 service account GCP login. |
+| **`doctor`** | — | Comprehensive diagnostics on Node version, ports, permissions, and IDE binary paths. |
+| **`stats`** | — | Real-time token economy, tokens saved via RTK, and resource stress benchmark (~0% CPU, ~9.8 MB heap). |
 | **`unified, matrix`** | — | Displays the Single Unified Master Telemetry Ledger. |
-| **`stats`** | — | Real-time token economy, savings, and resource stress benchmark. |
-| **`security status`** | — | Inspects host binding (Localhost vs LAN) and Gateway Token. |
+| **`purge`** | — | Cryptographically zeroes out credentials on disk and wipes memory keys. |
+| **`account list`** | — | Lists all accounts, virtual pin IDs, quotas, and health statuses. |
+| **`account add`** | `<id> <name> <tier> <model> <key>` | Adds an account with disk persistence. |
+| **`account delete`** | `<id>` | Deletes an account from the mesh pool. |
+| **`account verify`** | `<key>` | Verifies an API key live against the upstream provider catalog. |
+| **`account purge`** | — | Shreds credentials from disk and clears memory pools. |
+| **`ide connect`** | `<antigravity\|cursor\|vscode\|windsurf\|all>` | Injects gateway settings into editor after validating real binaries. |
+| **`ide disconnect`**| `<antigravity\|cursor\|vscode\|windsurf\|all>` | Reverts editor to default settings. |
+| **`security status`** | — | Inspects host network binding (Localhost vs LAN) and Gateway Token. |
 | **`security toggle-lan`** | `[lan\|localhost]` | Toggles between 127.0.0.1 Loopback and 0.0.0.0 LAN Sharing. |
 | **`security toggle-auth`**| — | Toggles mandatory Gateway Bearer Token authentication. |
 | **`security regenerate-token`** | — | Rotates the Gateway Master Bearer Token. |
-| **`doctor`** | — | Deep diagnostics on Node version, ports, permissions, and IDE paths. |
-| **`upgrade`** | — | Checks for updates and pulls the latest version. |
-| **`account list`** | — | Lists all accounts, virtual pin IDs, quotas, and statuses. |
-| **`account add`** | `<id> <name> <tier> <model> <key>` | Adds an account with disk persistence. |
-| **`account delete`** | `<id>` | Deletes an account from the mesh pool. |
-| **`account verify`** | `<key>` | Verifies an API key against the provider API. |
-| **`account purge`** | — | Shreds credentials from disk and clears memory pools. |
-| **`ide connect`** | `<antigravity\|cursor\|vscode\|all>` | Injects gateway settings into editor. |
-| **`ide disconnect`**| `<antigravity\|cursor\|vscode\|all>` | Reverts editor to default settings. |
+
+---
+
+### Common CLI Workflow Recipes:
+
+* **1. Self-Updating an Existing Clone**:
+  ```bash
+  node dist/cli.js upgrade
+  ```
+* **2. Starting as a Background Daemon & Checking Status**:
+  ```bash
+  node dist/cli.js start --daemon
+  node dist/cli.js status
+  ```
+* **3. Connecting All Installed IDEs with Binary Validation**:
+  ```bash
+  node dist/cli.js ide connect all
+  ```
+* **4. Dispatching a 4-Agent Parallel Swarm via Terminal**:
+  ```bash
+  node dist/cli.js swarm "Architect and implement distributed rate limiter with Redis backend"
+  ```
+* **5. Verifying Host Health & Resource Stress**:
+  ```bash
+  node dist/cli.js doctor
+  node dist/cli.js stats
+  ```
+* **6. Stopping the Gateway Cleanly**:
+  ```bash
+  node dist/cli.js stop
+  ```
 
 ---
 
