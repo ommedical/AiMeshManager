@@ -841,14 +841,17 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
 
   // Response headers indicating route metadata, heat, and intelligence power
   // Primary AiMeshManager headers
+  res.setHeader('X-AiMeshManager-Execution-Mode', executionMode);
   res.setHeader('X-AiMeshManager-Account', targetAccount.id);
   res.setHeader('X-AiMeshManager-Model', targetModel);
   res.setHeader('X-AiMeshManager-Tier', classification.tier);
   res.setHeader('X-AiMeshManager-Provider', targetAccount.provider);
   res.setHeader('X-AiMeshManager-Heat', String(classification.heatScore));
   res.setHeader('X-AiMeshManager-Intelligence', String(classification.intelligenceLevel));
+  res.setHeader('X-AiMeshManager-Tokens-Saved', String(optimization.tokensSaved));
 
   // Backward compatibility headers
+  res.setHeader('X-MeshManager-Execution-Mode', executionMode);
   res.setHeader('X-MeshManager-Account', targetAccount.id);
   res.setHeader('X-MeshManager-Model', targetModel);
   res.setHeader('X-MeshManager-Tier', classification.tier);

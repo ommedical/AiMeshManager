@@ -17,7 +17,8 @@
 [Account Management](#-zero-config-clean-slate--multi-account-management) •
 [Multi-Provider Setup](#-universal-multi-provider-ecosystem) •
 [IDE Connect Center](#-1-click-ide-connect-center--binary-validation) •
-[Model Intelligence](#-dynamic-model-performance-knowledge-matrix-best-vs-low-models) •
+[Autonomous Arbiter](#-dynamic-task-heat-intelligence-spectrum--autonomous-execution-arbiter) •
+[Live Topology Canvas](#-dynamic-multi-agent-swarm-with-live-graphical-topology-canvas) •
 [CLI Reference](#-complete-cli-command-reference)
 
 </div>
@@ -46,9 +47,16 @@
    * [Cursor AI Editor](#cursor-ai-editor)
    * [VS Code (Continue / Cline / Roo Code)](#vs-code-continue--cline--roo-code)
    * [Windsurf (Codeium)](#windsurf-codeium)
-8. [Dynamic Task Heat, Intelligence Spectrum & Parallel Multi-Account Routing](#-dynamic-task-heat-intelligence-spectrum--parallel-multi-account-routing)
+8. [Dynamic Task Heat, Intelligence Spectrum & Autonomous Execution Arbiter](#-dynamic-task-heat-intelligence-spectrum--autonomous-execution-arbiter)
+   * [The 3-Tier Dynamic Complexity Spectrum](#the-3-tier-dynamic-complexity-spectrum)
+   * [Autonomous Execution Arbiter: Sequential vs. Swarm (Zero Human Intervention)](#autonomous-execution-arbiter-sequential-vs-swarm-zero-human-intervention)
+   * [Tuned Token Economics & Error Reduction](#tuned-token-economics--error-reduction)
+   * [Real-Time HTTP Tracing Headers & Dynamic Verification](#real-time-http-tracing-headers--dynamic-verification)
 9. [Virtual Model Pins (`accountId/modelName`) & Default Models](#-virtual-model-pins-accountidmodelname--default-models)
-10. [Dynamic Multi-Agent Swarm with Shared Development Context](#-dynamic-multi-agent-swarm-with-shared-development-context)
+10. [Dynamic Multi-Agent Swarm with Live Graphical Topology Canvas](#-dynamic-multi-agent-swarm-with-live-graphical-topology-canvas)
+   * [The 4-Agent Parallel Swarm Architecture](#the-4-agent-parallel-swarm-architecture)
+   * [Live Graphical Autonomous Execution Topology Canvas](#live-graphical-topology-canvas-httplocalhost20128)
+   * [Swarm Dispatch Methods (Autonomous, CLI, Web UI)](#swarm-dispatch-methods-autonomous-cli-web-ui)
 11. [Single Unified Master Telemetry Ledger](#-single-unified-master-telemetry-ledger)
 12. [Local Network Isolation & Mandatory LAN Bearer Token Auth](#-local-network-isolation--mandatory-lan-bearer-token-auth)
 13. [Hermes-Style Self-Healing & Anti-Hallucination Guard](#-hermes-style-self-healing--anti-hallucination-guard)
@@ -366,54 +374,107 @@ aimeshmanager ide connect antigravity
 
 ---
 
-## 🔀 Dynamic Task Heat, Intelligence Spectrum & Parallel Multi-Account Routing
+## 🔀 Dynamic Task Heat, Intelligence Spectrum & Autonomous Execution Arbiter
 
-AiMeshManager introduces **Task Heat & Intelligence Spectrum Routing**. Rather than treating all code completions equally, it evaluates incoming prompts along a continuous complexity curve and routes them across accounts and models **simultaneously and in parallel**:
+AiMeshManager introduces **Task Heat Profiling & Autonomous Execution Arbitration**. Rather than treating all code completions equally, it evaluates incoming prompts along a continuous complexity curve and, **autonomously with zero human intervention**, determines whether to execute sequentially via a single turn or fork into a parallel multi-agent swarm across accounts:
 
 ```mermaid
 flowchart TD
     subgraph Clients["Concurrent Client Traffic"]
         C1["Cursor (Autocomplete / Syntax Fix)"]
-        C2["Antigravity (Strategic Architect & Planning)"]
+        C2["Google Antigravity (Architectural Planning)"]
         C3["VS Code / Cline (Autonomous Refactoring)"]
     end
 
-    subgraph Gateway["AiMeshManager Mesh Engine"]
-        Router["Dynamic Task Heat & Intelligence Profiler"]
+    subgraph Gateway["AiMeshManager Gateway Engine"]
+        Heat["Semantic Task Heat & Intelligence Profiler<br/>(Calculates Heat Score: 0% - 100%)"]
+        Arbiter{"Autonomous Decision Arbiter<br/>(Evaluates 4 Golden Rules)"}
     end
 
-    subgraph Dispatches["Simultaneous Parallel Execution"]
-        D1["Tier 1: Cold / Fast (Heat: 20%, 1★)<br/>➔ Dispatches to: Gemini Free (Flash)"]
-        D2["Tier 3: Hot / Strategic (Heat: 95%, 5★)<br/>➔ Dispatches to: Paid Pro Account (Pro 2.5)"]
-        D3["Tier 2: Warm / Tactical (Heat: 55%, 3★)<br/>➔ Dispatches to: OpenRouter / OmniRoute"]
+    subgraph SequentialPath["Sequential Single-Turn Execution (Preserves Tokens & Quota)"]
+        S1["⚡ Sequential Fast (Heat < 70%): Micro-Latency Free Tier"]
+        S2["📌 Sequential Pinned: Explicit accountId/modelName requested"]
+        S3["🛡️ Sequential Guard: Single active account (Rate-Limit Shield)"]
     end
 
-    C1 --> Router
-    C2 --> Router
-    C3 --> Router
+    subgraph SwarmPath["Dynamic Multi-Agent Swarm (Heat >= 70% & >= 2 Accounts)"]
+        A1["🧠 Planner / Architect (Paid Pro Account)"]
+        A2["💻 Core Implementation (Paid Pro Account)"]
+        A3["⚡ Syntax & Doc Linter (Free / Local Engine - $0 Quota)"]
+        A4["🛡️ Critic & Hermes Reflexion (Free Tier - 0 Errors)"]
+    end
 
-    Router --> D1
-    Router --> D2
-    Router --> D3
+    C1 --> Heat
+    C2 --> Heat
+    C3 --> Heat
+    Heat --> Arbiter
+
+    Arbiter -- "Heat < 70% OR Single Account" --> SequentialPath
+    Arbiter -- "Heat >= 70% AND >= 2 Accounts" --> SwarmPath
 ```
 
-### The 3-Tier Dynamic Spectrum:
+### The 3-Tier Dynamic Complexity Spectrum:
+Every prompt received at `/v1/chat/completions` is classified along a continuous semantic complexity curve:
 1. **Cold / Micro-Latency Tier (Heat: 15% – 25% | Intelligence: 1/5 ★)**:
    * **Triggers**: Tab autocomplete, syntax fixes, docstrings, variable rename, formatting.
-   * **Allocation**: Dispatched to Free Tier (`gemini-2.5-flash`), delivering sub-second response times while preserving 100% of your paid quota.
+   * **Allocation**: Dispatched to Free Tier (`gemini-2.5-flash`, `:free` models) or local engines (Ollama/LM Studio), delivering sub-second response times while preserving 100% of your paid quota.
 2. **Warm / Tactical Engineering Tier (Heat: 45% – 60% | Intelligence: 3/5 ★)**:
    * **Triggers**: Single-function implementations, unit tests, git commit synthesis, standard bug fixes.
-   * **Allocation**: Balanced code models with highest remaining quota headroom.
+   * **Allocation**: Balanced workhorse models with highest remaining quota headroom.
 3. **Hot / Strategic Architecture Tier (Heat: 75% – 100% | Intelligence: 4-5/5 ★)**:
    * **Triggers**: Multi-file refactoring, architectural planning, distributed systems design, roadmap brainstorming.
    * **Allocation**: Deep reasoning models (`gemini-2.5-pro`, `o1`, `deepseek-r1`) on Paid Pro subscriptions.
 
-### How to verify dynamic switching in real time:
-1. **Live Activity & Telemetry Tab**: Open `http://localhost:20128` $\to$ **Live Activity & Telemetry** to view client IDE, task classification (`MICRO_SYNTAX` vs `STRATEGIC_REASON`), dispatched account, active model, and routing mode.
-2. **HTTP Response Tracing Headers**: Every completion includes:
-   * `X-MeshManager-Account`: Account ID that executed the turn.
-   * `X-MeshManager-Model`: Exact model dispatched.
-   * `X-MeshManager-Tier`: Task tier classification.
+---
+
+### Autonomous Execution Arbiter: Sequential vs. Swarm (Zero Human Intervention)
+
+A common architectural question is: **"Does the user have to manually choose between Swarm and Sequential mode?"**
+
+The answer is **No! Zero human intervention is required.** 
+
+The Gateway contains an autonomous **Decision Arbiter** that inspects each incoming turn in real time and enforces 4 decisive rules:
+
+| Rule | Trigger Condition | Execution Mode | Decision Rationale & Safety Enforcement |
+| :--- | :--- | :--- | :--- |
+| **Rule 1: Virtual Model Pin** | Client requests `accountId/modelName` | `SEQUENTIAL_PINNED` | **Developer Overwrite**: Honors explicit account targeting without hijacking developer intent. |
+| **Rule 2: Quota & Rate-Limit Guard** | Only 1 active account available in mesh | `SEQUENTIAL_SINGLE_ACCOUNT` | **Rate-Limit Shield**: Spawning 4 parallel agents on 1 account would multiply requests by 4x and trigger 429 lockouts. Strictly enforces sequential execution to protect RPM/TPM headroom. |
+| **Rule 3: Low-Heat Token Economy** | Task Heat $< 70\%$ (Micro / Tactical) | `SEQUENTIAL_FAST` | **Token Economy**: Simple edits and autocomplete never waste 4 subagents. Fast single-turn execution preserves thousands of tokens. |
+| **Rule 4: High-Heat Complex Swarm** | Task Heat $\ge 70\%$ **AND** $\ge 2$ Active Accounts | `SWARM_PARALLEL` | **Autonomous Swarm**: Complex architectural tasks are automatically decomposed into 4 parallel specialized agents running across distinct accounts simultaneously. |
+
+---
+
+### Tuned Token Economics & Error Reduction
+
+AiMeshManager is specially tuned to maximize token efficiency and eliminate runtime failures:
+
+* **1. Token Boilerplate Compression (RTK Stripping)**:
+  Incoming prompts and system context are dynamically normalized, stripping duplicate whitespace, redundant markdown comments, and repetitive system turns, trimming **15% – 35% of input tokens** before sending upstream.
+* **2. Subagent $0 Paid Quota Offloading**:
+  When a Swarm is triggered, secondary agents (Syntax Linter, Docstring Generator, Critic) are strictly routed to Free Tier accounts (`gemini-2.5-flash`, OpenRouter `:free`) or local engines (Ollama/LM Studio). This ensures **zero paid quota is consumed for linting or review**, reserving your paid budget strictly for the Planner and Coder.
+* **3. Hermes-Style Reflexion & Self-Repair**:
+  LLMs frequently output unescaped Windows paths (`C:\Users\...`), wrap JSON responses in unnecessary markdown triple-backtick fences (` ```json `), or append trailing commas. AiMeshManager intercepts and auto-repairs these syntactic defects before they reach your IDE, preventing parser exceptions and crashes.
+* **4. Predictive Headroom Refill**:
+  Maintains rolling 60-second RPM and TPM buckets for each account. If an account drops below 15% headroom, traffic automatically diverts to the next healthiest account within 50ms, avoiding 429 errors completely.
+
+---
+
+### Real-Time HTTP Tracing Headers & Dynamic Verification
+
+Every response returned by AiMeshManager carries complete execution metadata headers for client auditing:
+
+| Tracing Header | Example Value | Description |
+| :--- | :--- | :--- |
+| **`X-AiMeshManager-Execution-Mode`** | `SWARM_PARALLEL` / `SEQUENTIAL_FAST` | Autonomous decision made by the Arbiter. |
+| **`X-AiMeshManager-Swarm-Agents`** | `Planner, Coder, Linter, Critic` | Specialized agent roles executed in parallel (or `none`). |
+| **`X-AiMeshManager-Heat`** | `92` | Evaluated semantic task complexity (0% – 100%). |
+| **`X-AiMeshManager-Intelligence`** | `5` | Required intelligence level (1 to 5 stars). |
+| **`X-AiMeshManager-Tier`** | `STRATEGIC_REASON` | Classification tier (`MICRO_SYNTAX`, `TACTICAL_CODE`, `STRATEGIC_REASON`). |
+| **`X-AiMeshManager-Account`** | `acc-pro-1` | Identifier of the account that fulfilled the request. |
+| **`X-AiMeshManager-Model`** | `gemini-2.5-pro` | Upstream model dispatched. |
+| **`X-AiMeshManager-Tokens-Saved`** | `184` | Tokens preserved via RTK optimization and free tier offloading. |
+
+*(All headers are mirrored as `X-MeshManager-*` for backward compatibility).*
 
 ---
 
@@ -437,34 +498,31 @@ $$\text{Format: } \mathbf{\text{account-id}} / \mathbf{\text{model-name}}$$
 
 ---
 
-## 🤖 Dynamic Multi-Agent Swarm with Shared Development Context
+## 🤖 Dynamic Multi-Agent Swarm with Live Graphical Topology Canvas
 
-AiMeshManager enables full **Multi-Agent Swarm Orchestration** where multiple specialized agents work in parallel on the same project task while maintaining **100% unified workspace context**:
+When a high-complexity task is identified (Heat $\ge 70\%$) and multiple accounts are available in your mesh, AiMeshManager automatically mobilizes a **4-Agent Parallel Swarm** operating with a **100% unified shared workspace context graph**:
 
 ```mermaid
 flowchart TD
-    subgraph Context["Unified Development & Workspace Context Graph"]
+    subgraph Context["Unified Workspace Context Graph"]
         AST["Workspace AST & Code Map"]
         DIFF["Git Diff & Staging Tree"]
         HIST["Full Chat & Session Memory"]
     end
 
-    subgraph SwarmOrchestrator["AiMeshManager Swarm Engine (Parallel Event Loops)"]
-        SW["Task Decomposer & Heat Profiler"]
+    subgraph Arbiter["Autonomous Execution Arbiter"]
+        SW["Task Decomposer & Heat Profiler (Heat >= 70%)"]
     end
 
     subgraph Subagents["Specialized Subagents (Simultaneous Parallel Execution)"]
-        A1["Architect & Planner (Heat: 96%)<br/>🧠 Dispatches to: Paid Pro #1 (Gemini 2.5 Pro)"]
-        A2["Core Implementation (Heat: 78%)<br/>💻 Dispatches to: Paid Pro #2 (Gemini 2.5 Pro)"]
-        A3["Syntax & Doc Linter (Heat: 20%)<br/>⚡ Dispatches to: Free Account #1 (Gemini 2.5 Flash)"]
-        A4["Critic & Hallucination Guard (Heat: 55%)<br/>🛡️ Dispatches to: Free Account #2 (Gemini 3.8 Flash)"]
+        A1["🧠 Planner / Architect (Heat: 96%, 5★)<br/>➔ Dispatches to: Paid Pro #1 (Gemini 2.5 Pro)"]
+        A2["💻 Implementation / Coder (Heat: 78%, 4★)<br/>➔ Dispatches to: Paid Pro #2 (Gemini 2.5 Pro)"]
+        A3["⚡ Syntax & Doc Linter (Heat: 20%, 1★)<br/>➔ Dispatches to: Free Tier / Local Ollama ($0 Quota)"]
+        A4["🛡️ Critic & Reflexion Guard (Heat: 55%, 3★)<br/>➔ Dispatches to: Free Account #2 (0 Errors)"]
     end
 
-    subgraph AtomicLedger["Atomic Master Ledger & Accounting"]
-        L1["Paid Pro #1 Bucket (-450 tokens)"]
-        L2["Paid Pro #2 Bucket (-620 tokens)"]
-        L3["Free Account #1 Bucket (-310 tokens)"]
-        L4["Free Account #2 Bucket (-280 tokens)"]
+    subgraph Canvas["Live Graphical Topology Canvas (http://localhost:20128)"]
+        TOP["Live Stream: Client Node ➔ Arbiter Gate ➔ 4 Branch Nodes ➔ Synthesis Ribbon"]
     end
 
     Context --> SW
@@ -472,18 +530,71 @@ flowchart TD
     SW --> A2
     SW --> A3
     SW --> A4
-    A1 --> L1
-    A2 --> L2
-    A3 --> L3
-    A4 --> L4
+    A1 --> Canvas
+    A2 --> Canvas
+    A3 --> Canvas
+    A4 --> Canvas
 ```
 
-### Dispatching a Swarm Task:
-```bash
-# Terminal CLI:
-aimeshmanager swarm "Architect and refactor high-throughput auth router with Redis caching"
+### The 4-Agent Parallel Swarm Architecture:
+1. **🧠 Planner / System Architect (Heat: 96% | Intelligence: 5★)**:
+   * **Role**: Analyzes data structures, interface signatures, modular boundaries, and security contracts.
+   * **Dispatched to**: Paid Pro Account (`gemini-2.5-pro`, `o1`, or `claude-3-7-sonnet`).
+2. **💻 Core Implementation / Coder (Heat: 78% | Intelligence: 4★)**:
+   * **Role**: Generates robust, strongly-typed code adhering to the architecture plan.
+   * **Dispatched to**: Paid Pro Account #2 or deep code model with high remaining TPM.
+3. **⚡ Syntax Linter / Docstring & Typing (Heat: 20% | Intelligence: 1★)**:
+   * **Role**: Generates JSDoc/TSDoc comments, cleans formatting, and validates type constraints.
+   * **Dispatched to**: **Free Tier Account** (`gemini-2.5-flash`) or local Ollama — **Consumes $0 Paid Quota!**
+4. **🛡️ Critic / Anti-Hallucination Reviewer (Heat: 55% | Intelligence: 3★)**:
+   * **Role**: Grounding verification — cross-references generated code against workspace context, verifies import symbols, and checks boundary conditions with Hermes reflexion.
+   * **Dispatched to**: Free Tier Account #2 (`gemini-3.8-flash`).
+
+---
+
+### Live Graphical Autonomous Execution Topology Canvas (`http://localhost:20128`)
+
+AiMeshManager features a **Live Graphical Topology Canvas** directly in the **🌐 Live Topology & Activity Matrix** tab of the Web Control Center:
+
 ```
-Or in Web UI $\to$ **Dynamic Task Simulator** $\to$ click **`⚡ Launch Swarm`**.
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                       🌐 Live Autonomous Execution Topology & Decision Canvas                               │
+│  Real-time graphical visualization of autonomous execution routing, agent loops, and token economy.         │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  [Client IDE: Google Antigravity] ──▶ [Arbiter: Heat 92% | Mode: 🚀 AUTONOMOUS SWARM (4 Loops)]             │
+│                                                                                                             │
+│  ├── 🧠 [Branch 1: Planner]  ➔ [personal-pro]    (gemini-2.5-pro)   | Tokens: 240 | Shield: ACTIVE          │
+│  ├── 💻 [Branch 2: Coder]    ➔ [work-pro]        (gemini-2.5-pro)   | Tokens: 280 | Shield: ACTIVE          │
+│  ├── ⚡ [Branch 3: Linter]   ➔ [free-account-1]  (gemini-2.5-flash) | Tokens: 160 | $0 Paid Quota!          │
+│  └── 🛡️ [Branch 4: Critic]   ➔ [free-account-2]  (gemini-3.8-flash) | Tokens: 190 | 0 Errors Grounded       │
+│                                                                                                             │
+│  └───▶ [Synthesis Ribbon]: 4 subagents executed simultaneously. Unified code streamed back to IDE.          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Key Capabilities of the Live Canvas:
+* **Real-Time Polling Stream**: Automatically updates every 2.5 seconds via `GET /api/topology/live`.
+* **Client IDE Origin**: Highlights which editor triggered the turn (Google Antigravity 2.0, Cursor, VS Code, Windsurf).
+* **Autonomous Arbiter Badge**: Dynamically displays the live decision badge:
+  * `🚀 AUTONOMOUS SWARM (4 Loops)`: High-complexity prompt autonomously forked across multiple accounts.
+  * `⚡ SEQUENTIAL FAST`: Low-complexity prompt routed sequentially to save tokens.
+  * `🛡️ SEQUENTIAL (Rate-Limit Guard)`: Single account pool guarded against 429 lockouts.
+  * `📌 SEQUENTIAL PINNED`: Explicit virtual pin honored.
+* **Execution Branch Cards**: Displays each parallel agent branch with live model badge, account name, provider tag, token count, tokens saved via RTK compression, and remaining account headroom percentage.
+* **Hermes Reflexion Shield Indicator**: Shows active error protection and syntax self-healing status on every branch.
+* **Consolidation & Synthesis Ribbon**: Explains how subagent turns were assembled into the final streaming response.
+
+---
+
+### Swarm Dispatch Methods:
+* **1. Autonomous Execution (Zero Friction)**:
+  Simply prompt your IDE normally (Cursor, Antigravity, VS Code). If the prompt has high architectural complexity ($\ge 70\%$ heat) and multiple accounts are configured, the Arbiter automatically handles the swarm!
+* **2. Terminal CLI**:
+  ```bash
+  aimeshmanager swarm "Architect and refactor high-throughput auth router with Redis caching"
+  ```
+* **3. Web Control Center**:
+  Open `http://localhost:20128` $\to$ **Dynamic Task Simulator** $\to$ click **`⚡ Launch Swarm`**.
 
 ---
 
