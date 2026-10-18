@@ -12,7 +12,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as https from 'https';
 
-export type ProviderType = 'gemini' | 'omniroute' | 'openai' | 'anthropic' | 'deepseek' | 'vertex' | 'ollama' | 'lmstudio' | 'local' | 'custom';
+export type ProviderType = 'gemini' | 'omniroute' | 'openrouter' | 'meta' | 'openai' | 'anthropic' | 'deepseek' | 'vertex' | 'ollama' | 'lmstudio' | 'local' | 'custom';
 export type AuthType = 'api_key' | 'oauth_bearer' | 'oauth_refresh' | 'session_cookie';
 
 export interface GeminiAccount {

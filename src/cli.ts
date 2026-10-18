@@ -78,7 +78,7 @@ async function main() {
       break;
 
     case 'stop':
-      handleStop();
+      await handleStop();
       break;
 
     case 'status':
@@ -86,8 +86,8 @@ async function main() {
       break;
 
     case 'restart':
-      handleStop();
-      setTimeout(() => handleStart(), 1500);
+      await handleStop();
+      setTimeout(() => handleStart(), 1000);
       break;
 
     case 'update':
@@ -173,19 +173,81 @@ function handleStart() {
   }
 }
 
-function handleStop() {
+async function handleStop(): Promise<void> {
   const active = getActivePidFile();
   if (!active) {
     console.log(`\x1b[33m[!] No active AiMeshManager process found.\x1b[0m`);
     return;
   }
 
+  console.log(`\x1b[36m🛑 Initiating graceful shutdown for AiMeshManager (PID: ${active.pid})...\x1b[0m`);
+
+  // Step 1: Attempt graceful HTTP API shutdown first (triggers in-flight draining and state flush)
+  let stoppedViaHttp = false;
   try {
-    process.kill(active.pid, 'SIGTERM');
+    const http = await import('http');
+    await new Promise<void>((resolve) => {
+      const req = http.request({
+        hostname: '127.0.0.1',
+        port: PORT,
+        path: '/api/system/shutdown',
+        method: 'POST',
+        timeout: 2500
+      }, res => {
+        if (res.statusCode === 200) {
+          stoppedViaHttp = true;
+        }
+        res.resume();
+        resolve();
+      });
+      req.on('error', () => resolve()); // Fallback to OS signal if server unreachable
+      req.on('timeout', () => { req.destroy(); resolve(); });
+      req.end();
+    });
+  } catch (_) {}
+
+  // Step 2: Poll for process exit if HTTP shutdown was accepted
+  if (stoppedViaHttp) {
+    console.log(`[AiMeshManager] Graceful shutdown command accepted. Waiting for in-flight requests to complete...`);
+    const startTime = Date.now();
+    while (Date.now() - startTime < 4500) {
+      try {
+        process.kill(active.pid, 0); // Check if process still alive
+        await new Promise(r => setTimeout(r, 200));
+      } catch (_) {
+        // Process is gone!
+        console.log(`\x1b[32m[✓] AiMeshManager stopped cleanly and drained all active turns.\x1b[0m`);
+        return;
+      }
+    }
+  }
+
+  // Step 3: Fallback to OS process signals / termination
+  try {
+    if (process.platform === 'win32') {
+      try {
+        execSync(`taskkill /PID ${active.pid} /T /F`, { stdio: 'ignore' });
+      } catch (_) {
+        try { process.kill(active.pid, 'SIGTERM'); } catch (_) {}
+      }
+    } else {
+      process.kill(active.pid, 'SIGTERM');
+      const startTime = Date.now();
+      while (Date.now() - startTime < 2000) {
+        try {
+          process.kill(active.pid, 0);
+          await new Promise(r => setTimeout(r, 150));
+        } catch (_) {
+          break;
+        }
+      }
+      try { process.kill(active.pid, 'SIGKILL'); } catch (_) {}
+    }
+
     if (fs.existsSync(active.path)) fs.unlinkSync(active.path);
     if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
     if (fs.existsSync(LEGACY_PID_FILE)) fs.unlinkSync(LEGACY_PID_FILE);
-    console.log(`\x1b[32m[✓] Successfully stopped AiMeshManager (PID: ${active.pid})\x1b[0m`);
+    console.log(`\x1b[32m[✓] Successfully terminated AiMeshManager (PID: ${active.pid})\x1b[0m`);
   } catch (err: any) {
     console.log(`\x1b[31m[!] Failed to terminate PID ${active.pid}: ${err.message}\x1b[0m`);
     if (fs.existsSync(active.path)) fs.unlinkSync(active.path);
@@ -262,16 +324,17 @@ async function handleAccount(subArgs: string[]) {
       break;
 
     case 'add':
-      const [_, id, name, tier, defaultModel, apiKey] = subArgs;
+      const [_, id, name, tier, defaultModel, apiKey, providerArg, endpointUrlArg] = subArgs;
       if (!id || !name) {
-        console.log(`\x1b[31mUsage: meshmanager account add <id> <name> <free|paid_pro> <defaultModel> <apiKey>\x1b[0m`);
+        console.log(`\x1b[31mUsage: aimeshmanager account add <id> <name> <free|paid_pro|paid_ultra> <defaultModel> <apiKey> [provider] [endpointUrl]\x1b[0m`);
         return;
       }
       const newAcc: GeminiAccount = {
         id,
         name,
-        provider: 'gemini',
+        provider: (providerArg as any) || 'gemini',
         authType: 'api_key',
+        endpointUrl: endpointUrlArg || undefined,
         tier: (tier === 'paid_pro' || tier === 'paid_ultra') ? tier : 'free',
         defaultModel: defaultModel || (tier?.startsWith('paid') ? 'gemini-2.5-pro' : 'gemini-2.5-flash'),
         apiKey: apiKey || '',
@@ -292,7 +355,7 @@ async function handleAccount(subArgs: string[]) {
         estimatedCostUSD: 0
       };
       manager.addAccount(newAcc);
-      console.log(`\x1b[32m[✓] Account '${id}' successfully added and saved to ~/.meshmanager/accounts.json!\x1b[0m`);
+      console.log(`\x1b[32m[✓] Account '${id}' (${newAcc.provider.toUpperCase()}) successfully added and saved to ~/.aimeshmanager/accounts.json!\x1b[0m`);
       break;
 
     case 'delete':

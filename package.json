@@ -10,7 +10,7 @@
     "mesh": "./dist/cli.js"
   },
   "scripts": {
-    "prestart": "node -e \"if(!require('fs').existsSync('node_modules/express')){console.log('⚡ AiMeshManager: Auto-installing dependencies...');require('child_process').execSync('npm install --prefer-offline --no-audit',{stdio:'inherit'})}\"",
+    "prestart": "node -e \"if(!require('fs').existsSync('node_modules/express')){console.log('⚡ AiMeshManager: Auto-installing dependencies...');require('child_process').execSync('npm install --prefer-offline --no-audit',{stdio:'inherit'})};if(!require('fs').existsSync('dist/server.js')){console.log('⚡ AiMeshManager: Compiling TypeScript...');require('child_process').execSync('npm run build',{stdio:'inherit'})}\"",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "cli": "ts-node src/cli.ts",

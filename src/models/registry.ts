@@ -252,6 +252,84 @@ export class ModelKnowledgeRegistry {
     });
 
     // ==========================================
+    // 🧠 Meta Llama & OpenRouter Frontier Models
+    // ==========================================
+    this.register({
+      id: 'meta-llama/llama-3.3-70b-instruct',
+      name: 'Llama 3.3 70B Instruct (Meta / OpenRouter)',
+      provider: 'meta',
+      tier: TaskTier.TIER_3_STRATEGIC,
+      intelligenceLevel: 5,
+      recommendedHeatMin: 70,
+      recommendedHeatMax: 95,
+      contextWindow: 128000,
+      costProfile: 'free_cloud',
+      isLocal: false,
+      bestFor: 'Deep coding reasoning, multi-language refactoring, agent workflows',
+      description: 'Meta flagship open-weights model matching GPT-4o performance on coding benchmarks.'
+    });
+
+    this.register({
+      id: 'meta-llama/llama-3.1-405b-instruct',
+      name: 'Llama 3.1 405B Instruct (Meta Frontier)',
+      provider: 'meta',
+      tier: TaskTier.TIER_3_STRATEGIC,
+      intelligenceLevel: 5,
+      recommendedHeatMin: 85,
+      recommendedHeatMax: 100,
+      contextWindow: 128000,
+      costProfile: 'paid_ultra',
+      isLocal: false,
+      bestFor: 'Grand architectural design, formal code verification, complex agent planning',
+      description: 'Meta largest 405B parameter frontier model with maximum reasoning depth.'
+    });
+
+    this.register({
+      id: 'deepseek/deepseek-r1:free',
+      name: 'DeepSeek-R1 (OpenRouter Free Tier)',
+      provider: 'openrouter',
+      tier: TaskTier.TIER_3_STRATEGIC,
+      intelligenceLevel: 5,
+      recommendedHeatMin: 70,
+      recommendedHeatMax: 100,
+      contextWindow: 64000,
+      costProfile: 'free_cloud',
+      isLocal: false,
+      bestFor: '100% free cloud reasoning turn via OpenRouter free pool',
+      description: 'Zero-cost frontier reasoning model available via OpenRouter.'
+    });
+
+    this.register({
+      id: 'meta-llama/llama-3.3-70b-instruct:free',
+      name: 'Llama 3.3 70B (OpenRouter Free Tier)',
+      provider: 'openrouter',
+      tier: TaskTier.TIER_3_STRATEGIC,
+      intelligenceLevel: 4,
+      recommendedHeatMin: 60,
+      recommendedHeatMax: 90,
+      contextWindow: 128000,
+      costProfile: 'free_cloud',
+      isLocal: false,
+      bestFor: 'High-speed free cloud code generation via OpenRouter',
+      description: 'Zero-cost 70B parameter model hosted on OpenRouter free tier.'
+    });
+
+    this.register({
+      id: 'openrouter/auto',
+      name: 'OpenRouter Auto (Best Available)',
+      provider: 'openrouter',
+      tier: TaskTier.TIER_2_TACTICAL,
+      intelligenceLevel: 4,
+      recommendedHeatMin: 30,
+      recommendedHeatMax: 80,
+      contextWindow: 128000,
+      costProfile: 'paid_pro',
+      isLocal: false,
+      bestFor: 'Automated lowest-cost / highest-throughput routing across providers',
+      description: 'OpenRouter dynamic auto-router that dispatches to optimal provider.'
+    });
+
+    // ==========================================
     // 💻 Locally Running Models (Ollama, LM Studio, vLLM)
     // ==========================================
     this.register({

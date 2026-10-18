@@ -14,6 +14,7 @@ credentials.json
 # Local App Directories
 .oaaam/
 .meshmanager/
+.aimeshmanager/
 .gemini/
 
 # Node & Build Artifacts

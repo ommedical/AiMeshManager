@@ -273,6 +273,15 @@ async function runTests() {
     }
   });
 
+  // Test 18: System Status & Graceful Shutdown Readiness
+  await test('System Status: GET /api/system/status reports online state & zero in-flight turns', async () => {
+    const res = await request('GET', '/api/system/status');
+    if (res.status !== 200 || !res.data) throw new Error(`HTTP ${res.status}`);
+    if (res.data.status !== 'online') throw new Error(`Expected online, got ${res.data.status}`);
+    if (typeof res.data.pid !== 'number') throw new Error(`Expected pid number, got ${typeof res.data.pid}`);
+    if (typeof res.data.activeInFlightRequests !== 'number') throw new Error('Missing activeInFlightRequests');
+  });
+
   console.log('\n\x1b[36m====================================================\x1b[0m');
   console.log(`\x1b[1mSummary: \x1b[32m${passed} Passed\x1b[0m, \x1b[${failed > 0 ? '31m' : '32m'}${failed} Failed\x1b[0m of ${passed + failed} Tests`);
   console.log('\x1b[36m====================================================\x1b[0m');

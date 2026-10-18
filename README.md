@@ -42,6 +42,8 @@
 15. [Complete CLI Command Reference](#-complete-cli-command-reference)
 16. [Hermes-Style Self-Healing & Anti-Hallucination Guard](#-hermes-style-self-healing--anti-hallucination-guard)
 17. [Installation & Quickstart](#-installation--quickstart)
+18. [Graceful Shutdown Architecture & Multi-Scenario Service Termination Guide](#-graceful-shutdown-architecture--multi-scenario-service-termination-guide)
+19. [Universal Multi-Provider Ecosystem: OpenRouter, OmniRoute, FreeLLMAPI & Meta Llama AI](#-universal-multi-provider-ecosystem-openrouter-omniroute-freellmapi--meta-llama-ai)
 
 ---
 
@@ -600,8 +602,8 @@ No container runtime required. Runs directly on Node.js across Windows, macOS, L
 
 1. **Clone or Download the Repository:**
    ```bash
-   git clone https://github.com/your-username/antigravity_multi_auth.git
-   cd antigravity_multi_auth
+   git clone https://github.com/your-username/AiMeshManager.git
+   cd AiMeshManager
    ```
 2. **Launch AiMeshManager (1-Command):**
    ```bash
@@ -665,3 +667,341 @@ No container runtime required. Runs directly on Node.js across Windows, macOS, L
 * **Zero Cloud Telemetry:** Prompts and API keys reside strictly on your local machine and communicate only with Google's official endpoints.
 * **Localhost Binding:** Binds strictly to `127.0.0.1`, blocking unauthorized external network access.
 * **Encrypted Local Storage:** Configuration and accounts are stored locally under `~/.aimeshmanager/` (with automatic fallback to `~/.meshmanager/`).
+
+---
+
+## 🛑 Graceful Shutdown Architecture & Multi-Scenario Service Termination Guide
+
+AiMeshManager is an enterprise-grade AI Gateway orchestrating live Server-Sent Events (SSE) token streams, autonomous multi-agent swarm tasks, and rolling account quotas. Abruptly killing the process (`kill -9`, forceful taskkill) can drop in-flight IDE turns, corrupt token accounting ledgers, and leave orphaned TCP sockets on port `20128`.
+
+AiMeshManager features an **Autonomous 4-Phase Graceful Shutdown Engine** that safely intercepts all operating system signals, runtime exceptions, and orchestration events.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Client / OS / Orchestrator
+    participant Gate as AiMeshManager Gateway
+    participant Conn as In-Flight HTTP/SSE Turns
+    participant Disk as Disk & Telemetry Ledger
+    participant Net as TCP Socket (Port 20128)
+
+    User->>Gate: Trigger Stop (SIGINT, SIGTERM, SIGBREAK, SIGHUP, HTTP /api/system/shutdown)
+    Gate->>Gate: Set isShuttingDown = true
+    Note over Gate: Phase 1: Ingestion Freeze & Turn Draining
+    Gate-->>User: Any new request receives 503 + Retry-After: 5
+    Gate->>Net: server.close() (Stop accepting new connections)
+    Gate->>Net: server.closeIdleConnections() (Close keep-alive sockets)
+    Conn-->>Gate: Active streaming turns finish naturally (max 10s watchdog)
+    Note over Gate: Phase 2: Atomic State Persistence
+    Gate->>Disk: accountManager.saveAccounts() (Flush quotas & tokens)
+    Gate->>Disk: securityManager.saveConfig()
+    Note over Gate: Phase 3: PID Lockfile Cleanup
+    Gate->>Disk: Remove ~/.aimeshmanager/aimeshmanager.pid
+    Note over Gate: Phase 4: Sockets Closed & Process Exit
+    Gate->>Gate: process.exit(0)
+```
+
+---
+
+### ⏱️ The 4-Phase Graceful Shutdown Pipeline
+
+| Phase | Internal Action | Guarantee |
+| :--- | :--- | :--- |
+| **Phase 1: Ingestion Freeze & Turn Draining** | Rejects incoming requests with `HTTP 503 Service Unavailable` (`Connection: close`, `Retry-After: 5`). Stops accepting new TCP connections (`server.close()`). Drains idle Keep-Alive sockets (`server.closeIdleConnections()`). | Zero dropped turns; IDE clients receive clean retry hints rather than silent socket drops. |
+| **Phase 2: Atomic State & Ledger Persistence** | Flushes in-memory token counters, rolling RPM/TPM refill windows, and per-account savings to `~/.aimeshmanager/accounts.json`. | Zero accounting drift; paid quota metrics are 100% preserved across service restarts. |
+| **Phase 3: PID Lockfile Cleanup** | Unlinks `~/.aimeshmanager/aimeshmanager.pid` and legacy `.meshmanager.pid` lockfiles. | Eliminates "Address already in use" (`EADDRINUSE`) or ghost daemon errors on reboot. |
+| **Phase 4: Sockets Closed & Exit** | Closes background sync intervals, awaits in-flight active turns to reach `0`, and exits with code `0`. A 10-second watchdog timer guarantees the service never hangs indefinitely. | Safe, non-blocking termination with guaranteed process exit. |
+
+---
+
+### 🕹️ Multi-Scenario Service Termination Reference
+
+AiMeshManager handles every execution mode, deployment platform, and runtime event:
+
+#### 1. Interactive Terminal Foreground (`npm start`, `npm run dev`, `ts-node src/server.ts`)
+* **Event: `Ctrl + C` (`SIGINT`)**
+  * When running in an active terminal session, pressing `Ctrl + C` dispatches a POSIX `SIGINT`.
+  * AiMeshManager catches `process.on('SIGINT')`, announces shutdown progress, drains connections, flushes accounts, and terminates cleanly with exit code `0`.
+* **Event: Windows Console Close / Break (`SIGBREAK` / `Ctrl + Break`)**
+  * On Windows Command Prompt or PowerShell, pressing `Ctrl + Break` or clicking the console window's `[X]` button fires a Windows console break event.
+  * AiMeshManager catches `process.on('SIGBREAK')` to cleanly release port `20128` before Windows closes the terminal host.
+* **Event: Terminal Window Closed / Session Disconnect (`SIGHUP`)**
+  * When closing a tab or disconnecting an SSH/WSL session, the parent shell sends `SIGHUP`.
+  * Handled via `process.on('SIGHUP')` to avoid corrupted account state.
+
+#### 2. Background Daemon Run (`aimeshmanager start --daemon`)
+* **Recommended Stop Command:**
+  ```bash
+  aimeshmanager stop
+  # Or with short aliases:
+  aimm stop
+  mesh stop
+  ```
+* **How It Works Under the Hood:**
+  1. The CLI queries the running process via `POST http://127.0.0.1:20128/api/system/shutdown`.
+  2. The server acknowledges, freezes new traffic, drains active streams, and saves disk state.
+  3. The CLI polls for process termination for up to 4.5 seconds.
+  4. If the process is unresponsive (e.g. frozen in synchronous loop), the CLI automatically falls back to OS-level process termination (`taskkill /PID <pid> /T /F` on Windows, or `SIGTERM` $\to$ `SIGKILL` on Unix).
+* **Safe Restart Command:**
+  ```bash
+  aimeshmanager restart
+  ```
+  * Safely awaits the full shutdown of the old process and release of port `20128` before spawning the new instance, eliminating race conditions.
+
+#### 3. Web Control Center (1-Click UI Stop & REST API)
+* **1-Click Web UI Stop:**
+  * Open the Web Control Center at `http://localhost:20128`.
+  * In the top-right header, click **`🛑 Stop Service`**.
+  * Confirms the action and signals the gateway to drain in-flight turns and shut down.
+* **REST API Endpoints:**
+  * **Check Gateway Health & In-Flight Turns:**
+    ```bash
+    curl http://127.0.0.1:20128/api/system/status
+    ```
+    *Response:*
+    ```json
+    {
+      "status": "online",
+      "pid": 14520,
+      "port": 20128,
+      "host": "127.0.0.1",
+      "mode": "localhost",
+      "activeInFlightRequests": 0,
+      "uptimeSeconds": 3600
+    }
+    ```
+  * **Trigger Remote Graceful Shutdown:**
+    ```bash
+    curl -X POST http://127.0.0.1:20128/api/system/shutdown
+    ```
+  * **Trigger Remote Graceful Restart:**
+    ```bash
+    curl -X POST http://127.0.0.1:20128/api/system/restart
+    ```
+
+#### 4. Containerized Deployments (Docker & Podman)
+Containers rely on `SIGTERM` followed by a grace timeout before issuing `SIGKILL`.
+* **Stopping a Container:**
+  ```bash
+  # Docker:
+  docker stop -t 30 aimeshmanager
+  
+  # Podman:
+  podman stop -t 30 aimeshmanager
+  ```
+  *(The `-t 30` flag grants a 30-second grace window to ensure long reasoning turns complete naturally).*
+* **Stopping via Compose:**
+  ```bash
+  docker compose down
+  # Or:
+  podman compose down
+  ```
+* **Production `docker-compose.yml` Grace Configuration:**
+  ```yaml
+  services:
+    aimeshmanager:
+      image: aimeshmanager
+      stop_grace_period: 30s
+      stop_signal: SIGTERM
+  ```
+
+#### 5. Production Process Managers (PM2, systemd, Kubernetes)
+* **PM2 (Node Process Manager):**
+  ```bash
+  pm2 stop aimeshmanager
+  pm2 reload aimeshmanager
+  ```
+  * In addition to POSIX signals, AiMeshManager listens to PM2's inter-process messaging:
+    ```js
+    process.on('message', (msg) => {
+      if (msg === 'shutdown' || msg === 'SIGTERM') gracefulShutdown('IPC');
+    });
+    ```
+* **systemd (Linux / WSL / Ubuntu Service):**
+  ```ini
+  [Unit]
+  Description=AiMeshManager AI Gateway
+  After=network.target
+
+  [Service]
+  Type=simple
+  User=node
+  ExecStart=/usr/bin/node /opt/aimeshmanager/dist/server.js
+  Restart=on-failure
+  KillSignal=SIGTERM
+  TimeoutStopSec=30
+
+  [Install]
+  WantedBy=multi-user.target
+  ```
+  * Stop with:
+    ```bash
+    sudo systemctl stop aimeshmanager
+    ```
+* **Kubernetes Pod Lifecycle:**
+  ```yaml
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: aimeshmanager
+  spec:
+    template:
+      spec:
+        terminationGracePeriodSeconds: 30
+        containers:
+          - name: aimeshmanager
+            image: aimeshmanager:latest
+            lifecycle:
+              preStop:
+                httpGet:
+                  path: /api/system/shutdown
+                  port: 20128
+  ```
+
+#### 6. Windows-Specific Environments (PowerShell & Command Prompt)
+* **PowerShell Graceful Stop:**
+  ```powershell
+  # Graceful HTTP trigger (Recommended):
+  Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:20128/api/system/shutdown"
+
+  # Or by PID lookup:
+  $pidVal = Get-Content "$HOME\.aimeshmanager\aimeshmanager.pid"
+  Stop-Process -Id $pidVal
+  ```
+* **Command Prompt (CMD):**
+  ```cmd
+  :: Graceful HTTP trigger:
+  curl.exe -X POST http://127.0.0.1:20128/api/system/shutdown
+
+  :: Force fallback if unresponsive:
+  taskkill /PID <PID> /T /F
+  ```
+
+#### 7. Resilience Against Runtime Errors & Crash Events
+* **`uncaughtException`:**
+  * If an unhandled exception occurs in runtime code, AiMeshManager logs the stack trace, performs an emergency disk flush of `accounts.json` and security config, unlinks PID files, and exits with code `1`.
+* **`unhandledRejection`:**
+  * Logged with diagnostic context without abruptly crashing the active server, preventing upstream network drops from severing local IDE sessions.
+* **`EADDRINUSE` (Port 20128 Conflict):**
+  * If another instance is already bound to port `20128`, AiMeshManager detects this immediately, issues a clear diagnostic warning, and exits cleanly instead of crashing unhandled.
+* **10-Second Watchdog Timer:**
+  * If an upstream provider hangs or a TCP socket remains in a half-open state during shutdown, the internal watchdog fires after 10 seconds, invokes `server.closeAllConnections()`, and terminates cleanly.
+
+---
+
+## 🌐 Universal Multi-Provider Ecosystem: OpenRouter, OmniRoute, FreeLLMAPI & Meta Llama AI
+
+**AiMeshManager is 100% compatible with OpenRouter, OmniRoute, Meta Developer Llama API, and all directory providers listed on FreeLLMAPI.**
+
+Because AiMeshManager features an extensible **Generic OpenAI-Compatible & Multi-Provider Engine**, any service providing a standard REST endpoint (`/v1/chat/completions`) or custom routing proxy can be pooled directly into your local mesh:
+
+| Service / Directory | Official Website | API Format | Free Tier / Models Available | Recommended Models |
+| :--- | :--- | :---: | :---: | :--- |
+| **OpenRouter** | [openrouter.ai](https://openrouter.ai/) | OpenAI-Compatible (`https://openrouter.ai/api/v1`) | ✅ **Yes** (Generous pool of `:free` models) | `deepseek/deepseek-r1:free`<br>`meta-llama/llama-3.3-70b-instruct:free`<br>`google/gemini-2.0-flash-exp:free`<br>`openrouter/auto` |
+| **OmniRoute** | [omniroute.online](https://www.omniroute.online/) | Native Gateway (`https://www.omniroute.online/v1`) | ✅ **Yes** (Automated multi-tier fallback router) | `auto-smart-router`<br>`gemini-2.5-pro`<br>`gpt-4o` |
+| **FreeLLMAPI Directory** | [enterprisedna.co/.../freellmapi](https://enterprisedna.co/directories/open-source/freellmapi/) | Standard OpenAI REST (`/v1/chat/completions`) | ✅ **Yes** (Curated free/freemium API providers) | Groq (`llama-3.3-70b-versatile`)<br>Cerebras (`llama3.3-70b`)<br>SambaNova (`Meta-Llama-3.3-70B`)<br>Hugging Face (`Llama-3.3-70B`) |
+| **Meta Developer AI** | [dev.meta.ai](https://dev.meta.ai/lp/start-building) | Meta Llama REST (`https://api.meta.ai/v1`) | ✅ **Yes** (Developer tier for Llama models) | `meta-llama/llama-3.3-70b-instruct`<br>`meta-llama/llama-3.1-405b-instruct`<br>`meta-llama/llama-3.2-3b-instruct` |
+
+---
+
+### 🛠️ Step-by-Step Setup Guides for Each Provider
+
+#### 1. OpenRouter (`https://openrouter.ai/`)
+OpenRouter aggregates hundreds of models under a single API key, including completely free community models (`:free`).
+
+* **Step 1: Get an OpenRouter API Key**
+  * Sign up at [openrouter.ai/keys](https://openrouter.ai/keys) and generate an API key (`sk-or-v1-...`).
+* **Step 2: Add to AiMeshManager via Web UI:**
+  * Open `http://localhost:20128` $\to$ click **`+ Add AI Account`**.
+  * **Service Provider**: Select `OpenRouter (openrouter.ai — 100+ Models & Free Pool)`.
+  * **Endpoint URL**: Defaults automatically to `https://openrouter.ai/api/v1`.
+  * **Default Model**: Select or type `meta-llama/llama-3.3-70b-instruct:free` or `deepseek/deepseek-r1:free`.
+  * **API Key**: Paste your `sk-or-v1-...` key. Click **Save to Mesh**.
+* **Step 3: Or Add via CLI (1-Liner):**
+  ```bash
+  aimeshmanager account add openrouter-free "OpenRouter Free Pool" free "deepseek/deepseek-r1:free" "sk-or-v1-YOUR_KEY" openrouter "https://openrouter.ai/api/v1"
+  ```
+* **Step 4: Pin in Any IDE:**
+  * Target in Cursor, Antigravity, or VS Code using the virtual pin:
+    ```
+    openrouter-free/deepseek/deepseek-r1:free
+    ```
+
+---
+
+#### 2. OmniRoute Gateway (`https://www.omniroute.online/`)
+OmniRoute is designed as an enterprise fallback aggregator that automatically balances loads across diverse AI backends.
+
+* **Step 1: Obtain OmniRoute Key:**
+  * Get your access key from [omniroute.online](https://www.omniroute.online/).
+* **Step 2: Add via Web UI:**
+  * In the **+ Add AI Account** modal, choose **OmniRoute Gateway (omniroute.online)**.
+  * **Endpoint URL**: `https://www.omniroute.online/v1` (or your internal enterprise OmniRoute gateway).
+  * **Default Model**: `auto-smart-router`.
+* **Step 3: Or Add via CLI:**
+  ```bash
+  aimeshmanager account add omniroute-mesh "OmniRoute Gateway" enterprise "auto-smart-router" "YOUR_OMNIROUTE_KEY" omniroute "https://www.omniroute.online/v1"
+  ```
+
+---
+
+#### 3. FreeLLMAPI Directory Providers (Groq, Cerebras, SambaNova, Hugging Face)
+The [Enterprise DNA FreeLLMAPI Directory](https://enterprisedna.co/directories/open-source/freellmapi/) catalogs open-source and free-tier inference APIs. You can connect any of them into AiMeshManager using the generic OpenAI adapter:
+
+* **Example A: Groq Cloud (Ultra-Fast 500+ Tokens/Sec Llama 3.3)**
+  * Endpoint: `https://api.groq.com/openai/v1`
+  * Model: `llama-3.3-70b-versatile`
+  * CLI command:
+    ```bash
+    aimeshmanager account add groq-cloud "Groq Llama 3.3" free "llama-3.3-70b-versatile" "gsk_YOUR_GROQ_KEY" openai "https://api.groq.com/openai/v1"
+    ```
+* **Example B: Cerebras Inference (World Record Speed)**
+  * Endpoint: `https://api.cerebras.ai/v1`
+  * Model: `llama3.3-70b`
+  * CLI command:
+    ```bash
+    aimeshmanager account add cerebras-fast "Cerebras Fast" free "llama3.3-70b" "csk_YOUR_KEY" openai "https://api.cerebras.ai/v1"
+    ```
+* **Example C: SambaNova Systems (Full Precision Open Weights)**
+  * Endpoint: `https://api.sambanova.ai/v1`
+  * Model: `Meta-Llama-3.3-70B-Instruct`
+  * CLI command:
+    ```bash
+    aimeshmanager account add sambanova-1 "SambaNova Llama" free "Meta-Llama-3.3-70B-Instruct" "YOUR_KEY" openai "https://api.sambanova.ai/v1"
+    ```
+* **Example D: Hugging Face Serverless Inference**
+  * Endpoint: `https://api-inference.huggingface.co/v1`
+  * Model: `meta-llama/Llama-3.3-70B-Instruct`
+  * Key: Your Hugging Face User Access Token (`hf_...`)
+
+---
+
+#### 4. Meta Developer Llama AI (`https://dev.meta.ai/lp/start-building`)
+Meta offers official developer access to the state-of-the-art open-weights Llama 3.3 (70B), Llama 3.1 (405B Frontier), and lightweight Llama 3.2 models:
+
+* **Step 1: Sign up at Meta AI Developer Platform:**
+  * Visit [dev.meta.ai/lp/start-building](https://dev.meta.ai/lp/start-building) and register for Meta's developer API or deployed Llama Stack instance.
+* **Step 2: Add via Web UI:**
+  * Select Provider **`Meta Llama API (dev.meta.ai — Llama 3.3/3.1)`**.
+  * **Endpoint URL**: `https://api.meta.ai/v1` (or your assigned Llama Stack endpoint URL).
+  * **Default Model**: `meta-llama/llama-3.3-70b-instruct` or `meta-llama/llama-3.1-405b-instruct`.
+  * **API Key**: Enter your Meta Bearer Token.
+* **Step 3: Or Add via CLI:**
+  ```bash
+  aimeshmanager account add meta-llama-pro "Meta Llama 3.3 70B" paid_pro "meta-llama/llama-3.3-70b-instruct" "YOUR_META_KEY" meta "https://api.meta.ai/v1"
+  ```
+* **Step 4: Pin in Any IDE:**
+  ```
+  meta-llama-pro/meta-llama/llama-3.3-70b-instruct
+  ```
+
+---
+
+### 💡 The Multi-Provider Mesh Advantage: Zero Quota Lockout
+
+By combining your Google Gemini subscriptions with OpenRouter, OmniRoute, Meta AI, and FreeLLMAPI providers:
+1. **Never Pay Twice**: Use 100% free models (`deepseek/deepseek-r1:free`, Groq, Ollama) for routine autocomplete, syntax linting, and docstrings.
+2. **Infinite Fallback Chains**: If Google hits a 429 quota limit, AiMeshManager automatically rolls the turn in 50ms over to Groq, Meta Llama 3.3, or DeepSeek R1 without your editor skipping a beat.
+3. **Unified Cost & Token Ledger**: All tokens and cost savings across every provider are recorded in your **Single Unified Master Telemetry Ledger** at `http://localhost:20128`.
+
+

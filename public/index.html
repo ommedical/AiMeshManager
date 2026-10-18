@@ -425,7 +425,10 @@
         <button class="btn-primary" onclick="openAddAccountModal()">
           <span>+</span> Add AI Account
         </button>
-        <div class="status-pill">
+        <button class="btn-action-small" onclick="gracefulShutdownService()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; font-size: 0.82rem; padding: 0.55rem 0.9rem; font-weight: 600; border-radius: 9px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" title="Drain active connections and stop gateway">
+          <span>🛑</span> Stop Service
+        </button>
+        <div class="status-pill" id="global-status-pill">
           <div class="status-dot"></div>
           ONLINE &bull; localhost:20128
         </div>
@@ -795,13 +798,14 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
         <div class="form-group">
           <label class="form-label">Service Provider</label>
-          <select id="modal-acc-provider" class="form-input">
-            <option value="gemini">Google Gemini</option>
-            <option value="omniroute">OmniRoute Gateway</option>
-            <option value="vertex">Google Vertex AI</option>
-            <option value="openai">OpenAI / Compatible</option>
-            <option value="anthropic">Anthropic (Claude)</option>
-            <option value="deepseek">DeepSeek</option>
+          <select id="modal-acc-provider" class="form-input" onchange="onModalProviderChange(this.value)">
+            <option value="gemini">Google Gemini (Direct API / Pro / Ultra)</option>
+            <option value="openrouter">OpenRouter (openrouter.ai — 100+ Models & Free Pool)</option>
+            <option value="omniroute">OmniRoute Gateway (omniroute.online)</option>
+            <option value="meta">Meta Llama API (dev.meta.ai — Llama 3.3/3.1)</option>
+            <option value="openai">OpenAI / FreeLLMAPI / Compatible Endpoint</option>
+            <option value="anthropic">Anthropic (Claude Sonnet 3.7 / 3.5)</option>
+            <option value="deepseek">DeepSeek (R1 / V3)</option>
             <option value="ollama">Ollama (Local Models: 127.0.0.1:11434)</option>
             <option value="lmstudio">LM Studio (Local Models: 127.0.0.1:1234)</option>
             <option value="local">Custom Local (vLLM / llama.cpp / Jan)</option>
@@ -810,11 +814,15 @@
         <div class="form-group">
           <label class="form-label">Authentication Type</label>
           <select id="modal-acc-auth" class="form-input">
-            <option value="api_key">API Key (Standard)</option>
+            <option value="api_key">API Key (Standard Bearer)</option>
             <option value="oauth_bearer">OAuth 2.0 Bearer (Flash 3.8 / Preview)</option>
             <option value="session_cookie">Session Cookie</option>
           </select>
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Custom Endpoint URL (Optional / Multi-Provider Base URL)</label>
+        <input type="text" id="modal-acc-endpoint" class="form-input" placeholder="e.g. https://openrouter.ai/api/v1, https://api.groq.com/openai/v1, https://api.meta.ai/v1" />
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
         <div class="form-group">
@@ -1147,6 +1155,8 @@
         openai: ['gpt-4o', 'gpt-4o-mini', 'o1', 'o3-mini', 'o1-preview'],
         anthropic: ['claude-3-7-sonnet', 'claude-3-5-sonnet', 'claude-3-5-haiku'],
         deepseek: ['deepseek-reasoner', 'deepseek-chat'],
+        openrouter: ['meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-r1:free', 'openrouter/auto', 'meta-llama/llama-3.3-70b-instruct', 'anthropic/claude-3.5-sonnet'],
+        meta: ['meta-llama/llama-3.3-70b-instruct', 'meta-llama/llama-3.1-405b-instruct', 'meta-llama/llama-3.2-3b-instruct'],
         ollama: ['qwen2.5-coder:7b', 'llama3.2:3b', 'deepseek-r1:70b', 'qwen2.5-coder:32b'],
         lmstudio: ['qwen2.5-coder:7b', 'llama-3.2-3b-instruct'],
         omniroute: ['auto-smart-router', 'gemini-2.5-pro', 'gpt-4o']
@@ -1269,6 +1279,28 @@
       statusBox.innerHTML = `<span style="color: ${data.valid ? 'var(--success)' : 'var(--danger)'};">${data.message}</span>`;
     }
 
+    function onModalProviderChange(prov) {
+      const epInput = document.getElementById('modal-acc-endpoint');
+      if (!epInput) return;
+      if (prov === 'openrouter') {
+        epInput.value = 'https://openrouter.ai/api/v1';
+      } else if (prov === 'omniroute') {
+        epInput.value = 'https://www.omniroute.online/v1';
+      } else if (prov === 'meta') {
+        epInput.value = 'https://api.meta.ai/v1';
+      } else if (prov === 'deepseek') {
+        epInput.value = 'https://api.deepseek.com/v1';
+      } else if (prov === 'openai') {
+        epInput.value = 'https://api.openai.com/v1';
+      } else if (prov === 'ollama') {
+        epInput.value = 'http://127.0.0.1:11434/v1';
+      } else if (prov === 'lmstudio') {
+        epInput.value = 'http://127.0.0.1:1234/v1';
+      } else {
+        epInput.value = '';
+      }
+    }
+
     async function submitAddAccount() {
       const id = document.getElementById('modal-acc-id').value;
       const name = document.getElementById('modal-acc-name').value;
@@ -1277,6 +1309,7 @@
       const tier = document.getElementById('modal-acc-tier').value;
       const defaultModel = document.getElementById('modal-acc-model').value;
       const apiKey = document.getElementById('modal-acc-key').value;
+      const endpointUrl = document.getElementById('modal-acc-endpoint') ? document.getElementById('modal-acc-endpoint').value.trim() : '';
 
       if (!id || !name) {
         alert('Please fill in Account Identifier and Name');
@@ -1286,7 +1319,7 @@
       const res = await fetch('/api/accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, provider, authType, tier, defaultModel, apiKey })
+        body: JSON.stringify({ id, name, provider, authType, tier, defaultModel, apiKey, endpointUrl: endpointUrl || undefined })
       });
 
       if (res.ok) {
@@ -1522,6 +1555,24 @@
         alert('Model sync failed: ' + e.message);
       } finally {
         if (btn) btn.innerText = '🔄 Sync Latest Cloud Models';
+      }
+    }
+
+    async function gracefulShutdownService() {
+      if (!confirm('Are you sure you want to stop the AiMeshManager gateway service? All in-flight requests will be drained gracefully.')) return;
+      try {
+        const res = await fetch('/api/system/shutdown', { method: 'POST' });
+        const data = await res.json();
+        const pill = document.getElementById('global-status-pill');
+        if (pill) {
+          pill.style.background = 'rgba(239, 68, 68, 0.15)';
+          pill.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+          pill.style.color = 'var(--danger)';
+          pill.innerHTML = '<div class="status-dot" style="background: var(--danger); box-shadow: 0 0 10px var(--danger);"></div> SHUTTING DOWN...';
+        }
+        alert(data.message || 'Service is shutting down gracefully.');
+      } catch (e) {
+        alert('Failed to trigger shutdown: ' + e.message);
       }
     }
 

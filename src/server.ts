@@ -136,6 +136,36 @@ export const securityManager = new MeshSecurityManager();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+// 🛑 In-flight Turn Tracking & Graceful Shutdown Guard
+let activeInFlightRequests = 0;
+let isShuttingDown = false;
+
+app.use((req: Request, res: Response, next) => {
+  if (isShuttingDown) {
+    res.setHeader('Connection', 'close');
+    res.setHeader('Retry-After', '5');
+    return res.status(503).json({
+      error: {
+        message: 'AiMeshManager gateway service is gracefully shutting down. Please retry shortly.',
+        code: 'SERVICE_SHUTTING_DOWN'
+      }
+    });
+  }
+
+  activeInFlightRequests++;
+  let finished = false;
+  const onDone = () => {
+    if (!finished) {
+      finished = true;
+      activeInFlightRequests = Math.max(0, activeInFlightRequests - 1);
+    }
+  };
+
+  res.on('finish', onDone);
+  res.on('close', onDone);
+  next();
+});
+
 // 🛡️ Atomic Security & Firewall Middleware
 app.use((req: Request, res: Response, next) => {
   const rawIp = req.socket.remoteAddress || req.ip || '';
@@ -937,15 +967,132 @@ app.post('/api/heal/simulate', (req: Request, res: Response) => {
   res.json(result);
 });
 
+// ==========================================
+// 🛑 System Health & Graceful Shutdown Endpoints
+// ==========================================
+app.get('/api/system/status', (req: Request, res: Response) => {
+  res.json({
+    status: isShuttingDown ? 'shutting_down' : 'online',
+    pid: process.pid,
+    port: PORT,
+    host: securityManager.getConfig().mode === 'localhost' ? '127.0.0.1' : '0.0.0.0',
+    mode: securityManager.getConfig().mode,
+    activeInFlightRequests,
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/system/shutdown', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'Graceful shutdown initiated. Draining in-flight requests and persisting state...',
+    pid: process.pid,
+    activeInFlightRequests
+  });
+
+  setTimeout(() => {
+    gracefulShutdown('HTTP_ADMIN_API', 0);
+  }, 200).unref();
+});
+
+app.post('/api/system/restart', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'Graceful restart initiated. Restarting gateway service...',
+    pid: process.pid
+  });
+
+  setTimeout(() => {
+    gracefulShutdown('HTTP_ADMIN_RESTART', 0);
+  }, 200).unref();
+});
+
 const host = securityManager.getConfig().mode === 'localhost' ? '127.0.0.1' : '0.0.0.0';
 
-app.listen(PORT, host, () => {
+let syncTimer: NodeJS.Timeout | null = null;
+let shutdownInProgress = false;
+
+export function gracefulShutdown(trigger: string, exitCode: number = 0) {
+  if (shutdownInProgress) return;
+  shutdownInProgress = true;
+  isShuttingDown = true;
+
+  console.log(`\n\x1b[33m[AiMeshManager] Graceful shutdown triggered via: ${trigger} (PID: ${process.pid})\x1b[0m`);
+  console.log(`[AiMeshManager] Phase 1/4: Halting incoming connections; draining ${activeInFlightRequests} active in-flight turn(s)...`);
+
+  if (syncTimer) {
+    clearInterval(syncTimer);
+    syncTimer = null;
+  }
+
+  // Stop accepting new TCP connections
+  server.close((err) => {
+    if (err) {
+      console.warn(`[AiMeshManager] Server close note: ${err.message}`);
+    }
+  });
+
+  // Close idle HTTP keep-alive connections immediately
+  if (typeof (server as any).closeIdleConnections === 'function') {
+    (server as any).closeIdleConnections();
+  }
+
+  // Phase 2: Persist state & ledger to disk
+  try {
+    console.log(`[AiMeshManager] Phase 2/4: Persisting account quotas, token usage stats, and security configuration...`);
+    accountManager.saveAccounts();
+    securityManager.saveConfig();
+  } catch (err: any) {
+    console.error(`[AiMeshManager] Error saving state during shutdown:`, err.message);
+  }
+
+  // Phase 3: Clean up lockfiles
+  try {
+    console.log(`[AiMeshManager] Phase 3/4: Removing PID lockfiles...`);
+    const pidFiles = [
+      path.join(os.homedir(), '.aimeshmanager', 'aimeshmanager.pid'),
+      path.join(os.homedir(), '.meshmanager', 'meshmanager.pid')
+    ];
+    for (const pf of pidFiles) {
+      if (fs.existsSync(pf)) {
+        try { fs.unlinkSync(pf); } catch (_) {}
+      }
+    }
+  } catch (_) {}
+
+  // Phase 4: Watchdog timeout (10 seconds max)
+  const watchdog = setTimeout(() => {
+    console.warn(`\x1b[31m[AiMeshManager] Watchdog timeout (10s) reached with ${activeInFlightRequests} active turn(s) remaining. Force closing remaining sockets.\x1b[0m`);
+    if (typeof (server as any).closeAllConnections === 'function') {
+      (server as any).closeAllConnections();
+    }
+    process.exit(exitCode || 1);
+  }, 10000);
+  if (watchdog.unref) watchdog.unref();
+
+  // Poll active in-flight requests until drained
+  const drainCheck = setInterval(() => {
+    if (activeInFlightRequests <= 0) {
+      clearInterval(drainCheck);
+      clearTimeout(watchdog);
+      console.log(`\x1b[32m[✓] [AiMeshManager] Phase 4/4: All in-flight turns completed. Sockets closed. Clean shutdown finished.\x1b[0m`);
+      process.exit(exitCode);
+    } else {
+      console.log(`[AiMeshManager] Waiting for ${activeInFlightRequests} active in-flight turn(s) to finish...`);
+    }
+  }, 200);
+  if (drainCheck.unref) drainCheck.unref();
+}
+
+const server = app.listen(PORT, host, () => {
   console.log(`=======================================================`);
   console.log(` AiMeshManager Core Running on: http://${host}:${PORT}`);
   console.log(` Control Center Dashboard:      http://localhost:${PORT}`);
   console.log(` OpenAI / Gemini API Endpoint:  http://localhost:${PORT}/v1`);
   console.log(` Network Isolation Mode:        ${securityManager.getConfig().mode.toUpperCase()} (Host: ${host})`);
   console.log(` Gateway Token Auth:            ${securityManager.getConfig().requireGatewayToken ? 'ENABLED' : 'DISABLED'}`);
+  console.log(` Graceful Shutdown Handler:     ARMED (SIGINT, SIGTERM, SIGBREAK, SIGHUP, HTTP)`);
   console.log(`=======================================================`);
 
   // Auto-sync cloud upstream models and local engines dynamically in background
@@ -954,8 +1101,37 @@ app.listen(PORT, host, () => {
     ModelKnowledgeRegistry.syncUpstreamModels(accountManager.getAccounts()).catch(() => {});
   }, 1000).unref();
 
-  const syncTimer = setInterval(() => {
+  syncTimer = setInterval(() => {
     ModelKnowledgeRegistry.syncUpstreamModels(accountManager.getAccounts()).catch(() => {});
   }, 6 * 3600 * 1000);
   syncTimer.unref();
 });
+
+server.on('error', (err: any) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\x1b[31m[!] Port ${PORT} is already in use by another instance or process.\x1b[0m`);
+    console.error(`[!] Use 'aimeshmanager stop' or kill the existing process occupying port ${PORT}.`);
+    process.exit(1);
+  } else {
+    console.error(`[AiMeshManager Server Error]:`, err);
+  }
+});
+
+// OS Signals & Process Lifecycle Events
+process.on('SIGINT', () => gracefulShutdown('SIGINT (Ctrl+C)', 0));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM (Process Termination / Container Stop)', 0));
+process.on('SIGBREAK', () => gracefulShutdown('SIGBREAK (Windows Console Close / Break)', 0));
+process.on('SIGHUP', () => gracefulShutdown('SIGHUP (Terminal Hangup)', 0));
+process.on('message', (msg: any) => {
+  if (msg === 'shutdown' || msg === 'SIGTERM') {
+    gracefulShutdown('IPC Message (PM2 / Parent Process)', 0);
+  }
+});
+process.on('uncaughtException', (err: Error) => {
+  console.error(`\x1b[31m[AiMeshManager Fatal Error] Uncaught Exception:\x1b[0m`, err);
+  gracefulShutdown('uncaughtException', 1);
+});
+process.on('unhandledRejection', (reason: any) => {
+  console.warn(`\x1b[33m[AiMeshManager Warning] Unhandled Promise Rejection:\x1b[0m`, reason);
+});
+
