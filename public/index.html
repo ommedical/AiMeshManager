@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity OmniGate — Intelligent Multi-Account Mesh & Token Optimizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 24, 38, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(99, 102, 241, 0.4);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.25);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font: 'Outfit', sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 25px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-title span {
+      background: linear-gradient(90deg, #818cf8, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--success);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+
+    /* Metric Ribbon */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .metric-card:hover {
+      border-color: var(--card-hover-border);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px -10px var(--primary-glow);
+    }
+
+    .metric-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: var(--mono);
+      color: var(--text);
+    }
+
+    .metric-highlight {
+      color: var(--accent);
+    }
+
+    /* Main Grid Layout */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    @media (max-width: 960px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 1.75rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    /* Account Cards */
+    .accounts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .account-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .account-item:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .account-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .account-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .account-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+
+    .tag-free {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .tag-paid {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .quota-meter-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 0.6rem;
+    }
+
+    .quota-meter-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--primary));
+      transition: width 0.5s ease;
+    }
+
+    .account-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--mono);
+    }
+
+    .btn-sim-429 {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-sim-429:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* 1-Click IDE Integrations */
+    .ide-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .ide-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+    }
+
+    .ide-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .ide-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .ide-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--mono);
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    /* Interactive Simulator */
+    .simulator-box {
+      margin-top: 1.5rem;
+    }
+
+    .preset-chips {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--primary);
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 80px;
+      margin-bottom: 1rem;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .btn-dispatch {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.75rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+
+    .btn-dispatch:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .live-feed {
+      margin-top: 1rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .feed-line {
+      margin-bottom: 0.4rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .feed-tag {
+      color: var(--accent);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-area">
+        <div class="logo-badge">⚡</div>
+        <div>
+          <h1 class="brand-title">Antigravity <span>OmniGate</span></h1>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Dynamic Multi-Account Mesh & Token Optimizer</p>
+        </div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        ONLINE &bull; localhost:20128
+      </div>
+    </header>
+
+    <!-- Metrics Ribbon -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Requests Processed</div>
+        <div class="metric-value" id="val-requests">1,284</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tokens Saved (Compression)</div>
+        <div class="metric-value metric-highlight" id="val-tokens">384,120</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Auto-Failovers Handled</div>
+        <div class="metric-value" id="val-failovers">18</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Estimated Cost Saved</div>
+        <div class="metric-value" style="color: var(--success);" id="val-cost">$1.15</div>
+      </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="dashboard-layout">
+      <!-- Left Panel: Multi-Account Mesh Pool -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🛡️</span> Multi-Account Quota Mesh
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">P2C Balanced</span>
+        </div>
+        <div class="accounts-list" id="accounts-container">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+
+      <!-- Right Panel: 1-Click IDE Integrations & Live Simulator -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🔌</span> 1-Click IDE Auto-Connect
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Zero Config</span>
+        </div>
+        
+        <div class="ide-list" id="ide-container">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <div class="simulator-box">
+          <div class="panel-title" style="font-size: 1rem; margin-bottom: 0.5rem;">
+            <span>🧠</span> Semantic Task Allocator Simulator
+          </div>
+          <div class="preset-chips">
+            <div class="chip" onclick="setPreset('doc')">📄 Generate Docstring</div>
+            <div class="chip" onclick="setPreset('test')">🧪 Create Unit Test</div>
+            <div class="chip" onclick="setPreset('arch')">🏛️ Multi-File Architecture</div>
+          </div>
+          <textarea id="sim-prompt" class="input-field" placeholder="Type a sample instruction or prompt to test dynamic model allocation..."></textarea>
+          <button class="btn-dispatch" onclick="testDispatch()">Test Dynamic Allocation & Route</button>
+
+          <div class="live-feed" id="live-feed">
+            <div class="feed-line"><span class="feed-tag">[SYSTEM]</span> OmniGate router initialized and listening on :20128/v1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        document.getElementById('val-requests').innerText = data.totalRequests.toLocaleString();
+        document.getElementById('val-tokens').innerText = data.totalTokensSaved.toLocaleString();
+        document.getElementById('val-failovers').innerText = data.totalFailovers.toLocaleString();
+        document.getElementById('val-cost').innerText = '$' + data.estimatedCostSavedUSD;
+      } catch (e) {}
+    }
+
+    async function loadAccounts() {
+      try {
+        const res = await fetch('/api/accounts');
+        const accounts = await res.json();
+        const container = document.getElementById('accounts-container');
+        container.innerHTML = '';
+
+        accounts.forEach(acc => {
+          const usedPct = Math.min(100, Math.round((acc.rollingTokensUsed / acc.rollingWindowLimit) * 100));
+          const tagClass = acc.tier.startsWith('paid') ? 'tag-paid' : 'tag-free';
+          const tierLabel = acc.tier.startsWith('paid') ? 'PAID PRO' : 'FREE TIER';
+
+          const card = document.createElement('div');
+          card.className = 'account-item';
+          card.innerHTML = `
+            <div class="account-top">
+              <div class="account-title-wrap">
+                <span class="account-name">${acc.name}</span>
+                <span class="tag ${tagClass}">${tierLabel}</span>
+              </div>
+              <button class="btn-sim-429" onclick="simulate429('${acc.id}')">Simulate 429</button>
+            </div>
+            <div class="quota-meter-bar">
+              <div class="quota-meter-fill" style="width: ${usedPct}%;"></div>
+            </div>
+            <div class="account-meta">
+              <span>Rolling Quota: ${usedPct}% (${(acc.rollingTokensUsed/1000).toFixed(0)}k / ${(acc.rollingWindowLimit/1000).toFixed(0)}k)</span>
+              <span>RPM: ${acc.currentRpm} / ${acc.maxRpm}</span>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {}
+    }
+
+    async function loadIDEs() {
+      try {
+        const res = await fetch('/api/ides');
+        const ides = await res.json();
+        const container = document.getElementById('ide-container');
+        container.innerHTML = '';
+
+        ides.forEach(ide => {
+          const item = document.createElement('div');
+          item.className = 'ide-item';
+          item.innerHTML = `
+            <div class="ide-info">
+              <span class="ide-name">${ide.name}</span>
+              <span class="ide-status">${ide.detected ? (ide.isRoutedToProxy ? '🟢 Connected to OmniGate' : '⚪ Direct Connection') : 'Not Detected'}</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" ${ide.isRoutedToProxy ? 'checked' : ''} onchange="toggleIDE('${ide.id}', this.checked)">
+              <span class="slider"></span>
+            </label>
+          `;
+          container.appendChild(item);
+        });
+      } catch (e) {}
+    }
+
+    async function toggleIDE(ideId, enable) {
+      await fetch('/api/ides/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ideId, enable })
+      });
+      loadIDEs();
+    }
+
+    async function simulate429(accountId) {
+      await fetch('/api/accounts/simulate-429', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId })
+      });
+      loadAccounts();
+      loadStats();
+      addLog(`[ALERT] Account '${accountId}' hit rate limit. Auto-routing switched to secondary backup account.`);
+    }
+
+    function setPreset(type) {
+      const field = document.getElementById('sim-prompt');
+      if (type === 'doc') field.value = 'Add docstring comments and format code syntax for this python function.';
+      if (type === 'test') field.value = 'Write a comprehensive Jest unit test suite for the user authentication helper.';
+      if (type === 'arch') field.value = 'Refactor entire distributed microservices architecture and plan database migration across multiple repos.';
+    }
+
+    async function testDispatch() {
+      const prompt = document.getElementById('sim-prompt').value;
+      if (!prompt) return;
+
+      addLog(`[INCOMING] Request received: "${prompt.slice(0, 45)}..."`);
+
+      const res = await fetch('/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: prompt }],
+          model: 'auto-smart-router'
+        })
+      });
+
+      const data = await res.json();
+      const content = data.choices[0].message.content;
+      addLog(`[DISPATCH] Handled: ${content}`);
+      loadAccounts();
+      loadStats();
+    }
+
+    function addLog(text) {
+      const feed = document.getElementById('live-feed');
+      const line = document.createElement('div');
+      line.className = 'feed-line';
+      line.innerHTML = `<span class="feed-tag">[${new Date().toLocaleTimeString()}]</span> ${text}`;
+      feed.appendChild(line);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    // Initialize
+    loadStats();
+    loadAccounts();
+    loadIDEs();
+    setInterval(loadStats, 5000);
+    setInterval(loadAccounts, 5000);
+  </script>
+</body>
+</html>
