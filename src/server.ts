@@ -47,7 +47,8 @@ export interface BlockedAccessLog {
 }
 
 export class MeshSecurityManager {
-  private configDir = path.join(os.homedir(), '.meshmanager');
+  private configDir = path.join(os.homedir(), '.aimeshmanager');
+  private legacyConfigDir = path.join(os.homedir(), '.meshmanager');
   private configFile = path.join(this.configDir, 'security.json');
   private config: MeshSecurityConfig;
   private blockedLogs: BlockedAccessLog[] = [];
@@ -55,6 +56,10 @@ export class MeshSecurityManager {
   constructor() {
     if (!fs.existsSync(this.configDir)) {
       fs.mkdirSync(this.configDir, { recursive: true });
+      const legacySec = path.join(this.legacyConfigDir, 'security.json');
+      if (fs.existsSync(legacySec) && !fs.existsSync(this.configFile)) {
+        try { fs.copyFileSync(legacySec, this.configFile); } catch (e) {}
+      }
     }
     this.config = this.loadConfig();
   }
@@ -141,7 +146,7 @@ app.use((req: Request, res: Response, next) => {
     securityManager.recordBlocked(rawIp, req.method, req.path, 'Remote LAN connection blocked (Localhost-Only mode)');
     return res.status(403).json({
       error: {
-        message: 'MeshManager is currently configured in Localhost-Only mode. Local network requests are forbidden.',
+        message: 'AiMeshManager is currently configured in Localhost-Only mode. Local network requests are forbidden.',
         code: 'FORBIDDEN_LAN_MODE'
       }
     });
@@ -157,7 +162,7 @@ app.use((req: Request, res: Response, next) => {
       securityManager.recordBlocked(rawIp, req.method, req.path, 'Missing or invalid Gateway Bearer Token');
       return res.status(401).json({
         error: {
-          message: 'Unauthorized: A valid MeshManager Gateway Bearer Token is required.',
+          message: 'Unauthorized: A valid AiMeshManager Gateway Bearer Token is required.',
           code: 'UNAUTHORIZED_GATEWAY_TOKEN'
         }
       });
@@ -392,14 +397,14 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
     if (targetAccount) {
       totalFailoversHandled++;
       targetModel = targetAccount.defaultModel;
-      console.log(`[MeshManager Auto-Failover] Switched to: ${targetAccount.name}`);
+      console.log(`[AiMeshManager Auto-Failover] Switched to: ${targetAccount.name}`);
     }
   }
 
   if (!targetAccount) {
     return res.status(429).json({
       error: {
-        message: 'All accounts in MeshManager are currently exhausted or disabled.',
+        message: 'All accounts in AiMeshManager are currently exhausted or disabled.',
         type: 'all_accounts_exhausted'
       }
     });
@@ -455,6 +460,15 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
   if (activityLog.length > 50) activityLog.pop();
 
   // Response headers indicating route metadata, heat, and intelligence power
+  // Primary AiMeshManager headers
+  res.setHeader('X-AiMeshManager-Account', targetAccount.id);
+  res.setHeader('X-AiMeshManager-Model', targetModel);
+  res.setHeader('X-AiMeshManager-Tier', classification.tier);
+  res.setHeader('X-AiMeshManager-Provider', targetAccount.provider);
+  res.setHeader('X-AiMeshManager-Heat', String(classification.heatScore));
+  res.setHeader('X-AiMeshManager-Intelligence', String(classification.intelligenceLevel));
+
+  // Backward compatibility headers
   res.setHeader('X-MeshManager-Account', targetAccount.id);
   res.setHeader('X-MeshManager-Model', targetModel);
   res.setHeader('X-MeshManager-Tier', classification.tier);
@@ -469,7 +483,7 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
     res.setHeader('Connection', 'keep-alive');
 
     const sampleChunks = [
-      `[MeshManager: ${targetAccount.name} (${targetAccount.provider.toUpperCase()}) | Model: ${targetModel}]\n\n`,
+      `[AiMeshManager: ${targetAccount.name} (${targetAccount.provider.toUpperCase()}) | Model: ${targetModel}]\n\n`,
       `[Grounding Score: 1.0 | Authenticated via ${targetAccount.authType}]\n\n`,
       `Turn processed and verified cleanly.`
     ];
@@ -505,7 +519,7 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
           index: 0,
           message: {
             role: 'assistant',
-            content: `[MeshManager Routed via ${targetAccount.name} (${targetModel})]\n\nTask executed successfully.`
+            content: `[AiMeshManager Routed via ${targetAccount.name} (${targetModel})]\n\nTask executed successfully.`
           },
           finish_reason: 'stop'
         }
@@ -721,7 +735,7 @@ app.post('/api/accounts/purge', (req: Request, res: Response) => {
 // 🌐 Antigravity 2.0 / Google Cloud Local OAuth Token Mock
 app.post(['/oauth2/token', '/oauth2/v4/token', '/token'], (req: Request, res: Response) => {
   res.json({
-    access_token: 'ya29.meshmanager-antigravity-local-session',
+    access_token: 'ya29.aimeshmanager-antigravity-local-session',
     token_type: 'Bearer',
     expires_in: 3600,
     scope: 'https://www.googleapis.com/auth/cloud-platform'
@@ -730,8 +744,9 @@ app.post(['/oauth2/token', '/oauth2/v4/token', '/token'], (req: Request, res: Re
 
 // 🛠️ Antigravity 2.0 Mock Service Account / ADC Generator
 app.post('/api/antigravity/generate-mock-adc', (req: Request, res: Response) => {
-  const configDir = path.join(os.homedir(), '.meshmanager');
-  const adcPath = path.join(configDir, 'meshmanager-service-account.json');
+  const configDir = path.join(os.homedir(), '.aimeshmanager');
+  if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
+  const adcPath = path.join(configDir, 'aimeshmanager-service-account.json');
   
   const mockServiceAccount = ideDetector.getMockServiceAccountADC(PORT);
 
@@ -863,7 +878,7 @@ app.post('/v1/swarm/dispatch', async (req: Request, res: Response) => {
     totalSwarmTokensSaved: totalSwarmSaved,
     agents: results,
     subagents: results,
-    synthesis: `[MeshManager Swarm Synthesis]: All 4 specialized subagents completed their roles concurrently across distinct pooled accounts. 100% of the project context was preserved throughout the parallel execution pipeline.`
+    synthesis: `[AiMeshManager Swarm Synthesis]: All 4 specialized subagents completed their roles concurrently across distinct pooled accounts. 100% of the project context was preserved throughout the parallel execution pipeline.`
   });
 });
 
@@ -882,7 +897,7 @@ const host = securityManager.getConfig().mode === 'localhost' ? '127.0.0.1' : '0
 
 app.listen(PORT, host, () => {
   console.log(`=======================================================`);
-  console.log(` MeshManager Core Running on:   http://${host}:${PORT}`);
+  console.log(` AiMeshManager Core Running on: http://${host}:${PORT}`);
   console.log(` Control Center Dashboard:      http://localhost:${PORT}`);
   console.log(` OpenAI / Gemini API Endpoint:  http://localhost:${PORT}/v1`);
   console.log(` Network Isolation Mode:        ${securityManager.getConfig().mode.toUpperCase()} (Host: ${host})`);

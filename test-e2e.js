@@ -52,7 +52,7 @@ function request(method, path, body = null, headers = {}) {
 
 async function runTests() {
   console.log('\x1b[36m====================================================\x1b[0m');
-  console.log('\x1b[1m 🧪 MeshManager E2E Test Suite (v2.2)\x1b[0m');
+  console.log('\x1b[1m 🧪 AiMeshManager E2E Test Suite (v2.2)\x1b[0m');
   console.log('\x1b[36m====================================================\x1b[0m\n');
 
   let passed = 0;
@@ -93,7 +93,7 @@ async function runTests() {
       model: 'auto-smart-router'
     }, { 'x-client-ide': 'Cursor AI' });
     if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
-    const tier = res.headers['x-meshmanager-tier'];
+    const tier = res.headers['x-aimeshmanager-tier'] || res.headers['x-meshmanager-tier'];
     if (!tier || !tier.includes('MICRO_SYNTAX')) throw new Error(`Expected MICRO_SYNTAX, got ${tier}`);
   });
 
@@ -104,7 +104,7 @@ async function runTests() {
       model: 'auto-smart-router'
     }, { 'x-client-ide': 'Google Antigravity' });
     if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
-    const tier = res.headers['x-meshmanager-tier'];
+    const tier = res.headers['x-aimeshmanager-tier'] || res.headers['x-meshmanager-tier'];
     if (!tier || !tier.includes('STRATEGIC_REASON')) throw new Error(`Expected STRATEGIC_REASON, got ${tier}`);
   });
 
@@ -115,7 +115,7 @@ async function runTests() {
       model: 'acc-paid-pro-1/gemini-2.5-pro'
     }, { 'x-client-ide': 'VS Code (Continue)' });
     if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
-    const accountUsed = res.headers['x-meshmanager-account'];
+    const accountUsed = res.headers['x-aimeshmanager-account'] || res.headers['x-meshmanager-account'];
     if (accountUsed !== 'acc-paid-pro-1') throw new Error(`Expected acc-paid-pro-1, got ${accountUsed}`);
   });
 
@@ -226,8 +226,8 @@ async function runTests() {
       model: 'auto-smart-router'
     }, { 'x-client-ide': 'Google Antigravity' });
     if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
-    const heat = res.headers['x-meshmanager-heat'];
-    const intelligence = res.headers['x-meshmanager-intelligence'];
+    const heat = res.headers['x-aimeshmanager-heat'] || res.headers['x-meshmanager-heat'];
+    const intelligence = res.headers['x-aimeshmanager-intelligence'] || res.headers['x-meshmanager-intelligence'];
     if (!heat || parseInt(heat) < 80) throw new Error(`Expected heat >= 80%, got ${heat}%`);
     if (!intelligence || parseInt(intelligence) < 4) throw new Error(`Expected intelligence >= 4/5, got ${intelligence}`);
   });

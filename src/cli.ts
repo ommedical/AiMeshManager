@@ -13,12 +13,59 @@ import { AccountPoolManager, GeminiAccount } from './accounts/manager';
 import { IDEDetector } from './integrations/ide-detector';
 import { TokenOptimizer } from './optimizer/compressor';
 
-const CONFIG_DIR = path.join(os.homedir(), '.meshmanager');
-const PID_FILE = path.join(CONFIG_DIR, 'meshmanager.pid');
+/**
+ * Auto-install dependencies if node_modules is missing or incomplete
+ */
+export function ensureDependencies() {
+  const rootDir = path.resolve(__dirname, '..');
+  const expressPkg = path.join(rootDir, 'node_modules', 'express', 'package.json');
+  const corsPkg = path.join(rootDir, 'node_modules', 'cors', 'package.json');
+  if (!fs.existsSync(expressPkg) || !fs.existsSync(corsPkg)) {
+    console.log('\x1b[36m⚡ [AiMeshManager] Missing dependencies detected. Installing automatically...\x1b[0m');
+    try {
+      execSync('npm install --prefer-offline --no-audit', { stdio: 'inherit', cwd: rootDir });
+      console.log('\x1b[32m[✓] Dependencies installed successfully.\x1b[0m\n');
+    } catch (err: any) {
+      console.warn('\x1b[33m[!] Warning: Failed to auto-install dependencies:', err.message, '\x1b[0m');
+    }
+  }
+}
+
+const CONFIG_DIR = path.join(os.homedir(), '.aimeshmanager');
+const LEGACY_CONFIG_DIR = path.join(os.homedir(), '.meshmanager');
+const PID_FILE = path.join(CONFIG_DIR, 'aimeshmanager.pid');
+const LEGACY_PID_FILE = path.join(LEGACY_CONFIG_DIR, 'meshmanager.pid');
 const PORT = process.env.PORT || 20128;
 
 if (!fs.existsSync(CONFIG_DIR)) {
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  if (fs.existsSync(LEGACY_CONFIG_DIR)) {
+    try {
+      const files = fs.readdirSync(LEGACY_CONFIG_DIR);
+      for (const file of files) {
+        const srcPath = path.join(LEGACY_CONFIG_DIR, file);
+        const destPath = path.join(CONFIG_DIR, file);
+        if (!fs.existsSync(destPath) && fs.statSync(srcPath).isFile()) {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    } catch (e) {}
+  }
+}
+
+function getActivePidFile(): { path: string; pid: number } | null {
+  for (const pf of [PID_FILE, LEGACY_PID_FILE]) {
+    if (fs.existsSync(pf)) {
+      try {
+        const pid = Number(fs.readFileSync(pf, 'utf-8').trim());
+        process.kill(pid, 0);
+        return { path: pf, pid };
+      } catch (e) {
+        try { fs.unlinkSync(pf); } catch (_) {}
+      }
+    }
+  }
+  return null;
 }
 
 const args = process.argv.slice(2);
@@ -95,19 +142,15 @@ async function main() {
 }
 
 function handleStart() {
+  ensureDependencies();
   const isDaemon = args.includes('--daemon') || args.includes('-d');
-  console.log(`\x1b[36m⚡ Starting MeshManager...\x1b[0m`);
+  console.log(`\x1b[36m⚡ Starting AiMeshManager...\x1b[0m`);
 
-  if (fs.existsSync(PID_FILE)) {
-    const pid = fs.readFileSync(PID_FILE, 'utf-8').trim();
-    try {
-      process.kill(Number(pid), 0);
-      console.log(`\x1b[33m[!] MeshManager is already running with PID: ${pid}\x1b[0m`);
-      console.log(`Access Control Center: http://localhost:${PORT}`);
-      return;
-    } catch (e) {
-      fs.unlinkSync(PID_FILE);
-    }
+  const active = getActivePidFile();
+  if (active) {
+    console.log(`\x1b[33m[!] AiMeshManager is already running with PID: ${active.pid}\x1b[0m`);
+    console.log(`Access Control Center: http://localhost:${PORT}`);
+    return;
   }
 
   const serverScript = path.join(__dirname, 'server.js');
@@ -120,7 +163,7 @@ function handleStart() {
     child.unref();
     if (child.pid) {
       fs.writeFileSync(PID_FILE, String(child.pid), 'utf-8');
-      console.log(`\x1b[32m[✓] MeshManager started in background (PID: ${child.pid})\x1b[0m`);
+      console.log(`\x1b[32m[✓] AiMeshManager started in background (PID: ${child.pid})\x1b[0m`);
       console.log(`\x1b[36m- Control Center: http://localhost:${PORT}\x1b[0m`);
       console.log(`\x1b[36m- API Base URL:   http://localhost:${PORT}/v1\x1b[0m`);
     }
@@ -131,38 +174,31 @@ function handleStart() {
 }
 
 function handleStop() {
-  if (!fs.existsSync(PID_FILE)) {
-    console.log(`\x1b[33m[!] No active MeshManager process found.\x1b[0m`);
+  const active = getActivePidFile();
+  if (!active) {
+    console.log(`\x1b[33m[!] No active AiMeshManager process found.\x1b[0m`);
     return;
   }
 
-  const pid = Number(fs.readFileSync(PID_FILE, 'utf-8').trim());
   try {
-    process.kill(pid, 'SIGTERM');
-    fs.unlinkSync(PID_FILE);
-    console.log(`\x1b[32m[✓] Successfully stopped MeshManager (PID: ${pid})\x1b[0m`);
+    process.kill(active.pid, 'SIGTERM');
+    if (fs.existsSync(active.path)) fs.unlinkSync(active.path);
+    if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE);
+    if (fs.existsSync(LEGACY_PID_FILE)) fs.unlinkSync(LEGACY_PID_FILE);
+    console.log(`\x1b[32m[✓] Successfully stopped AiMeshManager (PID: ${active.pid})\x1b[0m`);
   } catch (err: any) {
-    console.log(`\x1b[31m[!] Failed to terminate PID ${pid}: ${err.message}\x1b[0m`);
-    fs.unlinkSync(PID_FILE);
+    console.log(`\x1b[31m[!] Failed to terminate PID ${active.pid}: ${err.message}\x1b[0m`);
+    if (fs.existsSync(active.path)) fs.unlinkSync(active.path);
   }
 }
 
 function handleStatus() {
-  let isRunning = false;
-  let pid = '';
-
-  if (fs.existsSync(PID_FILE)) {
-    pid = fs.readFileSync(PID_FILE, 'utf-8').trim();
-    try {
-      process.kill(Number(pid), 0);
-      isRunning = true;
-    } catch (e) {
-      isRunning = false;
-    }
-  }
+  const active = getActivePidFile();
+  const isRunning = !!active;
+  const pid = active ? String(active.pid) : '';
 
   console.log(`\x1b[36m====================================================\x1b[0m`);
-  console.log(`\x1b[1m MeshManager Status\x1b[0m`);
+  console.log(`\x1b[1m AiMeshManager Status\x1b[0m`);
   console.log(`\x1b[36m====================================================\x1b[0m`);
   console.log(` Core Gateway:   ${isRunning ? `\x1b[32m● ONLINE (PID: ${pid})\x1b[0m` : `\x1b[31m○ OFFLINE\x1b[0m`}`);
   console.log(` Local Endpoint: http://localhost:${PORT}/v1`);
@@ -180,7 +216,7 @@ function handleStatus() {
 }
 
 function handleUpgrade() {
-  console.log(`\x1b[36m🔄 Checking for MeshManager updates...\x1b[0m`);
+  console.log(`\x1b[36m🔄 Checking for AiMeshManager updates...\x1b[0m`);
   try {
     const repoDir = path.resolve(__dirname, '..');
     if (fs.existsSync(path.join(repoDir, '.git'))) {
@@ -189,11 +225,11 @@ function handleUpgrade() {
       console.log(gitOut.trim());
       console.log(`Executing: npm install && npm run build...`);
       execSync('npm install && npm run build', { cwd: repoDir, stdio: 'inherit' });
-      console.log(`\x1b[32m[✓] MeshManager upgraded successfully to the latest commit!\x1b[0m`);
+      console.log(`\x1b[32m[✓] AiMeshManager upgraded successfully to the latest commit!\x1b[0m`);
     } else {
       console.log(`Upgrading via npm...`);
-      execSync('npm install -g meshmanager@latest', { stdio: 'inherit' });
-      console.log(`\x1b[32m[✓] MeshManager npm package updated to latest release!\x1b[0m`);
+      execSync('npm install -g aimeshmanager@latest', { stdio: 'inherit' });
+      console.log(`\x1b[32m[✓] AiMeshManager npm package updated to latest release!\x1b[0m`);
     }
   } catch (err: any) {
     console.log(`\x1b[31m[!] Upgrade failed: ${err.message}\x1b[0m`);
@@ -475,7 +511,7 @@ async function handleSecurity(subArgs: string[]) {
   switch (action) {
     case 'status':
       console.log(`\x1b[1m\x1b[36m====================================================\x1b[0m`);
-      console.log(`\x1b[1m 🛡️ MeshManager Local Network Security Status\x1b[0m`);
+      console.log(`\x1b[1m 🛡️ AiMeshManager Local Network Security Status\x1b[0m`);
       console.log(`\x1b[36m====================================================\x1b[0m`);
       console.log(` • Network Isolation Mode:    ${sec.mode === 'localhost' ? '\x1b[32m[LOCALHOST ONLY (127.0.0.1)]\x1b[0m' : '\x1b[33m[LAN SHARING ENABLED (0.0.0.0)]\x1b[0m'}`);
       console.log(` • Require Gateway Token:     ${sec.requireGatewayToken ? '\x1b[32mENABLED (Bearer Auth Enforced)\x1b[0m' : '\x1b[33mDISABLED (Open on Loopback)\x1b[0m'}`);
@@ -546,8 +582,9 @@ async function handleAntigravity(subArgs: string[]) {
   const detector = new IDEDetector();
 
   if (action === 'mock-adc' || action === 'setup' || action === 'connect') {
-    const configDir = path.join(os.homedir(), '.meshmanager');
-    const adcPath = path.join(configDir, 'meshmanager-service-account.json');
+    const configDir = path.join(os.homedir(), '.aimeshmanager');
+    if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
+    const adcPath = path.join(configDir, 'aimeshmanager-service-account.json');
     
     // Auto provision via IDEDetector
     const toggleRes = detector.toggleIDE('antigravity', true);
@@ -567,14 +604,14 @@ async function handleAntigravity(subArgs: string[]) {
     const res = detector.toggleIDE('antigravity', false);
     console.log(`\x1b[32m${res.message}\x1b[0m`);
   } else {
-    console.log(`\x1b[33mUsage: meshmanager antigravity <setup|connect|disconnect>\x1b[0m`);
+    console.log(`\x1b[33mUsage: aimeshmanager antigravity <setup|connect|disconnect>\x1b[0m`);
   }
 }
 
 async function handleSwarm(subArgs: string[]) {
   const task = subArgs.join(' ') || 'Decompose and implement distributed feature with parallel multi-agent swarm';
   console.log(`\x1b[1m\x1b[36m========================================================================================================\x1b[0m`);
-  console.log(`\x1b[1m 🚀 MeshManager Parallel Multi-Agent Swarm Dispatcher\x1b[0m`);
+  console.log(`\x1b[1m 🚀 AiMeshManager Parallel Multi-Agent Swarm Dispatcher\x1b[0m`);
   console.log(`\x1b[1m • Shared Workspace Context:   PRESERVED (AST, Git Diff, Session Memory)\x1b[0m`);
   console.log(`\x1b[1m • Dispatch Strategy:          SIMULTANEOUS & PARALLEL (Multi-Account Token Consumption)\x1b[0m`);
   console.log(`\x1b[1m • Task:                       "${task}"\x1b[0m`);
@@ -584,7 +621,7 @@ async function handleSwarm(subArgs: string[]) {
     const res = await fetch(`http://127.0.0.1:${PORT}/v1/swarm/dispatch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task, clientIDE: 'MeshManager CLI Swarm' })
+      body: JSON.stringify({ task, clientIDE: 'AiMeshManager CLI Swarm' })
     });
     if (!res.ok) {
       console.log(`\x1b[31m[!] Swarm execution failed: HTTP ${res.status}\x1b[0m`);
@@ -614,45 +651,45 @@ async function handleSwarm(subArgs: string[]) {
 
 function printHelp() {
   console.log(`
-\x1b[1m\x1b[36m⚡ MeshManager CLI Reference\x1b[0m
+\x1b[1m\x1b[36m⚡ AiMeshManager CLI Reference\x1b[0m
 
 \x1b[1mUSAGE:\x1b[0m
-  meshmanager <command> [options]
-  (or short alias: mesh <command>)
+  aimeshmanager <command> [options]
+  (or short aliases: aimm <cmd>, meshmanager <cmd>, mesh <cmd>)
 
 \x1b[1mCORE COMMANDS:\x1b[0m
-  \x1b[32mstart\x1b[0m [--daemon, -d]    Start MeshManager (foreground or background service)
-  \x1b[32mstop\x1b[0m                  Stop background MeshManager service
-  \x1b[32mrestart\x1b[0m               Restart the MeshManager gateway
+  \x1b[32mstart\x1b[0m [--daemon, -d]    Start AiMeshManager (auto-installs missing dependencies)
+  \x1b[32mstop\x1b[0m                  Stop background AiMeshManager service
+  \x1b[32mrestart\x1b[0m               Restart the AiMeshManager gateway
   \x1b[32mstatus\x1b[0m                Display gateway runtime status, port, and IDE connections
   \x1b[32munified, matrix\x1b[0m       Display Single Unified Master Telemetry Ledger
   \x1b[32mstats\x1b[0m                 Display real-time token savings and ~0 resource stress metrics
   \x1b[32mdoctor\x1b[0m                Run system diagnostics on ports, storage, and IDE paths
-  \x1b[32mupdate, upgrade\x1b[0m       Check for updates and automatically upgrade MeshManager
+  \x1b[32mupdate, upgrade\x1b[0m       Check for updates and automatically upgrade AiMeshManager
 
 \x1b[1mDYNAMIC MULTI-AGENT SWARM:\x1b[0m
-  \x1b[32mmeshmanager swarm "<task>"\x1b[0m    Dispatch 4 parallel subagents across paid & free accounts with shared context
+  \x1b[32maimeshmanager swarm "<task>"\x1b[0m   Dispatch 4 parallel subagents across paid & free accounts with shared context
 
 \x1b[1mANTIGRAVITY 2.0 INTEGRATION:\x1b[0m
-  \x1b[32mmeshmanager antigravity setup\x1b[0m Generate mock Google Cloud ADC to bypass corporate Service Account login
+  \x1b[32maimeshmanager antigravity setup\x1b[0m Generate mock Google Cloud ADC to bypass corporate Service Account login
 
 \x1b[1mSECURITY & ZERO-RESIDUAL PURGE:\x1b[0m
-  \x1b[32mmeshmanager purge\x1b[0m               Cryptographically shred all stored API keys & OAuth credentials from disk
-  \x1b[32mmeshmanager security status\x1b[0m     View network mode, token requirement, and blocked logs
-  \x1b[32mmeshmanager security toggle-lan\x1b[0m Toggle Localhost (127.0.0.1) vs LAN Sharing (0.0.0.0)
-  \x1b[32mmeshmanager security toggle-auth\x1b[0m Enable/Disable mandatory Gateway Bearer Token auth
-  \x1b[32mmeshmanager security regenerate-token\x1b[0m Rotate Gateway Master Token
+  \x1b[32maimeshmanager purge\x1b[0m               Cryptographically shred all stored API keys & OAuth credentials from disk
+  \x1b[32maimeshmanager security status\x1b[0m     View network mode, token requirement, and blocked logs
+  \x1b[32maimeshmanager security toggle-lan\x1b[0m Toggle Localhost (127.0.0.1) vs LAN Sharing (0.0.0.0)
+  \x1b[32maimeshmanager security toggle-auth\x1b[0m Enable/Disable mandatory Gateway Bearer Token auth
+  \x1b[32maimeshmanager security regenerate-token\x1b[0m Rotate Gateway Master Token
 
 \x1b[1mACCOUNT MANAGEMENT:\x1b[0m
-  \x1b[32mmeshmanager account list\x1b[0m        List accounts, pins, and quota metrics
-  \x1b[32mmeshmanager account add <id> ...\x1b[0m Add new AI account (Gemini, OmniRoute, etc.)
-  \x1b[32mmeshmanager account delete <id>\x1b[0m Delete account from pool
-  \x1b[32mmeshmanager account verify <key>\x1b[0m Test key with Google Gemini API
-  \x1b[32mmeshmanager account purge\x1b[0m        Shred stored credentials from disk and wipe keys from memory
+  \x1b[32maimeshmanager account list\x1b[0m        List accounts, pins, and quota metrics
+  \x1b[32maimeshmanager account add <id> ...\x1b[0m Add new AI account (Gemini, OmniRoute, etc.)
+  \x1b[32maimeshmanager account delete <id>\x1b[0m Delete account from pool
+  \x1b[32maimeshmanager account verify <key>\x1b[0m Test key with Google Gemini API
+  \x1b[32maimeshmanager account purge\x1b[0m        Shred stored credentials from disk and wipe keys from memory
 
 \x1b[1m1-CLICK IDE MANAGEMENT:\x1b[0m
-  \x1b[32mmeshmanager ide connect <ide|all>\x1b[0m    Connect IDE to mesh (Antigravity, Cursor, VS Code, Windsurf)
-  \x1b[32mmeshmanager ide disconnect <ide|all>\x1b[0m Revert IDE settings to default
+  \x1b[32maimeshmanager ide connect <ide|all>\x1b[0m    Connect IDE to mesh (Antigravity, Cursor, VS Code, Windsurf)
+  \x1b[32maimeshmanager ide disconnect <ide|all>\x1b[0m Revert IDE settings to default
 
 \x1b[1mACCESS POINTS:\x1b[0m
   Control Center Dashboard: \x1b[34mhttp://localhost:20128\x1b[0m

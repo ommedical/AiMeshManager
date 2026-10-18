@@ -88,10 +88,10 @@ export class IDEDetector {
 
     return {
       type: 'service_account',
-      project_id: 'meshmanager-local',
+      project_id: 'aimeshmanager-local',
       private_key_id: 'mesh-local-adc-key',
       private_key: privateKeyPem,
-      client_email: 'meshmanager-agent@meshmanager-local.iam.gserviceaccount.com',
+      client_email: 'aimeshmanager-agent@aimeshmanager-local.iam.gserviceaccount.com',
       client_id: '100201280000000000000',
       auth_uri: `http://127.0.0.1:${port}/auth`,
       token_uri: `http://127.0.0.1:${port}/oauth2/token`
@@ -156,7 +156,7 @@ export class IDEDetector {
     if (fs.existsSync(defaultAdcPath)) {
       try {
         const adc = JSON.parse(fs.readFileSync(defaultAdcPath, 'utf-8'));
-        if (adc.project_id === 'meshmanager-local' || (adc.token_uri && adc.token_uri.includes('20128'))) {
+        if (adc.project_id === 'aimeshmanager-local' || adc.project_id === 'meshmanager-local' || (adc.token_uri && adc.token_uri.includes('20128'))) {
           mockAdcProvisioned = true;
         }
       } catch (e) {}
@@ -243,6 +243,7 @@ export class IDEDetector {
         const content = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
         if (
           (content['continue.apiBase'] && content['continue.apiBase'].includes('20128')) ||
+          content['aimeshmanager.enabled'] === true ||
           content['meshmanager.enabled'] === true
         ) {
           isRouted = true;
@@ -260,7 +261,7 @@ export class IDEDetector {
       configSnippet: JSON.stringify(
         {
           'continue.apiBase': 'http://localhost:20128/v1',
-          'meshmanager.enabled': true
+          'aimeshmanager.enabled': true
         },
         null,
         2
@@ -334,10 +335,10 @@ export class IDEDetector {
           : path.join(this.homeDir, '.config', 'gcloud');
         const defaultAdcPath = path.join(gcloudDir, 'application_default_credentials.json');
         const bakAdcPath = path.join(gcloudDir, 'application_default_credentials.json.bak');
-        const localMeshAdc = path.join(this.homeDir, '.meshmanager', 'meshmanager-service-account.json');
+        const localMeshAdc = path.join(this.homeDir, '.aimeshmanager', 'aimeshmanager-service-account.json');
 
         if (enable) {
-          // 1. Provision Mock ADC in ~/.meshmanager
+          // 1. Provision Mock ADC in ~/.aimeshmanager
           const meshDir = path.dirname(localMeshAdc);
           if (!fs.existsSync(meshDir)) fs.mkdirSync(meshDir, { recursive: true });
           const mockAdc = this.getMockServiceAccountADC();
@@ -348,7 +349,7 @@ export class IDEDetector {
           if (fs.existsSync(defaultAdcPath)) {
             try {
               const existing = JSON.parse(fs.readFileSync(defaultAdcPath, 'utf-8'));
-              if (existing.project_id !== 'meshmanager-local') {
+              if (existing.project_id !== 'aimeshmanager-local' && existing.project_id !== 'meshmanager-local') {
                 fs.copyFileSync(defaultAdcPath, bakAdcPath);
               }
             } catch (e) {}
@@ -381,7 +382,7 @@ export class IDEDetector {
             : ` Ready for launch.`;
           return {
             success: true,
-            message: `[✓] Connected Google Antigravity 2.0 & IDE to MeshManager! Default Google Cloud ADC provisioned at: ${defaultAdcPath}.${runningMsg} Antigravity will now authenticate error-free without service account prompts.`
+            message: `[✓] Connected Google Antigravity 2.0 & IDE to AiMeshManager! Default Google Cloud ADC provisioned at: ${defaultAdcPath}.${runningMsg} Antigravity will now authenticate error-free without service account prompts.`
           };
         } else {
           // Revert settings
@@ -405,7 +406,7 @@ export class IDEDetector {
           } else if (fs.existsSync(defaultAdcPath)) {
             try {
               const currentAdc = JSON.parse(fs.readFileSync(defaultAdcPath, 'utf-8'));
-              if (currentAdc.project_id === 'meshmanager-local') {
+              if (currentAdc.project_id === 'aimeshmanager-local' || currentAdc.project_id === 'meshmanager-local') {
                 fs.unlinkSync(defaultAdcPath);
               }
             } catch (e) {}
@@ -425,9 +426,11 @@ export class IDEDetector {
       } else if (ideId === 'vscode') {
         if (enable) {
           current['continue.apiBase'] = 'http://localhost:20128/v1';
-          current['meshmanager.enabled'] = true;
+          current['aimeshmanager.enabled'] = true;
+          delete current['meshmanager.enabled'];
         } else {
           delete current['continue.apiBase'];
+          delete current['aimeshmanager.enabled'];
           delete current['meshmanager.enabled'];
         }
       } else if (ideId === 'windsurf') {
@@ -443,7 +446,7 @@ export class IDEDetector {
       return {
         success: true,
         message: enable
-          ? `Successfully connected ${scan.name} to MeshManager!`
+          ? `Successfully connected ${scan.name} to AiMeshManager!`
           : `Reverted ${scan.name} to default settings.`
       };
     } catch (err: any) {

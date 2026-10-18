@@ -1,4 +1,4 @@
-# ⚡ MeshManager
+# ⚡ AiMeshManager
 
 <div align="center">
 
@@ -45,11 +45,11 @@
 
 ## 🎯 Overview & Core Philosophy
 
-**MeshManager** serves as an intelligent local gateway between all your development environments (Antigravity IDE/2.0, Cursor, VS Code, Windsurf, JetBrains) and your AI accounts.
+**AiMeshManager** serves as an intelligent local gateway between all your development environments (Antigravity IDE/2.0, Cursor, VS Code, Windsurf, JetBrains) and your AI accounts.
 
 It solves quota anxiety, rate limit crashes, and token waste by:
 * **Pooling multiple accounts:** Stacks multiple Free (`@gmail.com`) accounts and Paid (Google AI Pro, Ultra, Enterprise) subscriptions.
-* **Auto-failing over in 50ms:** When one account hits a 429 rate limit or quota ceiling, MeshManager seamlessly routes in-flight turns to a backup account without dropping IDE context.
+* **Auto-failing over in 50ms:** When one account hits a 429 rate limit or quota ceiling, AiMeshManager seamlessly routes in-flight turns to a backup account without dropping IDE context.
 * **Dynamic Model Allocation:** Automatically inspects task complexity and routes micro-tasks to free fast models and complex architecture tasks to deep reasoning models.
 * **Pinning specific models to specific accounts:** Allows binding an editor to a specific account and model (e.g. `acc-paid-pro/gemini-2.5-pro`).
 
@@ -57,7 +57,7 @@ It solves quota anxiety, rate limit crashes, and token waste by:
 
 ## 🌿 Resource Efficiency & ~0 Stress Benchmark
 
-MeshManager is engineered from the ground up for **near-zero host resource utilization**, ensuring your laptop or development workstation suffers virtually no impact:
+AiMeshManager is engineered from the ground up for **near-zero host resource utilization**, ensuring your laptop or development workstation suffers virtually no impact:
 
 * **Zero CPU Load on Idle (`~0% CPU`)**: Uses asynchronous non-blocking event-driven Node.js networking. No polling loops, no busy-waits, and all background timers are unreferenced (`.unref()`).
 * **Minimal Memory Footprint (`~9-15 MB Heap`)**: Compact in-memory maps for accounts and routing tables. Streaming SSE chunks are piped directly to the client without buffering entire multi-megabyte responses.
@@ -436,8 +436,10 @@ meshmanager ide connect all           # Connect all installed IDEs at once
 ## 💻 Complete CLI Command Reference
 
 ```bash
-meshmanager <command> [options]
-# Or short alias:
+aimeshmanager <command> [options]
+# Or short aliases:
+aimm <command>
+meshmanager <command>
 mesh <command>
 ```
 
@@ -471,12 +473,14 @@ mesh <command>
 ## 🚀 Installation & Quickstart
 
 ```bash
-# 1. Install dependencies & build
+# 1. Automatic Dependency Installation & Build
 npm install
 npm run build
 
-# 2. Launch MeshManager in the background
+# 2. Launch AiMeshManager (Auto-installs dependencies on first start if missing)
 node dist/cli.js start --daemon
+# Or via global CLI:
+# aimeshmanager start --daemon
 
 # 3. Open the Web Control Center
 # In your browser: http://localhost:20128
@@ -494,8 +498,9 @@ node dist/cli.js start --daemon
 
 ## ⚙️ Dynamic Automation vs. Manual Tweaks
 
-| Operational Dimension | What MeshManager Does Automatically | What You Can Tweak Manually |
+| Operational Dimension | What AiMeshManager Does Automatically | What You Can Tweak Manually |
 | :--- | :--- | :--- |
+| **Dependency Setup** | Automatically detects and installs missing `node_modules` on launch. | Run `npm install` manually if preferred. |
 | **Load Balancing** | Automatically routes turns using P2C algorithm; fails over in 50ms upon 429 errors. | Enable/disable accounts, adjust priority weights, or trigger manual cooldowns. |
 | **Model Selection** | Profiles task complexity and dispatches Flash, Thinking, or Pro models dynamically. | Set default models per account or use virtual pins (`accId/modelName`). |
 | **Token Optimization** | Compresses whitespace, prunes duplicate comment blocks, caches identical prompts. | Adjust compression aggressiveness levels. |
@@ -507,4 +512,4 @@ node dist/cli.js start --daemon
 
 * **Zero Cloud Telemetry:** Prompts and API keys reside strictly on your local machine and communicate only with Google's official endpoints.
 * **Localhost Binding:** Binds strictly to `127.0.0.1`, blocking unauthorized external network access.
-* **Encrypted Local Storage:** Configuration and accounts are stored locally under `~/.meshmanager/`.
+* **Encrypted Local Storage:** Configuration and accounts are stored locally under `~/.aimeshmanager/` (with automatic fallback to `~/.meshmanager/`).

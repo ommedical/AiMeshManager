@@ -44,7 +44,8 @@ export interface GeminiAccount {
 }
 
 export class AccountPoolManager {
-  private configDir = path.join(os.homedir(), '.meshmanager');
+  private configDir = path.join(os.homedir(), '.aimeshmanager');
+  private legacyConfigDir = path.join(os.homedir(), '.meshmanager');
   private accountsFile = path.join(this.configDir, 'accounts.json');
   private accounts: Map<string, GeminiAccount> = new Map();
 
@@ -59,6 +60,13 @@ export class AccountPoolManager {
   private ensureConfigDir() {
     if (!fs.existsSync(this.configDir)) {
       fs.mkdirSync(this.configDir, { recursive: true });
+      // Migrate legacy accounts if available
+      const legacyAccounts = path.join(this.legacyConfigDir, 'accounts.json');
+      if (fs.existsSync(legacyAccounts) && !fs.existsSync(this.accountsFile)) {
+        try {
+          fs.copyFileSync(legacyAccounts, this.accountsFile);
+        } catch (e) {}
+      }
     }
   }
 
@@ -79,7 +87,7 @@ export class AccountPoolManager {
         });
         return;
       } catch (e) {
-        console.error('[MeshManager] Failed to parse accounts.json; falling back to default seed.');
+        console.error('[AiMeshManager] Failed to parse accounts.json; falling back to default seed.');
       }
     }
 
@@ -276,18 +284,19 @@ export class AccountPoolManager {
       }
     }
 
-    // 3. Cryptographically shred any meshmanager mock ADC
+    // 3. Cryptographically shred any mock ADC
     const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
     const gcloudAdc = process.platform === 'win32'
       ? path.join(appData, 'gcloud', 'application_default_credentials.json')
       : path.join(os.homedir(), '.config', 'gcloud', 'application_default_credentials.json');
-    const meshAdc = path.join(this.configDir, 'meshmanager-service-account.json');
+    const aiMeshAdc = path.join(this.configDir, 'aimeshmanager-service-account.json');
+    const legacyMeshAdc = path.join(this.legacyConfigDir, 'meshmanager-service-account.json');
 
-    [gcloudAdc, meshAdc].forEach(p => {
+    [gcloudAdc, aiMeshAdc, legacyMeshAdc].forEach(p => {
       if (fs.existsSync(p)) {
         try {
           const parsed = JSON.parse(fs.readFileSync(p, 'utf-8'));
-          if (parsed.project_id === 'meshmanager-local') {
+          if (parsed.project_id === 'aimeshmanager-local' || parsed.project_id === 'meshmanager-local') {
             const stats = fs.statSync(p);
             if (stats.size > 0) fs.writeFileSync(p, Buffer.alloc(stats.size, 0));
             fs.unlinkSync(p);

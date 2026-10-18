@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  meshmanager:
+  aimeshmanager:
     build: .
-    container_name: meshmanager-mesh
+    container_name: aimeshmanager-mesh
     restart: always
     ports:
       - "20128:20128"
@@ -11,7 +11,7 @@ services:
       - PORT=20128
       - NODE_ENV=production
     volumes:
-      - ~/.meshmanager:/root/.meshmanager
+      - ~/.aimeshmanager:/root/.aimeshmanager
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:20128/api/stats"]
       interval: 15s
