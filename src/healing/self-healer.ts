@@ -66,6 +66,7 @@ export class SelfHealingEngine {
         resolved: true
       };
       this.memoryRecords.push(record);
+      if (this.memoryRecords.length > 50) this.memoryRecords.shift();
 
       return {
         healed: true,
