@@ -16,6 +16,10 @@
  */
 
 const http = require('http');
+const { spawn } = require('child_process');
+const path = require('path');
+
+let serverProcess = null;
 
 function request(method, path, body = null, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -50,7 +54,30 @@ function request(method, path, body = null, headers = {}) {
   });
 }
 
+async function ensureServerRunning() {
+  try {
+    await request('GET', '/api/stats');
+    return;
+  } catch (err) {
+    serverProcess = spawn(process.execPath, [path.join(__dirname, 'dist', 'server.js')], {
+      stdio: 'ignore',
+      env: { ...process.env, PORT: '20128' }
+    });
+
+    for (let i = 0; i < 30; i++) {
+      await new Promise(r => setTimeout(r, 200));
+      try {
+        await request('GET', '/api/stats');
+        return;
+      } catch (e) {}
+    }
+    throw new Error('Failed to auto-start AiMeshManager server on port 20128');
+  }
+}
+
 async function runTests() {
+  await ensureServerRunning();
+
   console.log('\x1b[36m====================================================\x1b[0m');
   console.log('\x1b[1m 🧪 AiMeshManager E2E Test Suite (v2.2)\x1b[0m');
   console.log('\x1b[36m====================================================\x1b[0m\n');
@@ -317,10 +344,21 @@ async function runTests() {
   console.log(`\x1b[1mSummary: \x1b[32m${passed} Passed\x1b[0m, \x1b[${failed > 0 ? '31m' : '32m'}${failed} Failed\x1b[0m of ${passed + failed} Tests`);
   console.log('\x1b[36m====================================================\x1b[0m');
 
+  if (serverProcess) {
+    try {
+      serverProcess.kill('SIGTERM');
+    } catch (e) {}
+  }
+
   if (failed > 0) process.exit(1);
 }
 
 runTests().catch(err => {
+  if (serverProcess) {
+    try {
+      serverProcess.kill('SIGTERM');
+    } catch (e) {}
+  }
   console.error('\x1b[31m[!] Test Runner Error:', err.message, '\x1b[0m');
   process.exit(1);
 });
