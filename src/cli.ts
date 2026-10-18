@@ -325,6 +325,22 @@ async function handleAccount(subArgs: string[]) {
       }
       break;
 
+    case 'set-model':
+    case 'model':
+      const targetAccId = subArgs[1];
+      const newModel = subArgs[2];
+      if (!targetAccId || !newModel) {
+        console.log(`\x1b[31mUsage: aimeshmanager account set-model <accountId> <modelName>\x1b[0m`);
+        return;
+      }
+      const updatedAcc = manager.updateAccount(targetAccId, { defaultModel: newModel });
+      if (updatedAcc) {
+        console.log(`\x1b[32m[✓] Account '${targetAccId}' default model updated to: \x1b[34m${newModel}\x1b[0m`);
+      } else {
+        console.log(`\x1b[31m[!] Account '${targetAccId}' not found in mesh pool.\x1b[0m`);
+      }
+      break;
+
     case 'purge':
       await handlePurge();
       break;

@@ -210,10 +210,122 @@ export class AccountPoolManager {
       estimatedCostUSD: 0
     };
 
+    // 5. OpenAI / ChatGPT Account
+    const demoOpenAI: GeminiAccount = {
+      id: 'openai-chatgpt',
+      name: 'OpenAI (ChatGPT Pro / API)',
+      provider: 'openai',
+      authType: 'api_key',
+      endpointUrl: 'https://api.openai.com/v1',
+      tier: 'paid_pro',
+      apiKey: process.env.OPENAI_API_KEY || '',
+      defaultModel: 'gpt-4o',
+      enabled: false,
+      maxRpm: 120,
+      maxTpm: 5000000,
+      currentRpm: 0,
+      rollingTokensUsed: 0,
+      rollingWindowLimit: 5000000,
+      windowResetTime: Date.now() + 24 * 3600 * 1000,
+      status: 'active',
+      cooldownUntil: 0,
+      priority: 2,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
+    };
+
+    // 6. Anthropic Claude Account
+    const demoClaude: GeminiAccount = {
+      id: 'claude-anthropic',
+      name: 'Anthropic Claude (Sonnet 3.7 / 3.5)',
+      provider: 'anthropic',
+      authType: 'api_key',
+      endpointUrl: 'https://api.anthropic.com/v1',
+      tier: 'paid_pro',
+      apiKey: process.env.ANTHROPIC_API_KEY || '',
+      defaultModel: 'claude-3-7-sonnet',
+      enabled: false,
+      maxRpm: 100,
+      maxTpm: 4000000,
+      currentRpm: 0,
+      rollingTokensUsed: 0,
+      rollingWindowLimit: 4000000,
+      windowResetTime: Date.now() + 24 * 3600 * 1000,
+      status: 'active',
+      cooldownUntil: 0,
+      priority: 2,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
+    };
+
+    // 7. DeepSeek Account
+    const demoDeepSeek: GeminiAccount = {
+      id: 'deepseek-ai',
+      name: 'DeepSeek (R1 Reasoner / V3)',
+      provider: 'deepseek',
+      authType: 'api_key',
+      endpointUrl: 'https://api.deepseek.com/v1',
+      tier: 'paid_pro',
+      apiKey: process.env.DEEPSEEK_API_KEY || '',
+      defaultModel: 'deepseek-reasoner',
+      enabled: false,
+      maxRpm: 120,
+      maxTpm: 5000000,
+      currentRpm: 0,
+      rollingTokensUsed: 0,
+      rollingWindowLimit: 5000000,
+      windowResetTime: Date.now() + 24 * 3600 * 1000,
+      status: 'active',
+      cooldownUntil: 0,
+      priority: 2,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
+    };
+
+    // 8. Ollama Local Engine (100% Free / No Key Required)
+    const demoOllama: GeminiAccount = {
+      id: 'ollama-local',
+      name: 'Ollama (Local Private Engine)',
+      provider: 'ollama',
+      authType: 'api_key',
+      endpointUrl: 'http://localhost:11434/v1',
+      tier: 'local',
+      apiKey: 'LOCAL_NO_KEY',
+      defaultModel: 'qwen2.5-coder:7b',
+      enabled: false,
+      maxRpm: 1000,
+      maxTpm: 20000000,
+      currentRpm: 0,
+      rollingTokensUsed: 0,
+      rollingWindowLimit: 20000000,
+      windowResetTime: Date.now() + 24 * 3600 * 1000,
+      status: 'active',
+      cooldownUntil: 0,
+      priority: 1,
+      totalRequests: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
+      totalTokensSaved: 0,
+      estimatedCostUSD: 0
+    };
+
     this.accounts.set(demoFree1.id, demoFree1);
     this.accounts.set(demoPaidPro1.id, demoPaidPro1);
     this.accounts.set(demoPaidPro2.id, demoPaidPro2);
     this.accounts.set(demoOmniRoute.id, demoOmniRoute);
+    this.accounts.set(demoOpenAI.id, demoOpenAI);
+    this.accounts.set(demoClaude.id, demoClaude);
+    this.accounts.set(demoDeepSeek.id, demoDeepSeek);
+    this.accounts.set(demoOllama.id, demoOllama);
   }
 
   public getAccounts(): GeminiAccount[] {
