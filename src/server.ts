@@ -96,6 +96,8 @@ export class MeshSecurityManager {
 
   public setMode(mode: 'localhost' | 'lan') {
     this.config.mode = mode;
+    // Enforce Gateway Bearer Token Auth by default for all LAN networking subscriptions
+    this.config.requireGatewayToken = (mode === 'lan');
     this.saveConfig();
   }
 
@@ -154,16 +156,20 @@ app.use((req: Request, res: Response, next) => {
   }
 
   // 2. Gateway Master Token Authentication Check
-  if (sec.requireGatewayToken && (req.path.startsWith('/v1/') || (req.path.startsWith('/api/') && !req.path.startsWith('/api/security/status')))) {
+  // Default to MANDATORY for ALL remote LAN network subscriptions, protecting accounts and quotas
+  const isRemoteLAN = !isLoopback;
+  const mustAuthenticate = isRemoteLAN || (sec.requireGatewayToken && isRemoteLAN);
+
+  if (mustAuthenticate && (req.path.startsWith('/v1/') || (req.path.startsWith('/api/') && !req.path.startsWith('/api/security/status')))) {
     const authHeader = req.headers['authorization'] || '';
     const customKey = req.headers['x-mesh-key'] || '';
     const provided = authHeader.toString().replace(/^Bearer\s+/i, '').trim() || customKey.toString().trim();
 
     if (provided !== sec.gatewayToken) {
-      securityManager.recordBlocked(rawIp, req.method, req.path, 'Missing or invalid Gateway Bearer Token');
+      securityManager.recordBlocked(rawIp, req.method, req.path, 'Remote LAN access blocked: Valid Gateway Bearer Token required');
       return res.status(401).json({
         error: {
-          message: 'Unauthorized: A valid AiMeshManager Gateway Bearer Token is required.',
+          message: 'Unauthorized: A valid AiMeshManager Gateway Bearer Token is required for LAN network consumption.',
           code: 'UNAUTHORIZED_GATEWAY_TOKEN'
         }
       });
@@ -638,7 +644,13 @@ app.post('/api/security/toggle-lan', (req: Request, res: Response) => {
   const current = securityManager.getConfig();
   const newMode = current.mode === 'localhost' ? 'lan' : 'localhost';
   securityManager.setMode(newMode);
-  res.json({ success: true, mode: newMode, message: `MeshManager network mode switched to: ${newMode}` });
+  res.json({
+    success: true,
+    mode: newMode,
+    requireGatewayToken: securityManager.getConfig().requireGatewayToken,
+    gatewayToken: securityManager.getConfig().gatewayToken,
+    message: `AiMeshManager network mode switched to: ${newMode} (Gateway Bearer Token Auth ${newMode === 'lan' ? 'Enforced by default' : 'Optional'})`
+  });
 });
 
 app.post('/api/security/toggle-auth', (req: Request, res: Response) => {

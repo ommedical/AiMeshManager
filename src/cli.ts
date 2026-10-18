@@ -524,11 +524,18 @@ async function handleSecurity(subArgs: string[]) {
     case 'set-mode':
       const newMode = (subArgs[1]?.toLowerCase() === 'lan' || sec.mode === 'localhost') ? 'lan' : 'localhost';
       sec.mode = newMode;
+      if (newMode === 'lan') {
+        sec.requireGatewayToken = true;
+      }
       fs.writeFileSync(secFile, JSON.stringify(sec, null, 2), 'utf-8');
       try {
         await fetch(`http://127.0.0.1:${PORT}/api/security/toggle-lan`, { method: 'POST' });
       } catch (e) {}
       console.log(`\x1b[32m[✓] Network mode switched to: ${newMode.toUpperCase()} (${newMode === 'localhost' ? '127.0.0.1 Loopback' : '0.0.0.0 LAN Sharing'})\x1b[0m`);
+      if (newMode === 'lan') {
+        console.log(`\x1b[33m • Gateway Bearer Token Auth has been automatically ENABLED to protect all LAN subscriptions.\x1b[0m`);
+        console.log(` • Master Gateway Token: \x1b[34m${sec.gatewayToken}\x1b[0m`);
+      }
       break;
 
     case 'toggle-auth':
