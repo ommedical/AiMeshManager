@@ -70,6 +70,9 @@ async function runTests() {
     }
   }
 
+  // Ensure demo accounts are seeded for the test suite
+  await request('POST', '/api/accounts/seed-demo');
+
   // Test 1: Health & Stats
   await test('Endpoint: GET /api/stats responds 200', async () => {
     const res = await request('GET', '/api/stats');

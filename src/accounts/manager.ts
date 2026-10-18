@@ -104,7 +104,13 @@ export class AccountPoolManager {
     }
   }
 
-  private initializeDefaultSeed() {
+  public initializeDefaultSeed() {
+    // Start completely blank with 0 accounts by default
+    this.accounts = new Map();
+  }
+
+  public seedDemoAccounts() {
+    this.accounts.clear();
     // 1. Free Gemini Account 1
     const demoFree1: GeminiAccount = {
       id: 'acc-free-1',
@@ -371,13 +377,10 @@ export class AccountPoolManager {
    */
   public purgeAllSecrets(): { purgedAccounts: number; filesWiped: string[] } {
     const filesWiped: string[] = [];
-    let count = 0;
+    const count = this.accounts.size;
 
-    // 1. Clear keys from in-memory account pool
-    this.accounts.forEach(acc => {
-      acc.apiKey = '';
-      count++;
-    });
+    // 1. Clear all accounts completely from memory
+    this.accounts.clear();
 
     // 2. Cryptographically shred accounts.json
     if (fs.existsSync(this.accountsFile)) {
@@ -418,8 +421,8 @@ export class AccountPoolManager {
       }
     });
 
-    // 4. Re-seed clean placeholders with no credentials
-    this.initializeDefaultSeed();
+    // 4. Save blank accounts state
+    this.saveAccounts();
     return { purgedAccounts: count, filesWiped };
   }
 
@@ -542,40 +545,104 @@ export class AccountPoolManager {
     }
   }
 
-  public async verifyApiKey(apiKey: string): Promise<{ valid: boolean; message: string; models?: string[] }> {
-    if (!apiKey || apiKey.startsWith('DEMO_')) {
+  public async verifyApiKey(apiKey: string, provider: string = 'gemini', endpointUrl?: string): Promise<{ valid: boolean; message: string; models?: string[] }> {
+    if (!apiKey) {
+      return { valid: false, message: 'No API key provided. Account will run in local simulation/loopback mode.' };
+    }
+
+    if (apiKey.startsWith('DEMO_')) {
       return { valid: true, message: 'Demo Credential accepted (Simulation Mode).' };
     }
 
-    // If OAuth Bearer token (starts with ya29...)
     if (apiKey.startsWith('ya29.')) {
       return { valid: true, message: 'Google OAuth 2.0 Bearer Token verified successfully.' };
     }
 
-    return new Promise(resolve => {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-      https
-        .get(url, res => {
-          let body = '';
-          res.on('data', chunk => (body += chunk));
-          res.on('end', () => {
-            if (res.statusCode === 200) {
-              try {
-                const parsed = JSON.parse(body);
-                const models = (parsed.models || []).map((m: any) => m.name.replace('models/', ''));
-                resolve({ valid: true, message: 'API Key successfully verified with Google Gemini API!', models });
-              } catch (e) {
-                resolve({ valid: true, message: 'API Key authenticated successfully.' });
-              }
-            } else {
-              resolve({ valid: false, message: `Authentication failed (HTTP ${res.statusCode}). Please verify your key.` });
-            }
-          });
-        })
-        .on('error', err => {
-          resolve({ valid: false, message: `Network error verifying key: ${err.message}` });
+    const prov = (provider || 'gemini').toLowerCase();
+
+    try {
+      if (prov === 'openrouter') {
+        const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(6000)
         });
-    });
+        if (res.ok) {
+          const data: any = await res.json();
+          const label = data.data?.label || 'OpenRouter Key';
+          const limit = data.data?.limit ? `$${data.data.limit}` : 'unlimited';
+          return { valid: true, message: `OpenRouter key active! (Label: ${label}, Limit: ${limit})` };
+        }
+        return { valid: false, message: `OpenRouter auth failed (HTTP ${res.status}). Check API key.` };
+      }
+
+      if (prov === 'openai') {
+        const base = endpointUrl ? endpointUrl.replace(/\/+$/, '') : 'https://api.openai.com/v1';
+        const res = await fetch(`${base}/models`, {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(6000)
+        });
+        if (res.ok) {
+          return { valid: true, message: 'OpenAI / Compatible Endpoint authenticated successfully! (HTTP 200)' };
+        }
+        return { valid: false, message: `OpenAI authentication failed: HTTP ${res.status}` };
+      }
+
+      if (prov === 'anthropic') {
+        const res = await fetch('https://api.anthropic.com/v1/models', {
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          signal: AbortSignal.timeout(6000)
+        });
+        if (res.ok) {
+          return { valid: true, message: 'Anthropic Claude API key verified successfully! (HTTP 200)' };
+        }
+        return { valid: false, message: `Anthropic verification failed: HTTP ${res.status}` };
+      }
+
+      if (prov === 'deepseek') {
+        const res = await fetch('https://api.deepseek.com/models', {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(6000)
+        });
+        if (res.ok) {
+          return { valid: true, message: 'DeepSeek API key authenticated successfully! (HTTP 200)' };
+        }
+        return { valid: false, message: `DeepSeek verification failed: HTTP ${res.status}` };
+      }
+
+      if (prov === 'ollama') {
+        const base = endpointUrl ? endpointUrl.replace(/\/v1\/?$/, '') : 'http://127.0.0.1:11434';
+        const res = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(4000) });
+        if (res.ok) {
+          const data: any = await res.json();
+          const models = (data.models || []).map((m: any) => m.name);
+          return { valid: true, message: `Local Ollama is online! Available: ${models.slice(0, 3).join(', ')}${models.length > 3 ? '...' : ''}` };
+        }
+        return { valid: false, message: `Could not reach Ollama at ${base}. Ensure Ollama is running.` };
+      }
+
+      if (prov === 'lmstudio') {
+        const base = endpointUrl ? endpointUrl.replace(/\/+$/, '') : 'http://127.0.0.1:1234/v1';
+        const res = await fetch(`${base}/models`, { signal: AbortSignal.timeout(4000) });
+        if (res.ok) {
+          return { valid: true, message: 'Local LM Studio is online and accepting connections!' };
+        }
+        return { valid: false, message: `Could not reach LM Studio at ${base}. Ensure local server is started.` };
+      }
+
+      // Default: Google Gemini
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
+        signal: AbortSignal.timeout(6000)
+      });
+      if (res.ok) {
+        return { valid: true, message: 'Google Gemini API key verified successfully! (HTTP 200)' };
+      }
+      return { valid: false, message: `Google Gemini auth failed (HTTP ${res.status}). Check API key.` };
+    } catch (err: any) {
+      return { valid: false, message: `Verification check failed: ${err.message}` };
+    }
   }
 
   private maintenanceCycle() {

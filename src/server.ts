@@ -770,9 +770,22 @@ app.post('/api/accounts/:id/toggle', (req: Request, res: Response) => {
 });
 
 app.post('/api/accounts/verify', async (req: Request, res: Response) => {
-  const { apiKey } = req.body;
-  const result = await accountManager.verifyApiKey(apiKey);
+  const { apiKey, provider, endpointUrl } = req.body;
+  const result = await accountManager.verifyApiKey(apiKey, provider, endpointUrl);
   res.json(result);
+});
+
+app.post('/api/accounts/:id/verify', async (req: Request, res: Response) => {
+  const acc = accountManager.getAccount(req.params.id);
+  if (!acc) return res.status(404).json({ valid: false, message: 'Account not found' });
+  const result = await accountManager.verifyApiKey(acc.apiKey, acc.provider, acc.endpointUrl);
+  res.json(result);
+});
+
+app.post('/api/accounts/seed-demo', (req: Request, res: Response) => {
+  accountManager.seedDemoAccounts();
+  accountManager.saveAccounts();
+  res.json({ success: true, message: 'Loaded default demo template accounts.', accounts: accountManager.getAccounts() });
 });
 
 app.post('/api/accounts/simulate-429', (req: Request, res: Response) => {
