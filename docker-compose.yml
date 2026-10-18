@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  oaaam:
+    build: .
+    container_name: oaaam-mesh
+    restart: always
+    ports:
+      - "20128:20128"
+    environment:
+      - PORT=20128
+      - NODE_ENV=production
+    volumes:
+      - ~/.oaaam:/root/.oaaam
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:20128/api/stats"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

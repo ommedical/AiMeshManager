@@ -26,8 +26,11 @@ export class AccountPoolManager {
 
   constructor() {
     this.initializeDefaultAccounts();
-    // Schedule periodic quota refresh / cooldown checks every 10 seconds
-    setInterval(() => this.maintenanceCycle(), 10000);
+    // Schedule periodic quota refresh / cooldown checks every 10 seconds (unref so CLI exits cleanly)
+    const timer = setInterval(() => this.maintenanceCycle(), 10000);
+    if (timer.unref) {
+      timer.unref();
+    }
   }
 
   private initializeDefaultAccounts() {

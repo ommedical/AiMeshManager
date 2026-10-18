@@ -1,23 +1,30 @@
 {
-  "name": "antigravity-omnigate",
+  "name": "oaaam",
   "version": "2.0.0",
-  "description": "Next-Gen Intelligent AI Gateway, Dynamic Multi-Account Mesh & Token Optimizer for Antigravity and Modern IDEs",
+  "description": "OAAAM (OmniAutoAiAgentMesh) — Next-Gen Intelligent Multi-Account AI Mesh, Token Optimizer & Self-Healing Gateway",
   "main": "dist/server.js",
+  "bin": {
+    "oaaam": "./dist/cli.js"
+  },
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
+    "cli": "ts-node src/cli.ts",
     "build": "tsc"
   },
   "keywords": [
+    "oaaam",
+    "omniautoaiagentmesh",
     "antigravity",
     "gemini",
     "multi-account",
     "ai-gateway",
     "token-optimizer",
+    "self-healing",
     "cursor",
     "vscode"
   ],
-  "author": "Antigravity Engineering",
+  "author": "OAAAM Open Source Contributors",
   "license": "MIT",
   "dependencies": {
     "express": "^4.19.2",

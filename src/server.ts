@@ -95,7 +95,7 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
 
   const effectiveModel = model === 'auto-smart-router' ? classification.recommendedModel : (model || classification.recommendedModel);
 
-  console.log(`[OmniGate Request #${totalRequestsServed}]`);
+  console.log(`[OAAAM Request #${totalRequestsServed}]`);
   console.log(` - Task Tier: ${classification.tier} (${classification.reason})`);
   console.log(` - Selected Account: ${targetAccount.name} [Tier: ${targetAccount.tier}]`);
   console.log(` - Model: ${effectiveModel}`);
