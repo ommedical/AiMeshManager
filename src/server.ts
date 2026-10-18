@@ -16,6 +16,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as crypto from 'crypto';
+import { exec } from 'child_process';
 import { AccountPoolManager, GeminiAccount, ProviderType, AuthType } from './accounts/manager';
 import { SemanticTaskClassifier } from './router/classifier';
 import { TokenOptimizer } from './optimizer/compressor';
@@ -1451,6 +1452,37 @@ export function gracefulShutdown(trigger: string, exitCode: number = 0) {
   if (drainCheck.unref) drainCheck.unref();
 }
 
+/**
+ * Cross-platform default browser launcher
+ * Automatically opens the Web Control Center dashboard upon successful startup.
+ */
+export function openBrowser(url: string): void {
+  if (
+    process.env.NO_BROWSER === 'true' ||
+    process.env.NO_BROWSER === '1' ||
+    process.env.CI === 'true' ||
+    process.env.NODE_ENV === 'test' ||
+    process.argv.includes('--no-open') ||
+    process.argv.includes('--no-browser')
+  ) {
+    return;
+  }
+
+  try {
+    const platform = process.platform;
+    if (platform === 'win32') {
+      exec(`start "" "${url}"`);
+    } else if (platform === 'darwin') {
+      exec(`open "${url}"`);
+    } else {
+      exec(`xdg-open "${url}"`);
+    }
+    console.log(` 🌐 Web Control Center auto-opened in your default browser.`);
+  } catch (err) {
+    // Non-critical: ignore browser spawn failures on headless hosts
+  }
+}
+
 const server = app.listen(PORT, host, () => {
   console.log(`=======================================================`);
   console.log(` AiMeshManager Core Running on: http://${host}:${PORT}`);
@@ -1460,6 +1492,9 @@ const server = app.listen(PORT, host, () => {
   console.log(` Gateway Token Auth:            ${securityManager.getConfig().requireGatewayToken ? 'ENABLED' : 'DISABLED'}`);
   console.log(` Graceful Shutdown Handler:     ARMED (SIGINT, SIGTERM, SIGBREAK, SIGHUP, HTTP)`);
   console.log(`=======================================================`);
+
+  // Auto-open browser upon successful server start
+  openBrowser(`http://localhost:${PORT}`);
 
   // Auto-sync cloud upstream models and local engines dynamically in background
   setTimeout(() => {

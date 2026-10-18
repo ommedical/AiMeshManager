@@ -102,11 +102,12 @@ Runs directly on Node.js (v18+) across Windows, macOS, Linux, WSL, or Android Te
    ```
    > ⚡ **Self-Bootstrapping:** If `node_modules` or `dist/` are not yet built, AiMeshManager automatically detects this and installs dependencies (`npm install`) and compiles TypeScript (`npm run build`) before starting!
 
-3. **Open the Web Control Center:**
-   Open your browser to:
+3. **Automatic Web Control Center Launch:**
+   As soon as the app starts successfully, **AiMeshManager automatically opens your default browser** directly to:
    ```
    http://localhost:20128
    ```
+   *(To disable automatic browser opening, e.g. on headless servers or CI, pass `--no-open` or set `NO_BROWSER=true`)*.
 
 4. **Run as a Background Daemon (Optional):**
    ```bash
@@ -244,13 +245,78 @@ AiMeshManager is fully compatible with all frontier AI clouds, aggregators, and 
 
 ### Setup Guides for Each Provider
 
-#### 1. Google Gemini (AI Studio & Paid Pro)
-* **Step 1**: Get an API key from [Google AI Studio](https://aistudio.google.com/).
-* **Step 2 (Web UI)**: Click **`+ Add AI Account`** $\to$ Select Provider: `Google Gemini` $\to$ Enter key $\to$ Click **`🔍 Test Key with Provider`** $\to$ Click **Save to Mesh**.
-* **Step 3 (CLI)**:
-  ```bash
-  aimeshmanager account add personal-gemini "Personal Gemini Pro" paid_pro gemini-2.5-pro "AIzaSy..."
-  ```
+#### 1. Google Gemini (Free Tier, Paid Pro & Google One AI Premium)
+
+Google Gemini provides multiple subscription tiers and access models. AiMeshManager pools them all under one unified, self-healing routing mesh:
+
+##### 📊 Subscription Tiers & Capabilities:
+| Subscription / Tier | How It Works | Rate Limits (RPM / TPM) | Ideal Mesh Role |
+| :--- | :--- | :---: | :--- |
+| **Free Tier** (`ai.google.dev`) | Free account with any standard `@gmail.com`. Generates free API keys in Google AI Studio. | **15 RPM** / **1M TPM** (1,500 requests/day) | Offloading micro-syntax, bracket completions, docstrings, formatting, and quick linting ($0 cost). |
+| **Google One AI Premium (Paid Pro)** | $19.99/mo plan (2TB storage + Gemini Advanced). Includes AI Studio developer access with high-priority rolling buckets. | **360 RPM** / **4M TPM** | Heavy development workhorse for `gemini-2.5-pro` and `gemini-2.5-flash` deep reasoning turns. |
+| **Google Cloud (GCP) Pay-As-You-Go** | Standard Google Cloud billing account linked to an AI Studio or Vertex project. | Scalable enterprise quota based on spending limits | High-concurrency agent swarms, continuous batch refactoring, team multi-IDE sharing. |
+
+---
+
+##### 🔑 Step-by-Step Setup Guide (For Free or Paid Pro):
+
+1. **Obtain your Permanent Google AI Studio API Key:**
+   * Open your browser and navigate to [Google AI Studio (https://aistudio.google.com/apikey)](https://aistudio.google.com/apikey).
+   * **Crucial:** Ensure you are signed in to the specific Google account that holds your subscription (e.g., your personal `@gmail.com` with Google One AI Premium or your GCP billing account).
+   * Click **`Create API Key`** $\to$ Select or create a project (e.g. `AiMeshManager Project`) $\to$ Click **`Create API Key in Existing Project`**.
+   * Copy the key to your clipboard (it always starts with `AIzaSy...`).
+
+2. **Add the Account in the Web Control Center (`http://localhost:20128`):**
+   * Click **`+ Add AI Account`** in the top navigation bar or on the dashboard card.
+   * **Account Identifier (ID)**: Enter a clean, URL-safe kebab-case ID such as `google-pro`, `gemini-paid`, or `gemini-free-1`.
+     *(Note: AiMeshManager automatically sanitizes input and converts spaces to hyphens to ensure safe URL routing).*
+   * **Friendly Label / Name**: Enter a recognizable name (e.g. `Personal Google One AI Premium` or `Work Pro Bucket`).
+   * **Provider**: Select **`Google Gemini`**.
+   * **Authentication Type**: Select **`API Key (AIzaSy...)`**.
+   * **API Key / Secret**: Paste your permanent `AIzaSy...` key.
+   * **Subscription Tier**: Select **`Paid Pro (5h Rolling Bucket)`** (or `Free Tier` if using a secondary free key).
+   * **Default Model**: Select **`gemini-2.5-pro`** (for deep reasoning) or **`gemini-2.5-flash`** (for sub-second responses).
+   * **Verify Connection**: Click **`🔍 Test Key with Provider`**! AiMeshManager queries Google's model catalog in real-time, verifying your key and displaying a green badge with active model counts.
+   * Click **`Save to Mesh`**. The account is immediately active in the mesh pool without requiring a server restart!
+
+3. **Or Add via Command Line (CLI):**
+   ```bash
+   # Add Paid Pro account:
+   aimeshmanager account add google-pro "Google One AI Premium" paid_pro gemini-2.5-pro "AIzaSy_YOUR_KEY" gemini
+
+   # Add secondary Free tier account for micro-task offloading:
+   aimeshmanager account add google-free "Gemini Free Fallback" free gemini-2.5-flash "AIzaSy_YOUR_FREE_KEY" gemini
+   ```
+
+---
+
+##### 💡 Critical Architecture Clarifications for Every Developer:
+
+* **Why Use an API Key (`AIzaSy...`) Instead of Browser Sign-In / OAuth?**
+  * **Browser Security Sandbox**: Modern web browsers strictly prevent desktop software, terminal daemons, and local proxy servers from extracting login cookies or reading passwords from your signed-in Chrome / Edge tabs. Any tool that claims to silently steal cookies from your browser violates basic operating system security and triggers antivirus quarantine.
+  * **The 60-Minute OAuth Expiration Wall**: Google OAuth 2.0 user Bearer tokens (`ya29...`) have a strict hardcoded lifetime of **exactly 60 minutes (3,600 seconds)**. Once that hour elapses, requests fail with `401 Unauthorized` unless an active OAuth refresh loop with client secrets is permanently maintained.
+  * **AI Studio Keys are Permanent Developer Credentials**: Google AI Studio API keys (`AIzaSy...`) never expire after 60 minutes. They are explicitly designed by Google for headless servers, IDE extensions, CLI tools, and gateways.
+
+* **How Pairing Paid Pro with a Free Account Saves up to 65% of Paid Quota:**
+  * When using frontier models like `gemini-2.5-pro`, simple IDE tasks (such as single-line bracket autocomplete, docstring generation, or variable renaming) consume valuable high-priority tokens from your paid 5-hour rolling bucket.
+  * By adding **one Paid Pro account** alongside **one Free Gemini account** (or a local Ollama model), AiMeshManager's **Autonomous Execution Arbiter** automatically routes micro-syntax tasks (Task Heat < 70%) to the free account ($0 cost), preserving **100% of your paid quota** exclusively for deep architectural planning, multi-file refactoring, and complex debugging!
+
+---
+
+##### 📋 Master Reference: DOs and DON'Ts (Best Practices & Common Pitfalls)
+
+| Category | ✅ DO (Best Practice) | ❌ DON'T (Common Pitfall) |
+| :--- | :--- | :--- |
+| **API Keys & Credentials** | **DO** generate permanent developer API keys from [Google AI Studio](https://aistudio.google.com/apikey) starting with `AIzaSy...`. | **DON'T** enter short-lived Google OAuth tokens (`ya29...`) expecting them to stay authenticated (they expire in 60 minutes). |
+| **Browser Authentication** | **DO** understand that copying your permanent API key is the secure, standard way to connect local desktop gateways to Google. | **DON'T** expect an app to read your Chrome cookies or auto-extract your Google password (browser sandboxing prevents this). |
+| **Account Identifiers (ID)** | **DO** use clean, lowercase kebab-case IDs (e.g. `google-pro`, `gemini-paid-1`, `openrouter-free`). | **DON'T** use spaces or special punctuation in IDs (e.g. `google pro` or `my account #1`), which break URL-based model pinning. |
+| **Credential Verification** | **DO** click **`🔍 Test Key with Provider`** in the modal or card to confirm upstream connectivity before saving. | **DON'T** leave the API Key field blank or guess if a key is working when live verification is built-in. |
+| **Quota & Cost Optimization** | **DO** pair your Paid Pro account with a secondary Free account or local runner (Ollama) to offload micro-tasks for $0. | **DON'T** route high-frequency single-character autocomplete directly to heavy reasoning models, which rapidly depletes quotas. |
+| **IDE Connectivity** | **DO** use the Google Antigravity toggle to automatically generate a Mock ADC and bypass corporate GCP IAM requirements. | **DON'T** attempt to create dummy corporate service account JSONs manually that corrupt `%APPDATA%\gcloud\`. |
+| **Upgrades & Maintenance** | **DO** run `aimeshmanager upgrade` or `node dist/cli.js upgrade` for 1-command git sync, dependency installation, and rebuild. | **DON'T** run invalid commands like `npm run --upgrade` (npm CLI does not accept custom flags without standard scripts). |
+| **Secrets & Privacy** | **DO** use **`🔥 Purge Stored Secrets`** or `aimeshmanager purge` for byte-level cryptographic disk zeroing on shared laptops. | **DON'T** commit `~/.aimeshmanager/accounts.json` or your API keys to public Git repositories. |
+
+---
 
 #### 2. OpenRouter (`https://openrouter.ai/`)
 * **Step 1**: Get your key (`sk-or-v1-...`) from [openrouter.ai/keys](https://openrouter.ai/keys).
@@ -341,21 +407,33 @@ AiMeshManager features an active IDE Integration Center that validates real bina
 ### Google Antigravity 2.0 Integration & Service Account Bypass (Mock ADC)
 
 #### The Challenge with Antigravity 2.0:
-Google Antigravity 2.0 is designed for enterprise environments where it forcefully demands a **Google Cloud Platform (GCP) Service Account** or Application Default Credentials (ADC) with corporate IAM roles. If you only have personal `@gmail.com` accounts or Google AI Studio API keys, Antigravity 2.0 blocks access.
+Google Antigravity 2.0 is designed for enterprise environments where it forcefully demands a **Google Cloud Platform (GCP) Service Account** or Application Default Credentials (ADC) with corporate IAM roles. If you only have personal `@gmail.com` accounts or Google AI Studio API keys, Antigravity 2.0 blocks access with authentication errors.
 
-#### The AiMeshManager Solution: Local Mock ADC & OAuth Token Loopback:
-1. **Dynamic Ephemeral RSA Key Generation**: At runtime, AiMeshManager generates an in-memory 2048-bit RSA key pair for the local service account without storing private keys in the repo.
-2. **Auto-Provisioning to Standard Google Cloud ADC Path**: Provisions the mock ADC file directly into Google's standard location:
+#### What the Web UI Toggle Switch & CLI Command Actually Do:
+When you click the toggle switch on the **Google Antigravity 2.0** card in the Web UI (or run `aimeshmanager antigravity setup`):
+
+1. **Active Process & Installation Discovery**:
+   AiMeshManager inspects running processes and system binary paths to detect whether Antigravity 2.0 is installed and running (`● Running (PID: xxxx)`).
+2. **Ephemeral RSA Key Generation**:
+   At runtime, AiMeshManager generates an in-memory 2048-bit RSA key pair for the local service account without storing private keys in the repo.
+3. **Mock ADC Provisioning (with Automatic Safe Backup)**:
+   It provisions a clean mock ADC configuration file into Google's standard location:
    * **Windows**: `%APPDATA%\gcloud\application_default_credentials.json`
    * **Linux/macOS**: `~/.config/gcloud/application_default_credentials.json`
-   *(Any existing user credentials are automatically backed up to `application_default_credentials.json.bak`)*.
-3. **Local OAuth Token Loopback**: When Antigravity 2.0 requests an OAuth token, AiMeshManager returns an instant mock Google Bearer token (`ya29.meshmanager-antigravity-local-session`) on `http://127.0.0.1:20128/oauth2/token`.
-4. **Transparent Proxying**: Antigravity routes all model traffic to `http://127.0.0.1:20128/v1`, where AiMeshManager transparently optimizes, load-balances, and dispatches across your pooled accounts!
+   > 🛡️ **Zero Data Loss**: If you previously had existing Google Cloud SDK credentials, AiMeshManager automatically creates a safe backup copy at `application_default_credentials.json.bak` before writing. Toggling the switch off restores your original credentials instantly.
+4. **Local OAuth Token Loopback Responder**:
+   When Antigravity 2.0 starts up, it reads the ADC file and attempts to authenticate against `http://127.0.0.1:20128/oauth2/token`. AiMeshManager's local loopback server immediately answers with a valid mock Google Bearer token (`ya29.meshmanager-antigravity-local-session`).
+5. **Transparent Gateway Proxying**:
+   Antigravity directs all code completion, chat, and reasoning requests to `http://127.0.0.1:20128/v1`. AiMeshManager receives the requests and transparently dispatches them across your pooled personal Google AI Studio keys, Paid Pro accounts, and fallback providers!
 
 ```bash
 # 1-Click CLI setup:
 aimeshmanager antigravity setup
 aimeshmanager ide connect antigravity
+
+# To disconnect and restore backup:
+aimeshmanager antigravity restore
+aimeshmanager ide disconnect antigravity
 ```
 
 ---

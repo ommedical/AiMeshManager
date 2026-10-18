@@ -144,6 +144,9 @@ async function main() {
 function handleStart() {
   ensureDependencies();
   const isDaemon = args.includes('--daemon') || args.includes('-d');
+  if (args.includes('--no-open') || args.includes('--no-browser')) {
+    process.env.NO_BROWSER = 'true';
+  }
   console.log(`\x1b[36m⚡ Starting AiMeshManager...\x1b[0m`);
 
   const active = getActivePidFile();
@@ -158,7 +161,8 @@ function handleStart() {
   if (isDaemon) {
     const child = spawn(process.execPath, [serverScript], {
       detached: true,
-      stdio: 'ignore'
+      stdio: 'ignore',
+      env: { ...process.env }
     });
     child.unref();
     if (child.pid) {

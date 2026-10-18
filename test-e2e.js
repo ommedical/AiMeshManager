@@ -61,7 +61,7 @@ async function ensureServerRunning() {
   } catch (err) {
     serverProcess = spawn(process.execPath, [path.join(__dirname, 'dist', 'server.js')], {
       stdio: 'ignore',
-      env: { ...process.env, PORT: '20128' }
+      env: { ...process.env, PORT: '20128', NO_BROWSER: 'true' }
     });
 
     for (let i = 0; i < 30; i++) {
