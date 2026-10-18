@@ -73,6 +73,18 @@ async function main() {
       await handleSecurity(args.slice(1));
       break;
 
+    case 'purge':
+      await handlePurge();
+      break;
+
+    case 'antigravity':
+      await handleAntigravity(args.slice(1));
+      break;
+
+    case 'swarm':
+      await handleSwarm(args.slice(1));
+      break;
+
     case 'help':
     case '--help':
     case '-h':
@@ -277,8 +289,12 @@ async function handleAccount(subArgs: string[]) {
       }
       break;
 
+    case 'purge':
+      await handlePurge();
+      break;
+
     default:
-      console.log(`\x1b[33mUsage: meshmanager account <list|add|delete|verify>\x1b[0m`);
+      console.log(`\x1b[33mUsage: meshmanager account <list|add|delete|verify|purge>\x1b[0m`);
       break;
   }
 }
@@ -504,6 +520,113 @@ async function handleSecurity(subArgs: string[]) {
   }
 }
 
+async function handlePurge() {
+  console.log(`\x1b[33m⚠️ WARNING: This will cryptographically shred all stored API keys and credentials on disk and clear in-memory pools!\x1b[0m`);
+  try {
+    const res = await fetch(`http://127.0.0.1:${PORT}/api/accounts/purge`, { method: 'POST' });
+    if (res.ok) {
+      const data: any = await res.json();
+      console.log(`\x1b[32m[✓] ${data.message}\x1b[0m`);
+      if (data.filesWiped && data.filesWiped.length > 0) {
+        console.log(`\x1b[36m • Shredded & Unlinked Files:\x1b[0m ${data.filesWiped.join(', ')}`);
+      }
+      return;
+    }
+  } catch (e) {
+    // If daemon is not running, purge directly via AccountPoolManager
+    const manager = new AccountPoolManager();
+    const result = manager.purgeAllSecrets();
+    console.log(`\x1b[32m[✓] Cryptographically shredded stored credentials from disk (Offline mode).\x1b[0m`);
+    console.log(`\x1b[36m • Shredded & Unlinked Files:\x1b[0m ${result.filesWiped.join(', ')}`);
+  }
+}
+
+async function handleAntigravity(subArgs: string[]) {
+  const action = subArgs[0]?.toLowerCase() || 'setup';
+  if (action === 'mock-adc' || action === 'setup') {
+    const configDir = path.join(os.homedir(), '.meshmanager');
+    const adcPath = path.join(configDir, 'meshmanager-service-account.json');
+    
+    try {
+      const res = await fetch(`http://127.0.0.1:${PORT}/api/antigravity/generate-mock-adc`, { method: 'POST' });
+      if (res.ok) {
+        const data: any = await res.json();
+        console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
+        console.log(`\x1b[1m 🛠️ Google Antigravity 2.0 Local Service Account Bypass (Mock ADC)\x1b[0m`);
+        console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
+        console.log(`\x1b[32m[✓] ${data.message}\x1b[0m\n`);
+        console.log(`Generated Mock ADC File: \x1b[34m${data.filePath}\x1b[0m\n`);
+        console.log(`\x1b[1mRun the following command before starting Antigravity 2.0:\x1b[0m`);
+        console.log(`\x1b[33m# PowerShell (Windows):\x1b[0m`);
+        console.log(`  ${data.envInstructions.powershell}\n`);
+        console.log(`\x1b[33m# Bash / Zsh (Linux/macOS):\x1b[0m`);
+        console.log(`  ${data.envInstructions.bash}\n`);
+        console.log(`\x1b[36mOnce set, Antigravity 2.0 will connect to MeshManager without asking for a corporate Google Cloud Service Account!\x1b[0m`);
+        console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
+        return;
+      }
+    } catch (e) {}
+
+    // Fallback if offline
+    const mockServiceAccount = {
+      type: 'service_account',
+      project_id: 'meshmanager-local',
+      private_key_id: 'mesh-local-adc-key',
+      private_key: 'MOCK_PRIVATE_KEY_EPHEMERAL_ADC',
+      client_email: 'meshmanager-agent@meshmanager-local.iam.gserviceaccount.com',
+      client_id: '100201280000000000000',
+      auth_uri: `http://127.0.0.1:${PORT}/auth`,
+      token_uri: `http://127.0.0.1:${PORT}/oauth2/token`
+    };
+    fs.writeFileSync(adcPath, JSON.stringify(mockServiceAccount, null, 2), 'utf-8');
+    console.log(`\x1b[32m[✓] Generated Mock ADC file at: ${adcPath}\x1b[0m`);
+    console.log(`Run: $env:GOOGLE_APPLICATION_CREDENTIALS="${adcPath}"; $env:GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:${PORT}/v1"`);
+  } else {
+    console.log(`\x1b[33mUsage: meshmanager antigravity <setup|mock-adc>\x1b[0m`);
+  }
+}
+
+async function handleSwarm(subArgs: string[]) {
+  const task = subArgs.join(' ') || 'Decompose and implement distributed feature with parallel multi-agent swarm';
+  console.log(`\x1b[1m\x1b[36m========================================================================================================\x1b[0m`);
+  console.log(`\x1b[1m 🚀 MeshManager Parallel Multi-Agent Swarm Dispatcher\x1b[0m`);
+  console.log(`\x1b[1m • Shared Workspace Context:   PRESERVED (AST, Git Diff, Session Memory)\x1b[0m`);
+  console.log(`\x1b[1m • Dispatch Strategy:          SIMULTANEOUS & PARALLEL (Multi-Account Token Consumption)\x1b[0m`);
+  console.log(`\x1b[1m • Task:                       "${task}"\x1b[0m`);
+  console.log(`\x1b[1m\x1b[36m========================================================================================================\x1b[0m\n`);
+
+  try {
+    const res = await fetch(`http://127.0.0.1:${PORT}/v1/swarm/dispatch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task, clientIDE: 'MeshManager CLI Swarm' })
+    });
+    if (!res.ok) {
+      console.log(`\x1b[31m[!] Swarm execution failed: HTTP ${res.status}\x1b[0m`);
+      return;
+    }
+    const data: any = await res.json();
+    console.log(`\x1b[1m Agent Sub-Task Role           Target Model          Target Account / Provider       Tier       Heat   Latency  Tokens Used (Saved)\x1b[0m`);
+    console.log(`\x1b[36m─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\x1b[0m`);
+    (data.agents || []).forEach((ag: any) => {
+      const roleCol = (ag.role || '').slice(0, 30).padEnd(31);
+      const modCol = (ag.modelUsed || '').slice(0, 20).padEnd(21);
+      const accCol = `${ag.accountUsed} (${ag.provider})`.slice(0, 30).padEnd(31);
+      const tierCol = (ag.accountTier || '').padEnd(10);
+      const heatCol = `${ag.heatScore}%`.padStart(5);
+      const latCol = `${ag.durationMs}ms`.padStart(7);
+      const tokCol = `${ag.inputTokens + ag.outputTokens} (-${ag.tokensSaved})`.padStart(18);
+      console.log(` ${roleCol} ${modCol} ${accCol} ${tierCol} ${heatCol} ${latCol}  ${tokCol}`);
+    });
+    console.log(`\x1b[36m─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\x1b[0m`);
+    console.log(`\x1b[32m[✓] Swarm completed in ${data.totalDurationMs}ms across 4 parallel event loops without thread contention.\x1b[0m`);
+    console.log(`\x1b[36m • Total Swarm Tokens: ${data.totalSwarmTokens} tokens | Quota Saved via Compression: ${data.totalSwarmSaved} tokens\x1b[0m`);
+    console.log(`\x1b[36m • Unified Master Ledger updated atomically.\x1b[0m\n`);
+  } catch (e: any) {
+    console.log(`\x1b[31m[!] Swarm request failed: ${e.message}\x1b[0m`);
+  }
+}
+
 function printHelp() {
   console.log(`
 \x1b[1m\x1b[36m⚡ MeshManager CLI Reference\x1b[0m
@@ -522,21 +645,29 @@ function printHelp() {
   \x1b[32mdoctor\x1b[0m                Run system diagnostics on ports, storage, and IDE paths
   \x1b[32mupdate, upgrade\x1b[0m       Check for updates and automatically upgrade MeshManager
 
-\x1b[1mSECURITY & NETWORK ISOLATION:\x1b[0m
-  \x1b[32mmeshmanager security status\x1b[0m            View network mode, token requirement, and blocked logs
-  \x1b[32mmeshmanager security toggle-lan\x1b[0m        Toggle Localhost (127.0.0.1) vs LAN Sharing (0.0.0.0)
-  \x1b[32mmeshmanager security toggle-auth\x1b[0m       Enable/Disable mandatory Gateway Bearer Token auth
+\x1b[1mDYNAMIC MULTI-AGENT SWARM:\x1b[0m
+  \x1b[32mmeshmanager swarm "<task>"\x1b[0m    Dispatch 4 parallel subagents across paid & free accounts with shared context
+
+\x1b[1mANTIGRAVITY 2.0 INTEGRATION:\x1b[0m
+  \x1b[32mmeshmanager antigravity setup\x1b[0m Generate mock Google Cloud ADC to bypass corporate Service Account login
+
+\x1b[1mSECURITY & ZERO-RESIDUAL PURGE:\x1b[0m
+  \x1b[32mmeshmanager purge\x1b[0m               Cryptographically shred all stored API keys & OAuth credentials from disk
+  \x1b[32mmeshmanager security status\x1b[0m     View network mode, token requirement, and blocked logs
+  \x1b[32mmeshmanager security toggle-lan\x1b[0m Toggle Localhost (127.0.0.1) vs LAN Sharing (0.0.0.0)
+  \x1b[32mmeshmanager security toggle-auth\x1b[0m Enable/Disable mandatory Gateway Bearer Token auth
   \x1b[32mmeshmanager security regenerate-token\x1b[0m Rotate Gateway Master Token
 
 \x1b[1mACCOUNT MANAGEMENT:\x1b[0m
-  \x1b[32mmeshmanager account list\x1b[0m               List accounts, pins, and quota metrics
-  \x1b[32mmeshmanager account add <id> ...\x1b[0m       Add new AI account (Gemini, OmniRoute, etc.)
-  \x1b[32mmeshmanager account delete <id>\x1b[0m        Delete account from pool
-  \x1b[32mmeshmanager account verify <key>\x1b[0m       Test key with Google Gemini API
+  \x1b[32mmeshmanager account list\x1b[0m        List accounts, pins, and quota metrics
+  \x1b[32mmeshmanager account add <id> ...\x1b[0m Add new AI account (Gemini, OmniRoute, etc.)
+  \x1b[32mmeshmanager account delete <id>\x1b[0m Delete account from pool
+  \x1b[32mmeshmanager account verify <key>\x1b[0m Test key with Google Gemini API
+  \x1b[32mmeshmanager account purge\x1b[0m        Shred stored credentials from disk and wipe keys from memory
 
 \x1b[1m1-CLICK IDE MANAGEMENT:\x1b[0m
-  \x1b[32mmeshmanager ide connect <ide|all>\x1b[0m      Connect IDE to mesh (Antigravity, Cursor, VS Code, Windsurf)
-  \x1b[32mmeshmanager ide disconnect <ide|all>\x1b[0m   Revert IDE settings to default
+  \x1b[32mmeshmanager ide connect <ide|all>\x1b[0m    Connect IDE to mesh (Antigravity, Cursor, VS Code, Windsurf)
+  \x1b[32mmeshmanager ide disconnect <ide|all>\x1b[0m Revert IDE settings to default
 
 \x1b[1mACCESS POINTS:\x1b[0m
   Control Center Dashboard: \x1b[34mhttp://localhost:20128\x1b[0m

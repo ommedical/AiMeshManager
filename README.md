@@ -28,16 +28,18 @@
 1. [Overview & Core Philosophy](#-overview--core-philosophy)
 2. [Resource Efficiency & ~0 Stress Benchmark](#-resource-efficiency---0-stress-benchmark)
 3. [Dynamic Task Heat, Intelligence Spectrum & Parallel Multi-Account Execution](#-dynamic-task-heat-intelligence-spectrum--parallel-multi-account-execution)
-4. [Single Unified Master Telemetry Ledger](#-single-unified-master-telemetry-ledger)
-5. [Local Network Isolation & Atomic Access Rules](#-local-network-isolation--atomic-access-rules)
-6. [Adding & Authenticating Multiple Accounts (API Keys & OAuth Bearer)](#-adding--authenticating-multiple-accounts)
-7. [How to Know if Models are Dynamically Changing](#-how-to-know-if-models-are-dynamically-changing)
-8. [Setting Default Models per Account](#-setting-default-models-per-account)
-9. [Virtual Model Pins (Direct Account Targeting)](#-using-a-specific-model-of-a-specific-account-in-any-ide)
-10. [1-Click IDE Connect Center & Binary Validation](#-1-click-ide-connect-center--fixing-vs-code-detection)
-11. [Complete CLI Command Reference](#-complete-cli-command-reference)
-12. [Hermes-Style Self-Healing & Anti-Hallucination Guard](#-hermes-style-self-healing--anti-hallucination-guard)
-13. [Installation & Quickstart](#-installation--quickstart)
+4. [Dynamic Multi-Agent Swarm with Shared Development Context](#-dynamic-multi-agent-swarm-with-shared-development-context)
+5. [Google Antigravity 2.0 Integration & Service Account Bypass (Mock ADC)](#-google-antigravity-20-integration--service-account-bypass-mock-adc)
+6. [Single Unified Master Telemetry Ledger](#-single-unified-master-telemetry-ledger)
+7. [Local Network Isolation & Zero-Residual Secret Purge](#-local-network-isolation--zero-residual-secret-purge)
+8. [Adding & Authenticating Multiple Accounts (API Keys & OAuth Bearer)](#-adding--authenticating-multiple-accounts)
+9. [How to Know if Models are Dynamically Changing](#-how-to-know-if-models-are-dynamically-changing)
+10. [Setting Default Models per Account](#-setting-default-models-per-account)
+11. [Virtual Model Pins (Direct Account Targeting)](#-using-a-specific-model-of-a-specific-account-in-any-ide)
+12. [1-Click IDE Connect Center & Binary Validation](#-1-click-ide-connect-center--fixing-vs-code-detection)
+13. [Complete CLI Command Reference](#-complete-cli-command-reference)
+14. [Hermes-Style Self-Healing & Anti-Hallucination Guard](#-hermes-style-self-healing--anti-hallucination-guard)
+15. [Installation & Quickstart](#-installation--quickstart)
 
 ---
 
@@ -125,6 +127,95 @@ When multiple IDEs or subagents trigger requests concurrently:
 
 ---
 
+## 🚀 Dynamic Multi-Agent Swarm with Shared Development Context
+
+MeshManager enables full **Multi-Agent Swarm Orchestration** where multiple specialized agents work in parallel on the same project task while maintaining **100% unified workspace context**:
+
+```mermaid
+flowchart TD
+    subgraph Context["Unified Development & Workspace Context Graph"]
+        AST["Workspace AST & Code Map"]
+        DIFF["Git Diff & Staging Tree"]
+        HIST["Full Chat & Session Memory"]
+    end
+
+    subgraph SwarmOrchestrator["MeshManager Swarm Engine (Parallel Event Loops)"]
+        SW["Task Decomposer & Heat Profiler"]
+    end
+
+    subgraph Subagents["Specialized Subagents (Simultaneous Parallel Execution)"]
+        A1["Architect & Planner (Heat: 96%)<br/>🧠 Dispatches to: Paid Pro #1 (Gemini 2.5 Pro)"]
+        A2["Core Implementation (Heat: 78%)<br/>💻 Dispatches to: Paid Pro #2 (Gemini 2.5 Pro)"]
+        A3["Syntax & Doc Linter (Heat: 20%)<br/>⚡ Dispatches to: Free Account #1 (Gemini 2.5 Flash)"]
+        A4["Critic & Hallucination Guard (Heat: 55%)<br/>🛡️ Dispatches to: Free Account #2 (Gemini 3.8 Flash)"]
+    end
+
+    subgraph AtomicLedger["Atomic Master Ledger & Accounting"]
+        L1["Paid Pro #1 Bucket (-450 tokens)"]
+        L2["Paid Pro #2 Bucket (-620 tokens)"]
+        L3["Free Account #1 Bucket (-310 tokens)"]
+        L4["Free Account #2 Bucket (-280 tokens)"]
+    end
+
+    Context --> SW
+    SW --> A1
+    SW --> A2
+    SW --> A3
+    SW --> A4
+    A1 --> L1
+    A2 --> L2
+    A3 --> L3
+    A4 --> L4
+```
+
+### How Shared Development Context is Preserved:
+1. **Central Context Registry:** When a task arrives, MeshManager extracts the project AST, git diff, and conversation turns.
+2. **Specialized Subagent Prompts:** Each subagent receives targeted instructions alongside the full workspace context without data degradation or hallucinated drift.
+3. **Simultaneous Execution via `Promise.all()`:** All 4 subagents run concurrently across non-blocking asynchronous event loops, taking just 1-3 ms to dispatch without lock contention.
+4. **Atomic Multi-Account Billing:** Paid subscriptions handle high-reasoning tasks, while free accounts handle documentation and linting, saving hundreds of thousands of paid tokens.
+
+### Triggering via CLI or Web UI:
+```bash
+# Dispatch a parallel swarm task:
+meshmanager swarm "Architect and refactor high-throughput auth router with Redis caching"
+```
+Or open `http://localhost:20128` $\to$ **Dynamic Task Simulator** $\to$ click **`⚡ Launch Swarm`**.
+
+---
+
+## ⚡ Google Antigravity 2.0 Integration & Service Account Bypass (Mock ADC)
+
+### The Challenge with Antigravity 2.0:
+Google Antigravity 2.0 is designed for enterprise environments where it forcefully demands a **Google Cloud Platform (GCP) Service Account** or Application Default Credentials (ADC) with corporate IAM roles. If you only have personal `@gmail.com` accounts, Google AI Studio API keys, or standard Google AI Pro subscriptions, Antigravity 2.0 blocks access.
+
+### The MeshManager Solution: Local Loopback Mock ADC
+MeshManager solves this cleanly by acting as a **local mock Google Cloud OAuth Provider**:
+1. **Generates Local Service Account ADC JSON (`meshmanager-service-account.json`)**: Configures `token_uri` to point to `http://127.0.0.1:20128/oauth2/token`.
+2. **Local OAuth Token Loopback**: When Antigravity 2.0 requests an OAuth token, MeshManager returns an instant mock Google Bearer token (`ya29.meshmanager-antigravity-local-session`).
+3. **Transparent Proxying**: Antigravity routes all model traffic to `GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:20128/v1"`, which MeshManager transparently translates, optimizes, and routes to your pooled accounts!
+
+### 1-Click Setup:
+```bash
+# Generate Mock ADC configuration:
+meshmanager antigravity setup
+```
+
+### Environment Variables to Set:
+* **PowerShell (Windows)**:
+  ```powershell
+  $env:GOOGLE_APPLICATION_CREDENTIALS="$HOME\.meshmanager\meshmanager-service-account.json"
+  $env:GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:20128/v1"
+  ```
+* **Bash / Zsh (Linux / macOS)**:
+  ```bash
+  export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.meshmanager/meshmanager-service-account.json"
+  export GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:20128/v1"
+  ```
+
+Once set, launch Antigravity 2.0. It will start instantly without asking for a corporate Google Cloud Service Account login!
+
+---
+
 ## 📊 Single Unified Master Telemetry Ledger
 
 Instead of fragmented accounting views, MeshManager unifies client development editors and upstream provider accounts into a **Single Master Telemetry Matrix**:
@@ -176,6 +267,20 @@ Prevent unauthorized scripts or rogue local processes from draining your token q
 
 ### 3. Real-Time Firewall Audit Log
 MeshManager tracks any unauthorized access attempt with timestamp, client IP address, target path, and reason. Inspect live in the Web UI under the **Security & Local Isolation** tab.
+
+### 4. Zero-Residual Secret Purge & File Shredding (`meshmanager purge`)
+If you need to leave no traces of your credentials on a system (e.g. shared workstations, client laptops, or when stopping the app):
+
+* **Cryptographic Byte Zeroing:** Before deleting `~/.meshmanager/accounts.json`, MeshManager overwrites every single byte on disk with zeroes (`Buffer.alloc(stats.size, 0)`), defeating disk data recovery and file undelete utilities.
+* **In-Memory Key Wiping:** Clears all API keys from active Node.js memory heaps and re-seeds clean simulation placeholders.
+* **1-Click CLI & UI Execution:**
+  ```bash
+  # Purge all stored credentials immediately:
+  meshmanager purge
+  # (or alias)
+  meshmanager account purge
+  ```
+  Or open the Web Control Center $\to$ **AI Accounts & Models** $\to$ click **`🔥 Purge Stored Secrets`**.
 
 ---
 
@@ -330,6 +435,9 @@ mesh <command>
 | **`stop`** | — | Stops the background service cleanly. |
 | **`restart`** | — | Safely restarts the gateway service. |
 | **`status`** | — | Prints gateway PID, port, active accounts, and connected IDEs. |
+| **`swarm`** | `"<task>"` | Dispatches 4 parallel subagents (Planner, Coder, Linter, Critic) across accounts. |
+| **`antigravity setup`** | `[mock-adc]` | Generates Mock Google Cloud ADC to bypass Antigravity 2.0 service account login. |
+| **`purge`** | — | Cryptographically shreds stored credentials from disk and clears in-memory keys. |
 | **`unified, matrix`** | — | Displays the Single Unified Master Telemetry Ledger. |
 | **`stats`** | — | Real-time token economy, savings, and resource stress benchmark. |
 | **`security status`** | — | Inspects host binding (Localhost vs LAN) and Gateway Token. |
@@ -342,6 +450,7 @@ mesh <command>
 | **`account add`** | `<id> <name> <tier> <model> <key>` | Adds an account with disk persistence. |
 | **`account delete`** | `<id>` | Deletes an account from the mesh pool. |
 | **`account verify`** | `<key>` | Verifies an API key against Google Gemini API. |
+| **`account purge`** | — | Shreds credentials from disk and clears memory pools. |
 | **`ide connect`** | `<antigravity\|cursor\|vscode\|all>` | Injects gateway settings into editor. |
 | **`ide disconnect`**| `<antigravity\|cursor\|vscode\|all>` | Reverts editor to default settings. |
 

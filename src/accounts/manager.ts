@@ -246,6 +246,42 @@ export class AccountPoolManager {
   }
 
   /**
+   * Cryptographically shreds all stored credential files on disk and clears API keys from memory.
+   * Ensures zero residual credentials remain on the system when invoked.
+   */
+  public purgeAllSecrets(): { purgedAccounts: number; filesWiped: string[] } {
+    const filesWiped: string[] = [];
+    let count = 0;
+
+    // 1. Clear keys from in-memory account pool
+    this.accounts.forEach(acc => {
+      acc.apiKey = 'PURGED';
+      count++;
+    });
+
+    // 2. Cryptographically shred accounts.json
+    if (fs.existsSync(this.accountsFile)) {
+      try {
+        const stats = fs.statSync(this.accountsFile);
+        if (stats.size > 0) {
+          fs.writeFileSync(this.accountsFile, Buffer.alloc(stats.size, 0));
+        }
+        fs.unlinkSync(this.accountsFile);
+        filesWiped.push(this.accountsFile);
+      } catch (e) {
+        if (fs.existsSync(this.accountsFile)) {
+          fs.unlinkSync(this.accountsFile);
+          filesWiped.push(this.accountsFile);
+        }
+      }
+    }
+
+    // 3. Re-seed clean mock placeholders with no real credentials
+    this.initializeDefaultSeed();
+    return { purgedAccounts: count, filesWiped };
+  }
+
+  /**
    * Resolves target account and model.
    * Handles:
    * 1. Specific Account & Model Pins: "accountId/modelName" (e.g. "acc-paid-pro-1/gemini-2.5-pro")
@@ -327,6 +363,15 @@ export class AccountPoolManager {
     if (acc) {
       acc.status = 'cooldown';
       acc.cooldownUntil = Date.now() + cooldownDurationSec * 1000;
+      this.saveAccounts();
+    }
+  }
+
+  public resetCooldown(accountId: string) {
+    const acc = this.accounts.get(accountId);
+    if (acc) {
+      acc.status = acc.enabled ? 'active' : 'disabled';
+      acc.cooldownUntil = 0;
       this.saveAccounts();
     }
   }

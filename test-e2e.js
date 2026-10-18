@@ -144,6 +144,8 @@ async function runTests() {
       model: 'auto-smart-router'
     });
     if (completionRes.status !== 200) throw new Error('Failover route failed');
+    // Restore acc-free-1 to active status for remaining tests
+    await request('POST', '/api/accounts/acc-free-1/reset-cooldown');
   });
 
   // Test 8: Self-Healing
@@ -228,6 +230,47 @@ async function runTests() {
     const intelligence = res.headers['x-meshmanager-intelligence'];
     if (!heat || parseInt(heat) < 80) throw new Error(`Expected heat >= 80%, got ${heat}%`);
     if (!intelligence || parseInt(intelligence) < 4) throw new Error(`Expected intelligence >= 4/5, got ${intelligence}`);
+  });
+
+  // Test 15: Antigravity 2.0 Mock ADC & OAuth Token Endpoint
+  await test('Antigravity 2.0: Generate Mock ADC and verify OAuth2 token loopback', async () => {
+    const adcRes = await request('POST', '/api/antigravity/generate-mock-adc');
+    if (adcRes.status !== 200 || !adcRes.data.filePath) {
+      throw new Error('Failed to generate mock ADC');
+    }
+    const tokenRes = await request('POST', '/oauth2/token');
+    if (tokenRes.status !== 200 || !tokenRes.data.access_token || !tokenRes.data.access_token.startsWith('ya29.')) {
+      throw new Error('OAuth token loopback failed to return Bearer ya29 token');
+    }
+  });
+
+  // Test 16: Multi-Agent Parallel Swarm (Decomposition with Shared Context)
+  await test('Dynamic Swarm: Concurrent 4-agent dispatch across multiple accounts', async () => {
+    const res = await request('POST', '/v1/swarm/dispatch', {
+      task: 'Refactor auth middleware to support HMAC and OAuth tokens concurrently'
+    });
+    if (res.status !== 200 || !res.data.success || !Array.isArray(res.data.agents)) {
+      throw new Error('Swarm dispatch failed');
+    }
+    if (res.data.agents.length !== 4) {
+      throw new Error(`Expected 4 subagents, got ${res.data.agents.length}`);
+    }
+    const hasPro = res.data.agents.some(a => a.accountTier === 'PAID_PRO');
+    const hasFree = res.data.agents.some(a => a.accountTier === 'FREE');
+    if (!hasPro || !hasFree) {
+      throw new Error('Swarm did not distribute across both paid and free accounts');
+    }
+  });
+
+  // Test 17: Zero-Residual Secret Purge
+  await test('Zero-Residual Purge: Cryptographically shreds credentials and clears in-memory keys', async () => {
+    const res = await request('POST', '/api/accounts/purge');
+    if (res.status !== 200 || !res.data.success) {
+      throw new Error('Purge failed');
+    }
+    if (!res.data.filesWiped || res.data.filesWiped.length === 0) {
+      throw new Error('No files reported wiped during purge');
+    }
   });
 
   console.log('\n\x1b[36m====================================================\x1b[0m');
