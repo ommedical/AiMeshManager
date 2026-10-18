@@ -12,7 +12,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as https from 'https';
 
-export type ProviderType = 'gemini' | 'omniroute' | 'openai' | 'anthropic' | 'deepseek' | 'vertex' | 'custom';
+export type ProviderType = 'gemini' | 'omniroute' | 'openai' | 'anthropic' | 'deepseek' | 'vertex' | 'ollama' | 'lmstudio' | 'local' | 'custom';
 export type AuthType = 'api_key' | 'oauth_bearer' | 'oauth_refresh' | 'session_cookie';
 
 export interface GeminiAccount {
@@ -20,9 +20,9 @@ export interface GeminiAccount {
   name: string;
   provider: ProviderType;
   authType: AuthType;
-  endpointUrl?: string; // For OmniRoute, Vertex, or custom OpenAI endpoints
-  tier: 'free' | 'paid_pro' | 'paid_ultra' | 'enterprise';
-  apiKey: string; // API Key or OAuth Bearer Token
+  endpointUrl?: string; // For OmniRoute, Vertex, Ollama, LM Studio, or custom OpenAI endpoints
+  tier: 'free' | 'paid_pro' | 'paid_ultra' | 'enterprise' | 'local';
+  apiKey: string; // API Key or OAuth Bearer Token (optional for local models)
   defaultModel: string;
   enabled: boolean;
   maxRpm: number;

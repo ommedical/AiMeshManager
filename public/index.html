@@ -438,6 +438,7 @@
       <button class="tab-btn" onclick="switchTab('dashboard')">📡 Live Activity Matrix</button>
       <button class="tab-btn" onclick="switchTab('accounts')">🛡️ AI Accounts & Multi-Model Mesh (<span id="acc-count-badge">4</span>)</button>
       <button class="tab-btn" onclick="switchTab('ides')">🔌 1-Click IDE Connect Center</button>
+      <button class="tab-btn" onclick="switchTab('models')">🤖 Model Intelligence & Local Engines</button>
       <button class="tab-btn" onclick="switchTab('security')">🔒 Security & Local Isolation</button>
       <button class="tab-btn" onclick="switchTab('simulator')">🧠 Dynamic Task Simulator</button>
     </div>
@@ -725,6 +726,52 @@
           <div id="swarm-result-box" style="display: none; background: rgba(0,0,0,0.5); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem;">
           </div>
         </div>
+    <!-- TAB: Model Intelligence & Local Engines -->
+    <div id="tab-models" class="tab-content">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>💻</span> Local AI Model Engines & Hardware Discovery
+          </div>
+          <button class="btn-primary" onclick="loadLocalServers()">🔄 Scan Local Engines</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          AiMeshManager natively integrates with locally running model servers on your machine. Local models provide <strong>100% free unlimited tokens</strong>, <strong>zero cloud quota consumption</strong>, and <strong>sub-second private offline execution</strong>.
+        </p>
+        <div class="ide-grid" id="local-servers-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top: 1.5rem;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🧠</span> Dynamic Multi-Provider Model Performance & Knowledge Matrix
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Auto-Tiered Catalog</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          AiMeshManager dynamically classifies and ranks models across all cloud and local providers into 3 intelligence tiers based on benchmark reasoning strength, context capacity, and cost profile.
+        </p>
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Model Name</th>
+                <th>Provider / Source</th>
+                <th>Task Intelligence Tier</th>
+                <th>Reasoning Power</th>
+                <th>Heat Band</th>
+                <th>Context Window</th>
+                <th>Cost Profile</th>
+                <th>Best Architectural Use Case</th>
+              </tr>
+            </thead>
+            <tbody id="models-knowledge-tbody">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -755,6 +802,9 @@
             <option value="openai">OpenAI / Compatible</option>
             <option value="anthropic">Anthropic (Claude)</option>
             <option value="deepseek">DeepSeek</option>
+            <option value="ollama">Ollama (Local Models: 127.0.0.1:11434)</option>
+            <option value="lmstudio">LM Studio (Local Models: 127.0.0.1:1234)</option>
+            <option value="local">Custom Local (vLLM / llama.cpp / Jan)</option>
           </select>
         </div>
         <div class="form-group">
@@ -1334,6 +1384,104 @@
       alert('Copied to clipboard: ' + str);
     }
 
+    async function loadLocalServers() {
+      try {
+        const res = await fetch('/api/local-models/detect');
+        const data = await res.json();
+        const grid = document.getElementById('local-servers-grid');
+        if (!grid) return;
+        grid.innerHTML = (data.servers || []).map(s => `
+          <div class="ide-card ${s.isOnline ? '' : 'uninstalled'}">
+            <div class="ide-card-header">
+              <div class="ide-title">${s.name}</div>
+              <span class="tag ${s.isOnline ? 'tag-free' : 'tag-provider'}">
+                ${s.isOnline ? '● ONLINE' : '○ NOT DETECTED'}
+              </span>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; font-family: var(--mono);">
+              Endpoint: ${s.endpoint} ${s.latencyMs ? '(' + s.latencyMs + 'ms)' : ''}
+            </div>
+            <div style="font-size: 0.8rem; margin-bottom: 0.5rem;">
+              ${s.isOnline 
+                ? '<strong>' + s.models.length + '</strong> pulled model(s) available for $0 unlimited mesh routing.' 
+                : 'Engine not running on port. Start ' + s.name + ' to enable 100% free offline local tokens.'}
+            </div>
+            ${s.models && s.models.length > 0 ? `
+              <div class="ide-code-box">Pulled Models: ${s.models.join(', ')}</div>
+            ` : ''}
+            <button class="btn-primary" style="width: 100%; font-size: 0.8rem; margin-top: 0.5rem;" 
+              onclick="${s.isOnline ? `connectLocalServer('${s.service}', '${s.endpoint}', '${s.models[0] || 'local-model'}')` : `window.open('${s.service === 'ollama' ? 'https://ollama.com' : 'https://lmstudio.ai'}', '_blank')`}">
+              ${s.isOnline ? '⚡ Add Discovered Models to Mesh Pool' : '📥 Download & Install Engine'}
+            </button>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    async function connectLocalServer(service, endpoint, defaultModel) {
+      const accId = `local-${service}-${Date.now().toString().slice(-4)}`;
+      const body = {
+        id: accId,
+        name: `${service.toUpperCase()} Local (${defaultModel})`,
+        provider: service === 'ollama' ? 'ollama' : 'local',
+        authType: 'api_key',
+        endpointUrl: endpoint + '/v1',
+        tier: 'free',
+        apiKey: 'local-no-key-required',
+        defaultModel: defaultModel
+      };
+      try {
+        const res = await fetch('/api/accounts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          alert(`Successfully added ${service.toUpperCase()} local models to AiMeshManager!`);
+          loadAccounts();
+          loadUnifiedLedger();
+        }
+      } catch (e) {
+        alert('Failed to register local engine: ' + e.message);
+      }
+    }
+
+    async function loadModelKnowledge() {
+      try {
+        const res = await fetch('/api/models/knowledge');
+        const models = await res.json();
+        const tbody = document.getElementById('models-knowledge-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = (models || []).map(m => {
+          const tierBadge = m.tier === 'STRATEGIC_REASON' 
+            ? '<span class="tag tag-paid">STRATEGIC (TIER 3)</span>'
+            : m.tier === 'TACTICAL_CODE'
+            ? '<span class="tag tag-free">TACTICAL (TIER 2)</span>'
+            : '<span class="tag tag-auth">MICRO (TIER 1)</span>';
+          
+          const stars = '⭐'.repeat(m.intelligenceLevel) + '☆'.repeat(Math.max(0, 5 - m.intelligenceLevel));
+          const costBadge = m.costProfile === 'free_local' 
+            ? '<span style="color: #34d399; font-weight: 700;">$0.00 (Local Hardware)</span>'
+            : m.costProfile === 'free_cloud'
+            ? '<span style="color: #38bdf8; font-weight: 700;">$0.00 (Free Quota)</span>'
+            : '<span style="color: #a5b4fc; font-weight: 700;">Paid Subscription</span>';
+
+          return `
+            <tr>
+              <td><strong style="color: var(--text);">${m.name}</strong><br><span style="font-family: var(--mono); font-size: 0.75rem; color: var(--text-muted);">${m.id}</span></td>
+              <td><span class="tag tag-provider">${m.provider.toUpperCase()}${m.isLocal ? ' (LOCAL)' : ''}</span></td>
+              <td>${tierBadge}</td>
+              <td style="color: #fbbf24; font-size: 0.9rem;">${stars} <span style="font-size: 0.75rem; color: var(--text-muted);">(${m.intelligenceLevel}/5)</span></td>
+              <td style="font-family: var(--mono); font-size: 0.8rem;">${m.recommendedHeatMin}% - ${m.recommendedHeatMax}%</td>
+              <td style="font-family: var(--mono); font-size: 0.8rem;">${(m.contextWindow / 1000).toLocaleString()}k tokens</td>
+              <td style="font-size: 0.8rem;">${costBadge}</td>
+              <td style="font-size: 0.8rem; color: #cbd5e1;">${m.bestFor}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {}
+    }
+
     // Initialize & polling
     loadStats();
     loadAccounts();
@@ -1341,6 +1489,8 @@
     loadConnections();
     loadUnifiedLedger();
     loadSecurityStatus();
+    loadLocalServers();
+    loadModelKnowledge();
     setInterval(loadStats, 4000);
     setInterval(loadConnections, 3000);
     setInterval(loadUnifiedLedger, 4000);

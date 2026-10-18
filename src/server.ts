@@ -22,6 +22,7 @@ import { TokenOptimizer } from './optimizer/compressor';
 import { IDEDetector } from './integrations/ide-detector';
 import { AntiHallucinationGuard } from './guardrails/anti-hallucination';
 import { SelfHealingEngine } from './healing/self-healer';
+import { ModelKnowledgeRegistry } from './models/registry';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 20128;
@@ -339,10 +340,16 @@ function recordIDEAccounting(
  */
 app.get('/v1/models', (req: Request, res: Response) => {
   const baseModels = [
-    { id: 'auto-smart-router', object: 'model', created: Date.now(), owned_by: 'meshmanager' },
-    { id: 'gemini-2.5-flash', object: 'model', created: Date.now(), owned_by: 'google' },
-    { id: 'gemini-2.5-pro', object: 'model', created: Date.now(), owned_by: 'google' },
-    { id: 'gemini-3.8-flash', object: 'model', created: Date.now(), owned_by: 'google' }
+    { id: 'auto-smart-router', object: 'model', created: Date.now(), owned_by: 'aimeshmanager' },
+    ...ModelKnowledgeRegistry.getAllModels().map(m => ({
+      id: m.id,
+      object: 'model',
+      created: Date.now(),
+      owned_by: m.provider,
+      intelligence_level: m.intelligenceLevel,
+      tier: m.tier,
+      is_local: m.isLocal
+    }))
   ];
 
   const virtualPins = accountManager.getAccounts().map(acc => ({
@@ -355,6 +362,20 @@ app.get('/v1/models', (req: Request, res: Response) => {
   res.json({
     object: 'list',
     data: [...baseModels, ...virtualPins]
+  });
+});
+
+// 🌐 Dynamic Model Performance Knowledge Matrix
+app.get('/api/models/knowledge', (req: Request, res: Response) => {
+  res.json(ModelKnowledgeRegistry.getAllModels());
+});
+
+// 💻 Local Model Server Detection (Ollama, LM Studio, vLLM)
+app.get('/api/local-models/detect', async (req: Request, res: Response) => {
+  const localServers = await ModelKnowledgeRegistry.detectLocalServers();
+  res.json({
+    servers: localServers,
+    detectedAny: localServers.some(s => s.isOnline)
   });
 });
 
