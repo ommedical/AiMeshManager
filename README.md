@@ -47,6 +47,7 @@
 6. [Dynamic Model Performance Knowledge Matrix (Best vs. Low Models)](#-dynamic-model-performance-knowledge-matrix-best-vs-low-models)
 7. [1-Click IDE Connect Center & Binary Validation](#-1-click-ide-connect-center--binary-validation)
    * [Google Antigravity 2.0 Mock ADC Loopback Bypass](#google-antigravity-20-integration--service-account-bypass-mock-adc)
+   * [Antigravity IDE UI Gatekeeper vs. Backend Gateway Routing](#️-antigravity-ide-ui-gatekeeper-vs-backend-gateway-routing)
    * [Cursor AI Editor](#cursor-ai-editor)
    * [VS Code (Continue / Cline / Roo Code)](#vs-code-continue--cline--roo-code)
    * [Windsurf (Codeium)](#windsurf-codeium)
@@ -61,6 +62,7 @@
    * [Live Graphical Autonomous Execution Topology Canvas](#live-graphical-topology-canvas-httplocalhost20128)
    * [Swarm Dispatch Methods (Autonomous, CLI, Web UI)](#swarm-dispatch-methods-autonomous-cli-web-ui)
 11. [Single Unified Master Telemetry Ledger](#-single-unified-master-telemetry-ledger)
+   * [Tracking Hourly, Daily, Weekly & 5-Hour Rolling Quota Consumption](#⏱️-tracking-hourly-daily-weekly--5-hour-rolling-quota-consumption)
 12. [Local Network Isolation & Mandatory LAN Bearer Token Auth](#-local-network-isolation--mandatory-lan-bearer-token-auth)
 13. [Hermes-Style Self-Healing & Anti-Hallucination Guard](#-hermes-style-self-healing--anti-hallucination-guard)
 14. [Resource Efficiency & ~0 Stress Benchmark](#-resource-efficiency---0-stress-benchmark)
@@ -116,13 +118,14 @@ Runs directly on Node.js (v18+) across Windows, macOS, Linux, WSL, or Android Te
    # Stop daemon:  node dist/cli.js stop
    ```
 
-5. **Install Global CLI (Optional):**
+5. **Install Global CLI System-Wide:**
+   To run `aimeshmanager` or `mesh` from **any directory** on your workstation (e.g. `C:\Users\...\Desktop\my-other-project`):
    ```bash
+   npm link
+   # Or install globally:
    npm install -g .
-   # Now run anywhere:
-   aimeshmanager start --daemon
-   aimeshmanager status
    ```
+   > 💡 **Short Command Aliases:** Registering globally gives you 4 handy commands: `aimeshmanager`, `aimm`, `meshmanager`, and `mesh` (e.g. `mesh status`, `mesh unified`, `mesh stats`).
 
 ---
 
@@ -436,6 +439,14 @@ aimeshmanager antigravity restore
 aimeshmanager ide disconnect antigravity
 ```
 
+#### ⚠️ Antigravity IDE UI Gatekeeper vs. Backend Gateway Routing:
+* **Why did it stop working when you logged out inside Antigravity IDE?**
+  Antigravity IDE (built on the VS Code / Google Cloud Code core) features an internal **client-side UI gatekeeper**. When you click *"Sign Out"* in the IDE's bottom-left Accounts menu, the IDE interface transitions to `Unauthenticated`, locks the chat input box, and displays *"Please sign in to Google to continue"*. It intercepts user interaction at the UI level *before* any prompt or network request can even be dispatched.
+* **The Solution — Use ANY Google Account as the "UI Key":**
+  The account signed into the Antigravity IDE window **does NOT need to be your paid account**! You can sign into the IDE GUI with **any standard free `@gmail.com` account** simply to satisfy the IDE's UI gate and unlock the chat input pane and agent sidebar.
+* **Where the Real Reasoning Happens:**
+  Once the UI is unlocked, 100% of the actual model requests flow through `http://localhost:20128/v1` and are signed and authenticated by **AiMeshManager using your real Paid Google AI Studio API Key (`AIzaSy...`)**. Upstream Google never checks your IDE window login state—it only validates the API key provided by AiMeshManager!
+
 ---
 
 ### Cursor AI Editor
@@ -723,6 +734,46 @@ AiMeshManager consolidates client development editors and upstream provider acco
 
 * **CLI Access**: `aimeshmanager unified` (or alias `aimeshmanager matrix`).
 * **Web UI**: Open `http://localhost:20128` $\to$ **Unified Master Ledger** tab with 1-click filters by client and tier.
+
+### ⏱️ Tracking Hourly, Daily, Weekly & 5-Hour Rolling Quota Consumption
+
+Developers often ask: *"Where do I see my hourly, daily, and weekly token limits and consumption per account?"*
+
+You have full visibility across **3 complementary levels**:
+
+#### 1. Inside AiMeshManager (Local Real-Time Dashboard & Terminal):
+* **5-Hour Rolling Bucket Progress Bar (`AI Accounts` tab)**:
+  * Each configured account card displays a live progress bar tracking **Used Tokens vs. 5-Hour Rolling Limit**.
+  * Displays a live **Headroom %** indicator.
+  * Shows the **exact countdown timer until your rolling quota refills** (e.g. *Refills in 2h 45m*).
+* **Unified Master Ledger (`Unified Master Ledger` tab)**:
+  * Displays real-time breakdown of **Input Tokens**, **Output Tokens**, and **Cost (USD)** broken down per Client IDE (e.g. `Google Antigravity`, `Cursor`, `VS Code`) and per Account.
+* **Via Terminal CLI**:
+  ```bash
+  # Instant live table of all IDE consumption & active account tokens:
+  aimeshmanager unified
+
+  # Overall system metrics, memory footprint & token savings:
+  aimeshmanager stats
+  ```
+
+#### 2. In Google AI Studio (Official Upstream Analytics):
+For API Keys and Google One AI Premium subscriptions:
+1. Navigate to [Google AI Studio (https://aistudio.google.com/)](https://aistudio.google.com/).
+2. In the left navigation menu, click **Plan and Billing** (or go to **API Keys** $\to$ click your Project).
+3. Click the **Usage** tab. Google displays granular upstream telemetry:
+   * **Hourly RPM Graph**: Real-time requests per minute vs. your quota ceiling (15 RPM free, or 360 RPM paid).
+   * **Hourly TPM Graph**: Tokens per minute vs. your token limit (1,000,000 TPM free, or 4,000,000 TPM paid).
+   * **Daily & Weekly Request Counts**: Filter by `Last 24 Hours`, `Last 7 Days`, or `Last 30 Days` to inspect cumulative token volume.
+
+#### 3. In Google Cloud Console (For Pay-As-You-Go Billing Projects):
+If your key is linked to a Google Cloud Platform project:
+1. Open [Google Cloud Console APIs Dashboard](https://console.cloud.google.com/apis/dashboard).
+2. Select your project and click **Generative Language API** (or Vertex AI).
+3. Click **Metrics**:
+   * Filter time ranges: **1 hour**, **6 hours**, **1 day**, **7 days**, or **30 days**.
+   * Inspect exact hourly throughput, peak latency, and HTTP status distributions (200 OK vs 429 Rate Limits).
+4. Go to **Billing** $\to$ **Reports** to see daily and weekly cost curves in dollars.
 
 ---
 
