@@ -5,19 +5,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/Node-v18%2B-brightgreen)](https://nodejs.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://hub.docker.com)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Docker%20%7C%20WSL%20%7C%20Termux-blue)](https://github.com)
-[![Token Savings](https://img.shields.io/badge/Token%20Savings-Up%20to%2065%25-orange)](https://github.com)
-[![Self--Healing](https://img.shields.io/badge/Self--Healing-Hermes%20Reflexion-purple)](https://github.com)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Docker%20%7C%20WSL%20%7C%20Termux-blue)](https://github.com/ommedical/AiMeshManager)
+[![Token Savings](https://img.shields.io/badge/Token%20Savings-Up%20to%2065%25-orange)](https://github.com/ommedical/AiMeshManager)
+[![Self--Healing](https://img.shields.io/badge/Self--Healing-Hermes%20Reflexion-purple)](https://github.com/ommedical/AiMeshManager)
 
 **Universal Multi-AI Accounts, Multi-Models & Multi-Agents Orchestrator for All Platforms & IDEs.**
 
-*Unified, zero-quota-lockout AI copilot routing for Google Antigravity 2.0, Antigravity IDE, Cursor, VS Code, Windsurf, JetBrains, Zed, Neovim, and Autonomous Agent Frameworks.*
+*Unified, zero-quota-lockout AI copilot gateway for Google Antigravity 2.0, Antigravity IDE, Cursor, VS Code, Windsurf, JetBrains, Zed, Neovim, and Autonomous Agent Frameworks.*
 
 [Quickstart](#-installation--quickstart) •
-[Account Management](#-adding--authenticating-multiple-accounts) •
-[Dynamic Routing & Verification](#-how-to-know-if-models-are-dynamically-changing) •
-[Virtual Model Pins](#-using-a-specific-model-of-a-specific-account-in-any-ide) •
-[IDE Connect Center](#-1-click-ide-connect-center--fixing-vs-code-detection) •
+[Account Management](#-zero-config-clean-slate--multi-account-management) •
+[Multi-Provider Setup](#-universal-multi-provider-ecosystem) •
+[IDE Connect Center](#-1-click-ide-connect-center--binary-validation) •
+[Model Intelligence](#-dynamic-model-performance-knowledge-matrix-best-vs-low-models) •
 [CLI Reference](#-complete-cli-command-reference)
 
 </div>
@@ -26,24 +26,36 @@
 
 ## 📖 Table of Contents
 1. [Overview & Core Philosophy](#-overview--core-philosophy)
-2. [Resource Efficiency & ~0 Stress Benchmark](#-resource-efficiency---0-stress-benchmark)
-3. [Dynamic Model Performance Knowledge Matrix (Best vs. Low Models)](#-dynamic-model-performance-knowledge-matrix-best-vs-low-models)
-4. [Local Running Models Support (Ollama, LM Studio, vLLM)](#-local-running-models-support-ollama-lm-studio-vllm)
-5. [Dynamic Task Heat, Intelligence Spectrum & Parallel Multi-Account Execution](#-dynamic-task-heat-intelligence-spectrum--parallel-multi-account-execution)
-6. [Dynamic Multi-Agent Swarm with Shared Development Context](#-dynamic-multi-agent-swarm-with-shared-development-context)
-7. [Google Antigravity 2.0 Integration & Service Account Bypass (Mock ADC)](#-google-antigravity-20-integration--service-account-bypass-mock-adc)
-8. [Single Unified Master Telemetry Ledger](#-single-unified-master-telemetry-ledger)
-9. [Local Network Isolation & Mandatory LAN Bearer Token Auth](#-local-network-isolation--mandatory-lan-bearer-token-auth)
-10. [Adding & Authenticating Multiple Accounts (API Keys & OAuth Bearer)](#-adding--authenticating-multiple-accounts)
-11. [How to Know if Models are Dynamically Changing](#-how-to-know-if-models-are-dynamically-changing)
-12. [Setting Default Models per Account & Virtual Model Pins](#-using-a-specific-model-of-a-specific-account-in-any-ide)
-13. [1-Click IDE Connect Center & Binary Validation](#-1-click-ide-connect-center--fixing-vs-code-detection)
-14. [Production Architecture Files: test-e2e.js, Dockerfile & docker-compose.yml](#-production-architecture-files-test-e2ejs-dockerfile--docker-composeyml)
+2. [Installation & Quickstart](#-installation--quickstart)
+3. [Zero-Config Clean Slate & Multi-Account Management](#-zero-config-clean-slate--multi-account-management)
+   * [Clean Slate Blank Startup by Default](#1-clean-slate-blank-startup-by-default-100-privacy)
+   * [Interactive Account Management: Add, Edit, Delete, Toggle](#2-interactive-account-management-add-edit-delete-toggle)
+   * [Live Multi-Provider Credential Verification (`🔍 Test Key`)](#3-live-multi-provider-credential-verification--test-key)
+   * [Cryptographic Zero-Residual Secret Purge (`🔥 Purge Stored Secrets`)](#4-cryptographic-zero-residual-secret-purge--file-shredding)
+   * [Instant Demo Templates (`🎲 Load Demo Templates`)](#5-instant-demo-templates--load-demo-templates)
+4. [Universal Multi-Provider Ecosystem](#-universal-multi-provider-ecosystem)
+   * [Google Gemini (AI Studio & Paid Pro)](#1-google-gemini-ai-studio--paid-pro)
+   * [OpenRouter (100+ Models & Free Pool)](#2-openrouter-openrouterai)
+   * [OmniRoute Gateway](#3-omniroute-gateway-omnirouteonline)
+   * [FreeLLMAPI Directory Providers (Groq, Cerebras, SambaNova, Hugging Face)](#4-freellmapi-directory-providers-groq-cerebras-sambanova-hugging-face)
+   * [Meta Developer Llama AI (Llama 3.3 / 3.1)](#5-meta-developer-llama-ai-devmetaai)
+5. [Local Running Models Support (Ollama, LM Studio, vLLM)](#-local-running-models-support-ollama-lm-studio-vllm)
+6. [Dynamic Model Performance Knowledge Matrix (Best vs. Low Models)](#-dynamic-model-performance-knowledge-matrix-best-vs-low-models)
+7. [1-Click IDE Connect Center & Binary Validation](#-1-click-ide-connect-center--binary-validation)
+   * [Google Antigravity 2.0 Mock ADC Loopback Bypass](#google-antigravity-20-integration--service-account-bypass-mock-adc)
+   * [Cursor AI Editor](#cursor-ai-editor)
+   * [VS Code (Continue / Cline / Roo Code)](#vs-code-continue--cline--roo-code)
+   * [Windsurf (Codeium)](#windsurf-codeium)
+8. [Dynamic Task Heat, Intelligence Spectrum & Parallel Multi-Account Routing](#-dynamic-task-heat-intelligence-spectrum--parallel-multi-account-routing)
+9. [Virtual Model Pins (`accountId/modelName`) & Default Models](#-virtual-model-pins-accountidmodelname--default-models)
+10. [Dynamic Multi-Agent Swarm with Shared Development Context](#-dynamic-multi-agent-swarm-with-shared-development-context)
+11. [Single Unified Master Telemetry Ledger](#-single-unified-master-telemetry-ledger)
+12. [Local Network Isolation & Mandatory LAN Bearer Token Auth](#-local-network-isolation--mandatory-lan-bearer-token-auth)
+13. [Hermes-Style Self-Healing & Anti-Hallucination Guard](#-hermes-style-self-healing--anti-hallucination-guard)
+14. [Resource Efficiency & ~0 Stress Benchmark](#-resource-efficiency---0-stress-benchmark)
 15. [Complete CLI Command Reference](#-complete-cli-command-reference)
-16. [Hermes-Style Self-Healing & Anti-Hallucination Guard](#-hermes-style-self-healing--anti-hallucination-guard)
-17. [Installation & Quickstart](#-installation--quickstart)
-18. [Graceful Shutdown Architecture & Multi-Scenario Service Termination Guide](#-graceful-shutdown-architecture--multi-scenario-service-termination-guide)
-19. [Universal Multi-Provider Ecosystem: OpenRouter, OmniRoute, FreeLLMAPI & Meta Llama AI](#-universal-multi-provider-ecosystem-openrouter-omniroute-freellmapi--meta-llama-ai)
+16. [Production Architecture Files: test-e2e.js, Dockerfile & docker-compose.yml](#-production-architecture-files-test-e2ejs-dockerfile--docker-composeyml)
+17. [Graceful Shutdown Architecture & Multi-Scenario Service Termination Guide](#-graceful-shutdown-architecture--multi-scenario-service-termination-guide)
 
 ---
 
@@ -51,39 +63,217 @@
 
 **AiMeshManager** serves as an intelligent local gateway between all your development environments (Antigravity IDE/2.0, Cursor, VS Code, Windsurf, JetBrains) and your AI accounts.
 
-It solves quota anxiety, rate limit crashes, and token waste by:
-* **Pooling multiple accounts:** Stacks multiple Free (`@gmail.com`) accounts and Paid (Google AI Pro, Ultra, Enterprise) subscriptions.
-* **Auto-failing over in 50ms:** When one account hits a 429 rate limit or quota ceiling, AiMeshManager seamlessly routes in-flight turns to a backup account without dropping IDE context.
-* **Dynamic Model Allocation:** Automatically inspects task complexity and routes micro-tasks to free fast models and complex architecture tasks to deep reasoning models.
-* **Pinning specific models to specific accounts:** Allows binding an editor to a specific account and model (e.g. `acc-paid-pro/gemini-2.5-pro`).
+It eliminates quota anxiety, rate limit crashes, and token waste by:
+* **Clean Slate Privacy**: Fresh installations start completely blank with zero pre-configured accounts or credentials stored on your disk. You control every key.
+* **Pooling multiple accounts:** Stacks multiple Free (`@gmail.com`) accounts and Paid (Google AI Pro, Ultra, Enterprise, OpenRouter, Meta AI) subscriptions into a single resilient mesh.
+* **Auto-failing over in 50ms:** When one account hits a 429 rate limit or quota ceiling, AiMeshManager seamlessly reroutes in-flight turns to a backup account without dropping IDE context.
+* **Dynamic Model Allocation:** Automatically inspects task complexity and routes micro-tasks (autocomplete, docstrings) to free fast models and complex architecture tasks to deep reasoning models.
+* **Pinning specific models to specific accounts:** Allows binding an editor to a specific account and model (e.g. `acc-paid-pro/gemini-2.5-pro` or `openrouter/deepseek-r1:free`).
+* **Zero Host Stress:** Engineered for `~0% CPU` on idle, tiny `~9-15 MB` memory footprint, and non-blocking streaming I/O.
 
 ---
 
-## 🌿 Resource Efficiency & ~0 Stress Benchmark
+## 🚀 Installation & Quickstart
 
-AiMeshManager is engineered from the ground up for **near-zero host resource utilization**, ensuring your laptop or development workstation suffers virtually no impact:
+You can run AiMeshManager **natively on your workstation** (zero Docker or Podman required) or inside a lightweight container.
 
-* **Zero CPU Load on Idle (`~0% CPU`)**: Uses asynchronous non-blocking event-driven Node.js networking. No polling loops, no busy-waits, and all background timers are unreferenced (`.unref()`).
-* **Minimal Memory Footprint (`~9-15 MB Heap`)**: Compact in-memory maps for accounts and routing tables. Streaming SSE chunks are piped directly to the client without buffering entire multi-megabyte responses.
-* **No Heavy Embedded Databases**: Settings, accounts, and security policies are stored as lightweight local JSON files (`~/.meshmanager/`), avoiding background database engines like Postgres or heavy SQLite workers.
+### Method 1: Native Run (Zero Docker or Podman Needed) — Recommended
+Runs directly on Node.js (v18+) across Windows, macOS, Linux, WSL, or Android Termux.
 
-| Metric | MeshManager Benchmark | Typical Heavy Proxies |
-| :--- | :--- | :--- |
-| **Idle CPU Stress** | **~0.0% CPU** | 2.5% – 8.0% CPU |
-| **Heap Memory** | **~9.8 MB** | 120 MB – 450 MB |
-| **Resident Set Size (RSS)** | **~50 - 60 MB** | 300 MB – 800 MB |
-| **I/O Strategy** | **Asynchronous Native Stream Piping** | Blocking thread pools |
+1. **Clone the Public Repository:**
+   ```bash
+   git clone https://github.com/ommedical/AiMeshManager.git
+   cd AiMeshManager
+   ```
+2. **Launch AiMeshManager (1-Command):**
+   ```bash
+   npm start
+   ```
+   > ⚡ **Self-Bootstrapping:** If `node_modules` or `dist/` are not yet built, AiMeshManager automatically detects this and installs dependencies (`npm install`) and compiles TypeScript (`npm run build`) before starting!
 
-Verify live at any time via CLI:
-```bash
-aimeshmanager stats
-```
+3. **Open the Web Control Center:**
+   Open your browser to:
+   ```
+   http://localhost:20128
+   ```
+
+4. **Run as a Background Daemon (Optional):**
+   ```bash
+   node dist/cli.js start --daemon
+   # Check status: node dist/cli.js status
+   # Stop daemon:  node dist/cli.js stop
+   ```
+
+5. **Install Global CLI (Optional):**
+   ```bash
+   npm install -g .
+   # Now run anywhere:
+   aimeshmanager start --daemon
+   aimeshmanager status
+   ```
+
+---
+
+### Method 2: Containerized Run (Podman or Docker)
+
+* **With Podman (Rootless & Open-Source):**
+   ```bash
+   podman compose up -d
+   # Or direct run:
+   podman build -t aimeshmanager . && podman run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager:Z --name aimeshmanager aimeshmanager
+   ```
+* **With Docker:**
+   ```bash
+   docker compose up -d
+   # Or direct run:
+   docker build -t aimeshmanager . && docker run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager --name aimeshmanager aimeshmanager
+   ```
+
+---
+
+## 🔑 Zero-Config Clean Slate & Multi-Account Management
+
+### 1. Clean Slate Blank Startup by Default (100% Privacy)
+Unlike traditional proxies that pre-seed arbitrary dummy keys or mock accounts, **AiMeshManager starts completely blank (`[]`) on a fresh install**:
+* **Zero Dummy Secrets**: No fake credentials or placeholder keys are written to disk.
+* **Intuitive Empty State Card**: On first launch, the Web UI displays a clean guidance card with two immediate actions:
+  * **`+ Add Your First Account`**: Add your own real Google Gemini, OpenRouter, OpenAI, Claude, DeepSeek, or local engine.
+  * **`🎲 Load Demo Templates`**: Optionally loads safe demonstration accounts for sandbox testing.
+
+---
+
+### 2. Interactive Account Management: Add, Edit, Delete, Toggle
+AiMeshManager provides complete lifecycle management directly in the Web UI (`http://localhost:20128`) and via REST API:
+
+* **➕ Add AI Account**:
+  * Click **`+ Add AI Account`** in the header or on the empty state card.
+  * Supports Google Gemini, OpenRouter, OmniRoute, OpenAI, Anthropic Claude, DeepSeek, Meta AI, and Local Engines.
+  * Select your subscription tier (`Free`, `Paid Pro`, `Enterprise`), default model, and priority weight.
+* **✏️ Edit Existing Accounts**:
+  * Every account card includes an in-place **`✏️ Edit`** button.
+  * Update friendly labels, API keys, base URLs, tier, default models, and RPM/TPM quota limits at any time. Changes take effect instantly without restarting the server.
+  * *REST API*: `PUT /api/accounts/:id`
+* **🗑️ Delete Account**:
+  * Click the **`🗑️ Delete`** icon on any account card to remove it from the active mesh routing pool.
+  * *REST API*: `DELETE /api/accounts/:id`
+* **⏸️ Toggle Active / Paused**:
+  * Use the toggle switch on each card to temporarily exclude an account from rotation (e.g. during manual billing maintenance) without deleting its configuration.
+
+---
+
+### 3. Live Multi-Provider Credential Verification (`🔍 Test Key`)
+Never guess whether an API key is valid or mistyped. AiMeshManager includes real-time live credential testing:
+
+* **In the Add / Edit Modal**: Click **`🔍 Test Key with Provider`** to validate a key before saving.
+* **On Every Account Card**: Click **`🔍 Test Key`** at any time. AiMeshManager queries the provider's official model catalog endpoint:
+  * **Google Gemini**: queries `https://generativelanguage.googleapis.com/v1beta/models?key=...`
+  * **OpenRouter**: queries `https://openrouter.ai/api/v1/auth/key`
+  * **OpenAI / DeepSeek / Meta**: queries `/v1/models`
+  * **Ollama**: queries `http://127.0.0.1:11434/api/tags`
+  * **LM Studio**: queries `http://127.0.0.1:1234/v1/models`
+* **Instant Feedback**: Displays green validation badges with active model counts on success, or the exact upstream error message on failure.
+* *REST API*: `POST /api/accounts/verify` or `POST /api/accounts/:id/verify`.
+
+---
+
+### 4. Cryptographic Zero-Residual Secret Purge & File Shredding
+If you are operating on a shared workstation, client laptop, or decommissioning an environment, AiMeshManager provides **provable cryptographic data shredding**:
+
+* **Byte-Level Disk Zeroing**: Overwrites every single byte of `~/.aimeshmanager/accounts.json` and `security.json` with zeroes (`Buffer.alloc(stats.size, 0)`) before unlinking from the filesystem, defeating disk recovery utilities.
+* **In-Memory Heap Wiping**: Immediately wipes all API keys from active memory heaps and resets the internal account registry to an empty array (`[]`).
+* **1-Click Execution**:
+  * In the Web UI: Click **`🔥 Purge Stored Secrets`** in the top header.
+  * In the CLI: Run `aimeshmanager purge` or `aimeshmanager account purge`.
+
+---
+
+### 5. Instant Demo Templates (`🎲 Load Demo Templates`)
+Want to explore all routing matrices, simulated load balancers, and multi-agent swarms without entering your real API keys?
+* Click **`🎲 Load Demo Templates`** in the Web UI or empty state card.
+* Instantly populates sample accounts (`Gemini Free Account`, `Google AI Pro (5h Rolling Bucket)`, `OpenRouter Free Pool`) for immediate testing and UI walkthroughs.
+
+---
+
+## 🌐 Universal Multi-Provider Ecosystem
+
+AiMeshManager is fully compatible with all frontier AI clouds, aggregators, and open-source directories:
+
+| Service / Provider | Official Website | API Protocol | Free Tier Available? | Recommended Models |
+| :--- | :--- | :---: | :---: | :--- |
+| **Google Gemini** | [ai.google.dev](https://ai.google.dev/) | Native Gemini REST & OpenAI-Compatible | ✅ **Yes** (Free 15 RPM / AI Pro 5h Bucket) | `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-3.8-flash` |
+| **OpenRouter** | [openrouter.ai](https://openrouter.ai/) | OpenAI-Compatible (`https://openrouter.ai/api/v1`) | ✅ **Yes** (Free community models) | `deepseek/deepseek-r1:free`, `meta-llama/llama-3.3-70b-instruct:free`, `openrouter/auto` |
+| **OmniRoute** | [omniroute.online](https://www.omniroute.online/) | Multi-Provider Gateway | ✅ **Yes** (Multi-tier fallback) | `auto-smart-router`, `gemini-2.5-pro`, `gpt-4o` |
+| **FreeLLMAPI Directory** | [enterprisedna.co/.../freellmapi](https://enterprisedna.co/directories/open-source/freellmapi/) | OpenAI REST (`/v1/chat/completions`) | ✅ **Yes** (Curated free inference APIs) | Groq (`llama-3.3-70b-versatile`), Cerebras (`llama3.3-70b`), SambaNova (`Meta-Llama-3.3-70B`) |
+| **Meta Developer AI** | [dev.meta.ai](https://dev.meta.ai/lp/start-building) | Meta Llama REST (`https://api.meta.ai/v1`) | ✅ **Yes** (Developer tier for Llama models) | `meta-llama/llama-3.3-70b-instruct`, `meta-llama/llama-3.1-405b-instruct` |
+
+---
+
+### Setup Guides for Each Provider
+
+#### 1. Google Gemini (AI Studio & Paid Pro)
+* **Step 1**: Get an API key from [Google AI Studio](https://aistudio.google.com/).
+* **Step 2 (Web UI)**: Click **`+ Add AI Account`** $\to$ Select Provider: `Google Gemini` $\to$ Enter key $\to$ Click **`🔍 Test Key with Provider`** $\to$ Click **Save to Mesh**.
+* **Step 3 (CLI)**:
+  ```bash
+  aimeshmanager account add personal-gemini "Personal Gemini Pro" paid_pro gemini-2.5-pro "AIzaSy..."
+  ```
+
+#### 2. OpenRouter (`https://openrouter.ai/`)
+* **Step 1**: Get your key (`sk-or-v1-...`) from [openrouter.ai/keys](https://openrouter.ai/keys).
+* **Step 2 (Web UI)**: Select Provider: `OpenRouter` $\to$ Endpoint defaults to `https://openrouter.ai/api/v1` $\to$ Set default model to `deepseek/deepseek-r1:free` or `meta-llama/llama-3.3-70b-instruct:free`.
+* **Step 3 (CLI)**:
+  ```bash
+  aimeshmanager account add openrouter-free "OpenRouter Free Pool" free "deepseek/deepseek-r1:free" "sk-or-v1-YOUR_KEY" openrouter "https://openrouter.ai/api/v1"
+  ```
+
+#### 3. OmniRoute Gateway (`https://www.omniroute.online/`)
+* **Step 1**: Obtain your OmniRoute key from [omniroute.online](https://www.omniroute.online/).
+* **Step 2 (CLI)**:
+  ```bash
+  aimeshmanager account add omniroute-mesh "OmniRoute Gateway" enterprise "auto-smart-router" "YOUR_OMNIROUTE_KEY" omniroute "https://www.omniroute.online/v1"
+  ```
+
+#### 4. FreeLLMAPI Directory Providers (Groq, Cerebras, SambaNova, Hugging Face)
+* **Groq Cloud (Ultra-Fast 500+ Tokens/Sec)**:
+  ```bash
+  aimeshmanager account add groq-cloud "Groq Llama 3.3" free "llama-3.3-70b-versatile" "gsk_YOUR_GROQ_KEY" openai "https://api.groq.com/openai/v1"
+  ```
+* **Cerebras Inference**:
+  ```bash
+  aimeshmanager account add cerebras-fast "Cerebras Fast" free "llama3.3-70b" "csk_YOUR_KEY" openai "https://api.cerebras.ai/v1"
+  ```
+* **SambaNova Systems**:
+  ```bash
+  aimeshmanager account add sambanova-1 "SambaNova Llama" free "Meta-Llama-3.3-70B-Instruct" "YOUR_KEY" openai "https://api.sambanova.ai/v1"
+  ```
+
+#### 5. Meta Developer Llama AI (`https://dev.meta.ai/lp/start-building`)
+* **Step 1**: Register at [dev.meta.ai/lp/start-building](https://dev.meta.ai/lp/start-building) and retrieve your bearer token.
+* **Step 2 (CLI)**:
+  ```bash
+  aimeshmanager account add meta-llama-pro "Meta Llama 3.3 70B" paid_pro "meta-llama/llama-3.3-70b-instruct" "YOUR_META_KEY" meta "https://api.meta.ai/v1"
+  ```
+
+---
+
+## 💻 Local Running Models Support (Ollama, LM Studio, vLLM)
+
+AiMeshManager natively interfaces with offline model runners on your local computer:
+* **Ollama** (`http://127.0.0.1:11434/v1` or `/api/tags`)
+* **LM Studio** (`http://127.0.0.1:1234/v1`)
+* **vLLM / LocalAI / llama.cpp** (`http://127.0.0.1:8000/v1`)
+
+### Why Connect Local Models?
+* **100% Free & Unlimited Tokens:** Run local open weights with **$0 token cost** and zero cloud limits.
+* **Complete Airplane Mode:** Continue autocompleting and refactoring code with zero internet connection.
+* **Intelligent Offloading:** AiMeshManager offloads micro-syntax, formatting, and docstrings to local weights, saving 100% of your paid cloud quotas for deep multi-file architectural reasoning.
+* **1-Click Scanner:** Go to **Model Intelligence & Local Engines** tab $\to$ click **`🔍 Scan Local Engines`**. AiMeshManager probes ports 11434 and 1234, identifies active runners, and imports installed model weights automatically.
 
 ---
 
 ## 🧠 Dynamic Model Performance Knowledge Matrix (Best vs. Low Models)
 
-AiMeshManager features an active **Model Performance & Capability Registry** that benchmarks and categorizes models across all connected providers into 3 operational intelligence tiers:
+AiMeshManager categorizes all connected models across cloud providers and local engines into 3 performance intelligence tiers:
 
 | Intelligence Tier | Reasoning Power | Heat Band | Context Window | Target Models across Providers | Best For |
 | :--- | :---: | :---: | :---: | :--- | :--- |
@@ -91,36 +281,94 @@ AiMeshManager features an active **Model Performance & Capability Registry** tha
 | **Tier 2: Tactical** *(Balanced Workhorse)* | ⭐⭐⭐ (3-4/5) | **30% – 75%** | 64k – 1M tokens | • **Gemini:** `gemini-2.5-flash`<br>• **OpenAI:** `gpt-4o-mini`<br>• **Claude:** `claude-3-5-haiku`<br>• **DeepSeek:** `deepseek-chat` (V3)<br>• **Local:** `qwen2.5-coder:7b/14b` | Feature implementation, writing functions, unit test generation, Git commit generation. |
 | **Tier 1: Micro / Free** *(Sub-second / Low Cost)* | ⭐ (1-2/5) | **0% – 30%** | 32k – 1M tokens | • **Gemini:** Free `gemini-2.5-flash`<br>• **OpenRouter:** `:free` models<br>• **Local (Ollama/LM Studio):** `llama3.2:3b`, `qwen2.5-coder:1.5b` | Tab autocomplete, adding comments, variable renaming, syntax linting, formatting. |
 
-### How It Automatically Fetches & Keeps Updated with Latest Models:
-1. **Dynamic Upstream Catalog Sync (`POST /api/models/sync`)**:
-   * On startup (and automatically every 6 hours), AiMeshManager queries official model endpoints from connected cloud providers (Google Gemini `v1beta/models`, OpenAI `/v1/models`, DeepSeek `/models`) using configured keys.
-   * Any newly announced models (e.g. `gemini-3.8-flash-high`, `o3-mini`, `deepseek-r1`) are automatically discovered, classified into the intelligence matrix, and added to your routing pool without restarting.
-   * **1-Click Manual Sync:** In the Web Control Center $\to$ **Model Intelligence** tab, click **`🔄 Sync Latest Cloud Models`** to fetch new upstream models on demand.
-2. **Dynamic Local Model Auto-Discovery:**
-   * Automatically polls local Ollama (`/api/tags`), LM Studio (`/v1/models`), and vLLM (`/v1/models`) and imports newly pulled local weights in 1 click.
-3. **Instant Fallback on 429:** If a tier-3 model faces rate-limits, AiMeshManager fails over in 50ms to an alternative frontier model in your pool without dropping IDE context.
-4. **Web UI Inspection:** Open `http://localhost:20128` $\to$ **Model Intelligence & Local Engines** tab to view the live capability matrix with token costs and context limits.
+### Upstream Model Catalog Auto-Sync:
+1. **Dynamic Upstream Sync (`POST /api/models/sync`)**:
+   * Queries connected cloud providers (Google, OpenAI, DeepSeek, OpenRouter) and imports newly announced models automatically without service restarts.
+   * In the Web UI $\to$ **Model Intelligence** tab, click **`🔄 Sync Latest Cloud Models`** to trigger synchronization on demand.
+2. **Instant 50ms 429 Fallback**: If a tier-3 model hits an upstream rate limit, AiMeshManager fails over in 50ms to an alternative frontier model in your pool without interrupting your IDE session.
 
 ---
 
-## 💻 Local Running Models Support (Ollama, LM Studio, vLLM)
+## 🔌 1-Click IDE Connect Center & Binary Validation
 
-AiMeshManager natively integrates with locally running model servers on your workstation:
-* **Ollama** (`http://127.0.0.1:11434/v1` or `/api/tags`)
-* **LM Studio** (`http://127.0.0.1:1234/v1`)
-* **vLLM / LocalAI / llama.cpp** (`http://127.0.0.1:8000/v1`)
+AiMeshManager features an active IDE Integration Center that validates real binary installations before writing configuration, preventing empty "ghost folders" on your system:
 
-### Why Connect Local Models?
-* **100% Free & Unlimited Tokens:** Local models have **$0 token cost** and **zero cloud rate limits**.
-* **Offline Airplane Mode:** Keep coding and autocompleting even with zero internet connectivity.
-* **Hybrid Cloud-Local Offloading:** Small syntax, docstrings, and autocomplete queries run on your local GPU/CPU, preserving 100% of your paid cloud quotas for heavy architecture tasks.
-* **Auto-Discovery:** Click **`Scan Local Engines`** in the Web UI, and AiMeshManager detects running local servers and imports all pulled models into your mesh routing pool in 1 click!
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                     🔌 1-Click IDE & Application Connector                      │
+│  Real Installation Validation: Toggle to connect installed IDEs.                │
+├────────────────────────┬────────────────────────┬───────────────────────────────┤
+│ Google Antigravity 2.0 │ Cursor AI Editor       │ VS Code (Continue/Cline/Roo)  │
+│ ● Running (PID: 9904)  │ ● Running (PID: 14210) │ ○ Installed                   │
+│ [ CONNECTED ]          │ [ CONNECTED ]          │ [ CONNECT ]                   │
+└────────────────────────┴────────────────────────┴───────────────────────────────┘
+```
+
+### Google Antigravity 2.0 Integration & Service Account Bypass (Mock ADC)
+
+#### The Challenge with Antigravity 2.0:
+Google Antigravity 2.0 is designed for enterprise environments where it forcefully demands a **Google Cloud Platform (GCP) Service Account** or Application Default Credentials (ADC) with corporate IAM roles. If you only have personal `@gmail.com` accounts or Google AI Studio API keys, Antigravity 2.0 blocks access.
+
+#### The AiMeshManager Solution: Local Mock ADC & OAuth Token Loopback:
+1. **Dynamic Ephemeral RSA Key Generation**: At runtime, AiMeshManager generates an in-memory 2048-bit RSA key pair for the local service account without storing private keys in the repo.
+2. **Auto-Provisioning to Standard Google Cloud ADC Path**: Provisions the mock ADC file directly into Google's standard location:
+   * **Windows**: `%APPDATA%\gcloud\application_default_credentials.json`
+   * **Linux/macOS**: `~/.config/gcloud/application_default_credentials.json`
+   *(Any existing user credentials are automatically backed up to `application_default_credentials.json.bak`)*.
+3. **Local OAuth Token Loopback**: When Antigravity 2.0 requests an OAuth token, AiMeshManager returns an instant mock Google Bearer token (`ya29.meshmanager-antigravity-local-session`) on `http://127.0.0.1:20128/oauth2/token`.
+4. **Transparent Proxying**: Antigravity routes all model traffic to `http://127.0.0.1:20128/v1`, where AiMeshManager transparently optimizes, load-balances, and dispatches across your pooled accounts!
+
+```bash
+# 1-Click CLI setup:
+aimeshmanager antigravity setup
+aimeshmanager ide connect antigravity
+```
 
 ---
 
-## 🧠 Dynamic Task Heat, Intelligence Spectrum & Parallel Multi-Account Execution
+### Cursor AI Editor
+* In the Web UI, toggle **Cursor** to `Connected`.
+* Or configure manually in Cursor Settings $\to$ **Models** $\to$ **OpenAI API**:
+  * **Base URL**: `http://localhost:20128/v1`
+  * **API Key**: `mesh-local` (or your Gateway Bearer Token)
+  * **Model**: `auto-smart-router` or virtual pin `personal-gemini/gemini-2.5-pro`
 
-MeshManager introduces **Task Heat & Intelligence Spectrum Routing**. Rather than treating all code completions equally, MeshManager dynamically profiles incoming requests along a continuous complexity curve and routes them across different accounts and models **simultaneously and in parallel**:
+---
+
+### VS Code (Continue / Cline / Roo Code)
+* **Auto-Directory & File Creation**: If you recently installed VS Code and `%APPDATA%\Code\User\` or `settings.json` does not exist yet, AiMeshManager **automatically creates the directories and generates clean settings files**.
+* **1-Click Connect via CLI**:
+  ```bash
+  aimeshmanager ide connect vscode
+  ```
+* **Continue Extension (`config.json`)**:
+  ```json
+  {
+    "models": [
+      {
+        "title": "AiMeshManager Smart Router",
+        "provider": "openai",
+        "model": "auto-smart-router",
+        "apiBase": "http://localhost:20128/v1",
+        "apiKey": "mesh-local"
+      }
+    ]
+  }
+  ```
+
+---
+
+### Windsurf (Codeium)
+* Click the **Windsurf** toggle in the Web UI or run:
+  ```bash
+  aimeshmanager ide connect windsurf
+  ```
+
+---
+
+## 🔀 Dynamic Task Heat, Intelligence Spectrum & Parallel Multi-Account Routing
+
+AiMeshManager introduces **Task Heat & Intelligence Spectrum Routing**. Rather than treating all code completions equally, it evaluates incoming prompts along a continuous complexity curve and routes them across accounts and models **simultaneously and in parallel**:
 
 ```mermaid
 flowchart TD
@@ -130,14 +378,14 @@ flowchart TD
         C3["VS Code / Cline (Autonomous Refactoring)"]
     end
 
-    subgraph Gateway["MeshManager Mesh Engine"]
+    subgraph Gateway["AiMeshManager Mesh Engine"]
         Router["Dynamic Task Heat & Intelligence Profiler"]
     end
 
     subgraph Dispatches["Simultaneous Parallel Execution"]
         D1["Tier 1: Cold / Fast (Heat: 20%, 1★)<br/>➔ Dispatches to: Gemini Free (Flash)"]
-        D2["Tier 3: Hot / Strategic (Heat: 95%, 5★)<br/>➔ Dispatches to: Paid Pro Account #1 (Pro 2.5)"]
-        D3["Tier 2: Warm / Tactical (Heat: 55%, 3★)<br/>➔ Dispatches to: Paid Pro Account #2 or OmniRoute"]
+        D2["Tier 3: Hot / Strategic (Heat: 95%, 5★)<br/>➔ Dispatches to: Paid Pro Account (Pro 2.5)"]
+        D3["Tier 2: Warm / Tactical (Heat: 55%, 3★)<br/>➔ Dispatches to: OpenRouter / OmniRoute"]
     end
 
     C1 --> Router
@@ -150,27 +398,48 @@ flowchart TD
 ```
 
 ### The 3-Tier Dynamic Spectrum:
-
 1. **Cold / Micro-Latency Tier (Heat: 15% – 25% | Intelligence: 1/5 ★)**:
-   * **Triggers**: Tab autocomplete, syntax fixes, docstrings, variable rename, formatting, lint cleanup.
+   * **Triggers**: Tab autocomplete, syntax fixes, docstrings, variable rename, formatting.
    * **Allocation**: Dispatched to Free Tier (`gemini-2.5-flash`), delivering sub-second response times while preserving 100% of your paid quota.
 2. **Warm / Tactical Engineering Tier (Heat: 45% – 60% | Intelligence: 3/5 ★)**:
    * **Triggers**: Single-function implementations, unit tests, git commit synthesis, standard bug fixes.
    * **Allocation**: Balanced code models with highest remaining quota headroom.
-3. **Hot / Strategic Architecture & Brainstorming Tier (Heat: 75% – 100% | Intelligence: 4-5/5 ★)**:
-   * **Triggers**: Multi-file refactoring, architectural planning, distributed systems design, roadmap brainstorming, trade-off analysis.
-   * **Allocation**: Deep reasoning models (`gemini-2.5-pro`, `gemini-3.8-flash-high`) on Paid Pro subscriptions.
+3. **Hot / Strategic Architecture Tier (Heat: 75% – 100% | Intelligence: 4-5/5 ★)**:
+   * **Triggers**: Multi-file refactoring, architectural planning, distributed systems design, roadmap brainstorming.
+   * **Allocation**: Deep reasoning models (`gemini-2.5-pro`, `o1`, `deepseek-r1`) on Paid Pro subscriptions.
 
-### Simultaneous & Parallel Execution:
-When multiple IDEs or subagents trigger requests concurrently:
-* Thread A (Cursor linter) and Thread B (Antigravity architect) run **concurrently without thread blocking**.
-* Each turn consumes tokens from its mapped account independently and records atomic usage in real time.
+### How to verify dynamic switching in real time:
+1. **Live Activity & Telemetry Tab**: Open `http://localhost:20128` $\to$ **Live Activity & Telemetry** to view client IDE, task classification (`MICRO_SYNTAX` vs `STRATEGIC_REASON`), dispatched account, active model, and routing mode.
+2. **HTTP Response Tracing Headers**: Every completion includes:
+   * `X-MeshManager-Account`: Account ID that executed the turn.
+   * `X-MeshManager-Model`: Exact model dispatched.
+   * `X-MeshManager-Tier`: Task tier classification.
 
 ---
 
-## 🚀 Dynamic Multi-Agent Swarm with Shared Development Context
+## 📌 Virtual Model Pins (`accountId/modelName`) & Default Models
 
-MeshManager enables full **Multi-Agent Swarm Orchestration** where multiple specialized agents work in parallel on the same project task while maintaining **100% unified workspace context**:
+What if you want **Cursor** to strictly use your **Paid Account with Gemini Pro**, while **Antigravity** uses **Free Flash**?
+
+AiMeshManager supports **Virtual Model Addressing**:
+
+$$\text{Format: } \mathbf{\text{account-id}} / \mathbf{\text{model-name}}$$
+
+### Examples:
+* `personal-pro/gemini-2.5-pro` $\to$ Dispatches strictly to Account `personal-pro` using `gemini-2.5-pro`.
+* `openrouter-free/deepseek/deepseek-r1:free` $\to$ Dispatches strictly to OpenRouter Free Pool.
+* `local-ollama/qwen2.5-coder:7b` $\to$ Dispatches strictly to local Ollama.
+
+### How to use in your editor:
+1. In the Web UI (**AI Accounts** tab), click **`Copy Pin`** next to any account card.
+2. Paste this string as your **Model Name** in Cursor, VS Code, or Antigravity.
+3. AiMeshManager routes directly to that account, bypassing the auto-classifier while still providing failover protection if the account hits a rate limit!
+
+---
+
+## 🤖 Dynamic Multi-Agent Swarm with Shared Development Context
+
+AiMeshManager enables full **Multi-Agent Swarm Orchestration** where multiple specialized agents work in parallel on the same project task while maintaining **100% unified workspace context**:
 
 ```mermaid
 flowchart TD
@@ -180,7 +449,7 @@ flowchart TD
         HIST["Full Chat & Session Memory"]
     end
 
-    subgraph SwarmOrchestrator["MeshManager Swarm Engine (Parallel Event Loops)"]
+    subgraph SwarmOrchestrator["AiMeshManager Swarm Engine (Parallel Event Loops)"]
         SW["Task Decomposer & Heat Profiler"]
     end
 
@@ -209,69 +478,18 @@ flowchart TD
     A4 --> L4
 ```
 
-### How Shared Development Context is Preserved:
-1. **Central Context Registry:** When a task arrives, MeshManager extracts the project AST, git diff, and conversation turns.
-2. **Specialized Subagent Prompts:** Each subagent receives targeted instructions alongside the full workspace context without data degradation or hallucinated drift.
-3. **Simultaneous Execution via `Promise.all()`:** All 4 subagents run concurrently across non-blocking asynchronous event loops, taking just 1-3 ms to dispatch without lock contention.
-4. **Atomic Multi-Account Billing:** Paid subscriptions handle high-reasoning tasks, while free accounts handle documentation and linting, saving hundreds of thousands of paid tokens.
-
-### Triggering via CLI or Web UI:
+### Dispatching a Swarm Task:
 ```bash
-# Dispatch a parallel swarm task:
-meshmanager swarm "Architect and refactor high-throughput auth router with Redis caching"
+# Terminal CLI:
+aimeshmanager swarm "Architect and refactor high-throughput auth router with Redis caching"
 ```
-Or open `http://localhost:20128` $\to$ **Dynamic Task Simulator** $\to$ click **`⚡ Launch Swarm`**.
-
----
-
-## ⚡ Google Antigravity 2.0 Integration & Service Account Bypass (Mock ADC)
-
-### The Challenge with Antigravity 2.0:
-Google Antigravity 2.0 is designed for enterprise environments where it forcefully demands a **Google Cloud Platform (GCP) Service Account** or Application Default Credentials (ADC) with corporate IAM roles. If you only have personal `@gmail.com` accounts, Google AI Studio API keys, or standard Google AI Pro subscriptions, Antigravity 2.0 blocks access.
-
-### The MeshManager Solution: Local Loopback Mock ADC & Dynamic Auto-Handling
-MeshManager solves this cleanly by acting as a **local mock Google Cloud OAuth Provider**:
-1. **Dynamic Ephemeral RSA Key Generation**: At runtime, MeshManager creates an in-memory 2048-bit RSA key pair for the local service account without storing hardcoded private keys in the repo.
-2. **Auto-Provisioning to Standard Google Cloud ADC Path**: In addition to `~/.meshmanager/meshmanager-service-account.json`, MeshManager provisions the ADC file directly into Google's standard location:
-   * **Windows**: `%APPDATA%\gcloud\application_default_credentials.json`
-   * **Linux/macOS**: `~/.config/gcloud/application_default_credentials.json`
-   *(Any existing user credentials are automatically backed up to `application_default_credentials.json.bak`)*.
-3. **Local OAuth Token Loopback**: When Antigravity 2.0 requests an OAuth token, MeshManager returns an instant mock Google Bearer token (`ya29.meshmanager-antigravity-local-session`) on `http://127.0.0.1:20128/oauth2/token`.
-4. **Transparent Proxying**: Antigravity routes all model traffic to `http://127.0.0.1:20128/v1`, which MeshManager transparently translates, optimizes, and routes to your pooled accounts!
-
-### How MeshManager Handles All Startup Scenarios Dynamically:
-
-| Scenario | What Happens | Action Needed |
-| :--- | :--- | :--- |
-| **Scenario A: MeshManager Starts First, Antigravity Starts Second** | MeshManager auto-provisions the mock ADC in `%APPDATA%\gcloud\` and injects proxy settings into Antigravity `settings.json`. When Antigravity starts, it finds the ADC naturally. | **Zero manual steps.** Start Antigravity normally. |
-| **Scenario B: Antigravity Starts First, MeshManager Starts Second** | Antigravity is already running and waiting or prompting. Starting MeshManager or clicking the UI toggle detects the active `Antigravity IDE.exe` process (PID), writes the ADC, and flushes token loopback. | Click **Connect** toggle in Web UI or run `meshmanager antigravity setup`. |
-| **Scenario C: User Toggles Disconnect or Stops MeshManager** | MeshManager reverts Antigravity `settings.json` and restores original `application_default_credentials.json.bak` if a backup existed, leaving zero residual files. | Click **Disconnect** in UI or run `meshmanager ide disconnect antigravity`. |
-
-### 1-Click Setup Commands:
-```bash
-# Auto-provision ADC and connect Antigravity:
-meshmanager antigravity setup
-# (or connect command)
-meshmanager ide connect antigravity
-```
-
-### Optional Manual Shell Overrides (For isolated subshells or containers):
-* **PowerShell (Windows)**:
-  ```powershell
-  $env:GOOGLE_APPLICATION_CREDENTIALS="$HOME\.meshmanager\meshmanager-service-account.json"
-  $env:GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:20128/v1"
-  ```
-* **Bash / Zsh (Linux / macOS)**:
-  ```bash
-  export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.meshmanager/meshmanager-service-account.json"
-  export GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:20128/v1"
-  ```
+Or in Web UI $\to$ **Dynamic Task Simulator** $\to$ click **`⚡ Launch Swarm`**.
 
 ---
 
 ## 📊 Single Unified Master Telemetry Ledger
 
-Instead of fragmented accounting views, MeshManager unifies client development editors and upstream provider accounts into a **Single Master Telemetry Matrix**:
+AiMeshManager consolidates client development editors and upstream provider accounts into an atomic accounting matrix:
 
 ```
 ================================================================================================================================================================
@@ -279,31 +497,25 @@ Instead of fragmented accounting views, MeshManager unifies client development e
 ================================================================================================================================================================
  Client IDE / Tool      Active Target Account   Provider/Service   Model Dispatched    Tier       Requests   Input Tokens  Output Tokens Total Tokens  Saved    Cost (USD) Status
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- Google Antigravity     acc-paid-pro-1          GEMINI             gemini-2.5-pro      PAID_PRO   89         210,400       18,200        228,600       42,100   $0.6858    [ACTIVE - 82% Headroom]
- Cursor AI              acc-free-1              GEMINI             gemini-2.5-flash    FREE       142        384,120       24,500        408,620       86,400   $1.2258    [ACTIVE - 15 RPM Cap]
- VS Code (Continue)     acc-paid-pro-2          GEMINI             gemini-2.5-pro      PAID_PRO   35         65,200        8,400         73,600        14,200   $0.2208    [ACTIVE - 95% Headroom]
+ Google Antigravity     personal-gemini-pro     GEMINI             gemini-2.5-pro      PAID_PRO   89         210,400       18,200        228,600       42,100   $0.6858    [ACTIVE - 82% Headroom]
+ Cursor AI              gemini-free-1           GEMINI             gemini-2.5-flash    FREE       142        384,120       24,500        408,620       86,400   $1.2258    [ACTIVE - 15 RPM Cap]
+ VS Code (Continue)     openrouter-pool         OPENROUTER         deepseek-r1:free    FREE       35         65,200        8,400         73,600        14,200   $0.0000    [ACTIVE - Healthy]
  Windsurf (Codeium)     omniroute-gateway       OMNIROUTE          auto-routing        ENTERPRISE 18         32,100        4,100         36,200        6,800    $0.1086    [ACTIVE - Healthy]
- Standby / Any Client   vertex-prod             VERTEX             gemini-2.5-flash    ENTERPRISE 0          0             0             0             0        $0.0000    [READY]
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- TOTAL MESH VOLUME:     5 Active Mappings                                                         284        691,820       55,200        747,020       149,500  $2.2410    [MESH HEALTHY]
+ TOTAL MESH VOLUME:     4 Active Mappings                                                         284        691,820       55,200        747,020       149,500  $2.0202    [MESH HEALTHY]
 ================================================================================================================================================================
 ```
 
-### How to Access:
-* **CLI**: `meshmanager unified` (or alias `meshmanager matrix`).
-* **Web UI**: Open `http://localhost:20128` $\to$ **Unified Master Ledger** tab with 1-click filters by client (`Antigravity`, `Cursor`, `VS Code`, `Paid Pro`, `Free Tier`).
+* **CLI Access**: `aimeshmanager unified` (or alias `aimeshmanager matrix`).
+* **Web UI**: Open `http://localhost:20128` $\to$ **Unified Master Ledger** tab with 1-click filters by client and tier.
 
 ---
 
 ## 🛡️ Local Network Isolation & Mandatory LAN Bearer Token Auth
 
-When running AiMeshManager on your laptop or local workstation, you have full control over network visibility and access security:
-
 ### 1. Host Network Binding: Localhost vs LAN Sharing
-* **Localhost-Only (`127.0.0.1`) [Default]**:
-  The gateway binds exclusively to the loopback interface. Other devices on your local Wi-Fi or office LAN cannot connect or even establish a TCP handshake on port `20128`.
-* **LAN Network Sharing (`0.0.0.0`)**:
-  Allows secondary developer machines, test phones, or Docker containers on your local network to connect to AiMeshManager.
+* **Localhost-Only (`127.0.0.1`) [Default]**: Binds strictly to the loopback interface. Other devices on your local Wi-Fi or office network cannot connect to port `20128`.
+* **LAN Network Sharing (`0.0.0.0`)**: Allows secondary machines, mobile devices, or Docker containers on your LAN to connect to AiMeshManager.
 * **Toggle with 1 Click**:
   ```bash
   aimeshmanager security toggle-lan
@@ -311,248 +523,46 @@ When running AiMeshManager on your laptop or local workstation, you have full co
 
 ### 2. Mandatory Gateway Master Bearer Token Auth (Default for LAN)
 > [!IMPORTANT]
-> **Automatic Protection:** Whenever LAN Network Sharing (`0.0.0.0`) is enabled, **Gateway Bearer Token Authentication is automatically ENFORCED by default** for all incoming remote network requests. This prevents unauthorized devices or rogue network scripts from consuming your paid subscriptions, API keys, or token quotas.
+> Whenever LAN Network Sharing (`0.0.0.0`) is enabled, **Gateway Bearer Token Authentication is automatically ENFORCED** for all incoming remote network requests. This prevents unauthorized network actors from consuming your paid API quotas.
 
-* Local loopback requests (`127.0.0.1`) from your local IDEs operate seamlessly without friction.
+* Local requests (`127.0.0.1`) operate seamlessly without friction.
 * Remote LAN requests must supply: `Authorization: Bearer <GATEWAY_TOKEN>` or header `X-Mesh-Key: <GATEWAY_TOKEN>`.
-* Toggle or rotate token via CLI:
+* Toggle or rotate token:
   ```bash
   aimeshmanager security status
   aimeshmanager security toggle-auth
   aimeshmanager security regenerate-token
   ```
 
-### 3. Real-Time Firewall Audit Log
-AiMeshManager tracks any unauthorized access attempt with timestamp, client IP address, target path, and reason. Inspect live in the Web UI under the **Security & Local Isolation** tab.
+---
 
-### 4. Zero-Residual Secret Purge & File Shredding (`aimeshmanager purge`)
-If you need to leave no traces of your credentials on a system (e.g. shared workstations, client laptops, or when stopping the app):
+## 🔄 Hermes-Style Self-Healing & Anti-Hallucination Guard
 
-* **Cryptographic Byte Zeroing:** Before deleting `~/.aimeshmanager/accounts.json`, AiMeshManager overwrites every single byte on disk with zeroes (`Buffer.alloc(stats.size, 0)`), defeating disk data recovery and file undelete utilities.
-* **In-Memory Key Wiping:** Clears all API keys from active Node.js memory heaps and re-seeds clean simulation placeholders.
-* **1-Click CLI & UI Execution:**
-  ```bash
-  # Purge all stored credentials immediately:
-  aimeshmanager purge
-  # (or alias)
-  aimeshmanager account purge
-  ```
-  Or open the Web Control Center $\to$ **AI Accounts & Models** $\to$ click **`🔥 Purge Stored Secrets`**.
+* **Autonomous Tool Call Repair**: Intercepts unescaped Windows paths (`C:\projects`), markdown code fences around JSON, and trailing commas emitted by LLMs, auto-repairing them before they cause IDE parser crashes.
+* **Context Grounding Guard**: Verifies imported packages, symbols, and paths against local workspace files.
+* **Deterministic Sampling Calibration**: Applies low temperature ($0.1 - 0.2$) for code generation, reserving higher entropy for creative brainstorming.
 
 ---
 
-## 🔑 Adding & Authenticating Multiple Accounts
+## 🌿 Resource Efficiency & ~0 Stress Benchmark
 
-MeshManager supports adding unlimited Google Gemini accounts with disk persistence (`~/.meshmanager/accounts.json`):
+AiMeshManager is engineered from the ground up for **near-zero host resource utilization**:
 
-### Method 1: Via the Web Control Center (Interactive UI)
-1. Open your browser to `http://localhost:20128`.
-2. Click **`+ Add AI Account`** in the top header.
-3. Fill in:
-   * **Account Identifier:** Unique slug (e.g., `work-gemini-pro` or `free-acc-3`).
-   * **Friendly Label:** Name to display (e.g., `Work Pro (5h Rolling Bucket)`).
-   * **Subscription Tier:** `Free Consumer` (15 RPM / Weekly) or `Google AI Pro` (120 RPM / 5h Rolling Window).
-   * **Default Model:** Choose `gemini-2.5-flash`, `gemini-2.5-pro`, or `gemini-3.8-flash`.
-   * **Google Gemini API Key:** Paste your API key from Google AI Studio.
-4. Click **`🔍 Verify Key with Google`**:
-   * MeshManager will query Google's API in real time. If the key is valid, a green confirmation displays immediately!
-5. Click **`Save to Mesh`**. The account is instantly saved and available to all connected IDEs.
+* **Zero CPU Load on Idle (`~0% CPU`)**: Uses non-blocking event-driven Node.js networking. No polling loops, no busy-waits, and all background timers are unreferenced (`.unref()`).
+* **Minimal Memory Footprint (`~9-15 MB Heap`)**: Compact in-memory maps for accounts and routing tables. Streaming SSE chunks are piped directly to clients without buffering multi-megabyte responses.
+* **Lightweight Storage**: Uses plain JSON files (`~/.aimeshmanager/accounts.json`), avoiding heavy background database engines like Postgres or SQLite daemons.
 
-### Method 2: Via the Terminal CLI
-```bash
-# Add a new account
-meshmanager account add personal-pro "Personal Google AI Pro" paid_pro gemini-2.5-pro AIzaSy...
-
-# Test an API key with Google
-meshmanager account verify AIzaSy...
-
-# View all pooled accounts and quota meters
-meshmanager account list
-```
-
----
-
-## 🧠 How to Know if Models are Dynamically Changing
-
-When your IDE is configured with `auto-smart-router` (or standard Gemini/OpenAI models), MeshManager’s **Semantic Task Classifier** evaluates every prompt before dispatching:
-
-```mermaid
-flowchart TD
-    IDE[Any IDE / Coding Tool] --> MM[MeshManager Gateway]
-    MM --> Classify{Semantic Task Classifier}
-    
-    Classify -->|Docstrings, Tab Complete, Formatting, Typo| Micro[Tier 1: MICRO_SYNTAX]
-    Classify -->|Functions, Unit Tests, Local Refactor| Tactical[Tier 2: TACTICAL_CODE]
-    Classify -->|Multi-file Refactor, Architecture, Debugging| Strategic[Tier 3: STRATEGIC_REASON]
-
-    Micro -->|Allocates| Flash[Free Gemini Flash Account: Zero Cost, High RPM]
-    Tactical -->|Allocates| Balanced[Gemini Flash-Thinking or Pro Free Tier]
-    Strategic -->|Allocates| Pro[Paid Gemini Pro Account: Deep Reasoning]
-
-    MM -.-> LiveFeed[Live Connection Matrix Table & Response Headers]
-```
-
-### How to verify in real-time:
-1. **Live IDE Connection & Dynamic Routing Matrix:**
-   * Open `http://localhost:20128` $\to$ **Live Activity & Telemetry** tab.
-   * Every request from your IDEs shows up in the table in real time with:
-     * **Client IDE:** (e.g. Cursor, Antigravity, VS Code)
-     * **Task Classification:** `MICRO_SYNTAX` vs `STRATEGIC_REASON`
-     * **Dispatched Account:** The exact account used (e.g. `Gemini Free Account (Primary)`)
-     * **Active Model:** The exact model executing the turn (`gemini-2.5-flash` vs `gemini-2.5-pro`)
-     * **Route Mode:** `⚡ DYNAMIC` vs `📌 PINNED`
-2. **HTTP Response Headers:**
-   Every completion returned by MeshManager includes tracing headers:
-   * `X-MeshManager-Account`: Account ID that executed the turn.
-   * `X-MeshManager-Model`: Exact model dispatched.
-   * `X-MeshManager-Tier`: Task tier classification.
-
----
-
-## ⚙️ Setting Default Models per Account
-
-Every account in MeshManager can have its own configured **Default Model**:
-* **Free Accounts:** Typically set to `gemini-2.5-flash` for high throughput and zero cost.
-* **Paid Pro Accounts:** Typically set to `gemini-2.5-pro` for deep agentic reasoning.
-
-### How to change an account's default model:
-* **In the Web UI:** Go to **AI Accounts & Model Pool** tab $\to$ locate the account card $\to$ change the **Default Model** dropdown (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-3.8-flash`). Changes take effect immediately without restarting.
-* **Via API:**
-  ```bash
-  curl -X PUT http://localhost:20128/api/accounts/acc-paid-pro -H "Content-Type: application/json" -d '{"defaultModel":"gemini-2.5-pro"}'
-  ```
-
----
-
-## 📌 Using a Specific Model of a Specific Account in Any IDE
-
-What if you want **Cursor** to strictly use your **Paid Account with Gemini Pro**, while **Antigravity** uses **Free Flash**?
-
-MeshManager supports **Virtual Model Addressing**:
-
-$$\text{Format: } \mathbf{\text{account-id}} / \mathbf{\text{model-name}}$$
-
-### Examples:
-* `acc-paid-pro/gemini-2.5-pro` $\to$ Dispatches strictly to Account `acc-paid-pro` using `gemini-2.5-pro`.
-* `acc-free-1/gemini-2.5-flash` $\to$ Dispatches strictly to Account `acc-free-1` using `gemini-2.5-flash`.
-
-### How to use in your editor:
-1. In the Web UI (**AI Accounts** tab), click **`Copy Pin`** next to any account (e.g. `acc-paid-pro/gemini-2.5-pro`).
-2. Paste this string as your **Model Name** in Cursor, VS Code, or Antigravity.
-3. MeshManager detects the virtual pin and routes directly to that account, bypassing the auto-classifier while still providing failover protection if the account hits a rate limit!
-
----
-
-## 📡 Monitoring Which IDE is Connected to Which Account & Model
-
-MeshManager inspects client headers (`User-Agent`, `x-client-ide`) and records active connections in an in-memory buffer.
-
-Open `http://localhost:20128` $\to$ **Live Activity & Telemetry**:
-
-| Time | Client IDE / Tool | Prompt Snippet | Task Classification | Dispatched Account | Active Model | Route Mode |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **16:29:48** | **Antigravity IDE** | Add docstring comments... | `MICRO_SYNTAX` | Gemini Free (Primary) | `gemini-2.5-flash` | `⚡ DYNAMIC` |
-| **16:29:49** | **Cursor AI** | Architect and plan multi-file... | `STRATEGIC_REASON` | Google AI Pro (5h Rolling) | `gemini-2.5-pro` | `⚡ DYNAMIC` |
-| **16:29:50** | **VS Code (Continue)**| Write a quick python script... | `TACTICAL_CODE` | Google AI Pro (5h Rolling) | `gemini-2.5-pro` | `📌 PINNED` |
-
----
-
-## 🔌 1-Click IDE Connect Center & Fixing VS Code Detection
-
-### Why did VS Code show "Not Detected" earlier?
-If you recently installed VS Code or haven't modified user settings yet, the folder `%APPDATA%\Code\User\` or the file `settings.json` does not exist on disk. Previous tools disabled the toggle if the file wasn't found.
-
-### The MeshManager Fix:
-* **Auto-Directory & File Creation:** In MeshManager, you can click the toggle on **any** IDE card (Antigravity, Cursor, VS Code, Windsurf). If the directory doesn't exist, MeshManager **automatically creates the folders and generates `settings.json`**.
-* **1-Click Copy Config Snippet:** Every IDE card displays the exact JSON snippet with a **`Copy Config Snippet`** button for manual setups or remote environments.
-
-### Supported IDEs:
-```bash
-# 1-Click Connect via CLI:
-meshmanager ide connect antigravity   # Google Antigravity 2.0 & IDE
-meshmanager ide connect cursor        # Cursor AI Editor
-meshmanager ide connect vscode        # VS Code (Continue / Cline / Roo)
-aimeshmanager ide connect windsurf      # Windsurf (Codeium)
-aimeshmanager ide connect all           # Connect all installed IDEs at once
-```
-
----
-
-## 🧪 Production Architecture Files: test-e2e.js, Dockerfile & docker-compose.yml
-
-These three core files provide production reliability, continuous integration verification, and deployment flexibility:
-
-### 1. `test-e2e.js` (End-to-End Regression Validation Suite)
-* **What it does:** Runs **17 automated end-to-end assertions** exercising every single subsystem in AiMeshManager.
-* **What it tests:**
-  1. Health & Resource statistics telemetry (`/api/stats`)
-  2. OpenAI-compatible models listing & virtual pins (`/v1/models`)
-  3. Micro-syntax task routing (Cursor $\to$ Free Flash)
-  4. Strategic architecture task routing (Antigravity $\to$ Paid Pro)
-  5. Virtual Pin targeting (`acc-paid-pro-1/gemini-2.5-pro`)
-  6. Real-time streaming Server-Sent Events (`stream=true`)
-  7. 50ms Auto-failover upon simulated 429 quota exhaustion
-  8. Hermes-style self-healing repair of malformed JSON tool calls
-  9. Multi-IDE request & token accounting split (`/api/ide-accounting`)
-  10. Real binary & running process validation (`/api/ides`)
-  11. Single Unified Master Telemetry Ledger matrix (`/api/unified-telemetry`)
-  12. Resource footprint benchmarks (Heap, RSS, ~0% idle CPU)
-  13. Localhost vs LAN network isolation and firewall mode toggling
-  14. Semantic task heat & intelligence scoring (Brainstorming $\to$ 88%–96% heat)
-  15. Antigravity 2.0 Mock ADC generation and OAuth2 token loopback
-  16. Dynamic 4-agent parallel swarm dispatch across multiple accounts
-  17. Cryptographic secret shredding & memory key wiping (`/api/accounts/purge`)
-* **How to run:**
-  ```bash
-  npm run test:e2e
-  # Output: Summary: 17 Passed, 0 Failed of 17 Tests (100% Pass)
-  ```
-
-### 2. `Dockerfile` (Containerized Lightweight Deployment: Docker & Podman)
-* **What it does:** Multi-stage OCI-compliant container recipe based on `node:20-alpine`.
-* **Architecture:**
-  * **Stage 1 (Builder):** Compiles TypeScript source code to optimized JavaScript.
-  * **Stage 2 (Runner):** Strips dev dependencies, keeping image footprint to ~60MB.
-  * **Healthcheck:** Automatic container health monitoring via `wget http://localhost:20128/api/stats`.
-* **Run with Docker:**
-  ```bash
-  docker build -t aimeshmanager .
-  docker run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager --name aimeshmanager aimeshmanager
-  ```
-* **Run with Podman (Rootless & Open-Source):**
-  ```bash
-  podman build -t aimeshmanager .
-  podman run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager:Z --name aimeshmanager aimeshmanager
-  ```
-
-### 3. `docker-compose.yml` (Single-Command Daemon Orchestration)
-* **What it does:** Declarative multi-container configuration for launching AiMeshManager with persistent storage and auto-restart policies. Works identically with Docker Compose and Podman Compose.
-* **Key Configuration:**
-  * Service: `aimeshmanager` (container: `aimeshmanager-mesh`)
-  * Port binding: `20128:20128`
-  * Restart policy: `always` (auto-recovers after workstation reboot)
-  * Volume mount: `~/.aimeshmanager:/root/.aimeshmanager` (preserves accounts across upgrades)
-* **Launch with Docker Compose:**
-  ```bash
-  docker compose up -d
-  ```
-* **Launch with Podman Compose:**
-  ```bash
-  podman compose up -d
-  # (or: podman-compose up -d)
-  ```
-
-### 4. Direct `docker/podman run` vs. `compose up -d`: Issues, Gotchas & Which is Best?
-
-| Operational Dimension | Direct `run` Command (`docker/podman run`) | Compose Orchestrator (`docker/podman compose up -d`) |
+| Metric | AiMeshManager Benchmark | Typical Heavy Proxies |
 | :--- | :--- | :--- |
-| **System Reboot Recovery** | ❌ **Does NOT restart** after reboot unless you manually append `--restart always`. | ✅ **Auto-restarts automatically** (`restart: always` specified in YAML). |
-| **Rebuild & Upgrade Collisions** | ❌ **Fails with name conflict:** `The container name "aimeshmanager" is already in use`. Requires manual `stop` & `rm`. | ✅ **Zero conflicts:** Automatically stops old container, recreates with new image, and resumes. |
-| **Typo-Prone Command Length** | ❌ **120+ character command:** Easy to forget `-d`, port mapping `-p`, or volume mount `-v`. | ✅ **Clean 1-liner:** `docker compose up -d` or `podman compose up -d`. |
-| **SELinux Labeling on Linux** | ⚠️ Requires remembering `:Z` flag on Podman (`-v ~/.aimeshmanager:/root/.aimeshmanager:Z`). | ✅ Handled cleanly across platforms. |
-| **Multi-Service Networking** | ⚠️ Runs on default bridge without container DNS resolution. | ✅ Isolated custom mesh network with DNS resolution. |
+| **Idle CPU Stress** | **~0.0% CPU** | 2.5% – 8.0% CPU |
+| **Heap Memory** | **~9.8 MB** | 120 MB – 450 MB |
+| **Resident Set Size (RSS)** | **~50 - 60 MB** | 300 MB – 800 MB |
+| **I/O Strategy** | **Asynchronous Native Stream Piping** | Blocking thread pools |
 
-> **Recommendation:** **`docker compose up -d` (or `podman compose up -d`) is by far preferable and best practice.** It guarantees your AI gateway stays running 24/7 across reboots, upgrades seamlessly with `--build`, and eliminates container naming conflicts.
+Verify live via CLI:
+```bash
+aimeshmanager stats
+```
 
 ---
 
@@ -574,7 +584,7 @@ mesh <command>
 | **`status`** | — | Prints gateway PID, port, active accounts, and connected IDEs. |
 | **`swarm`** | `"<task>"` | Dispatches 4 parallel subagents (Planner, Coder, Linter, Critic) across accounts. |
 | **`antigravity setup`** | `[mock-adc]` | Generates Mock Google Cloud ADC to bypass Antigravity 2.0 service account login. |
-| **`purge`** | — | Cryptographically shreds stored credentials from disk and clears in-memory keys. |
+| **`purge`** | — | Cryptographically shreds stored credentials from disk and wipes memory. |
 | **`unified, matrix`** | — | Displays the Single Unified Master Telemetry Ledger. |
 | **`stats`** | — | Real-time token economy, savings, and resource stress benchmark. |
 | **`security status`** | — | Inspects host binding (Localhost vs LAN) and Gateway Token. |
@@ -586,95 +596,77 @@ mesh <command>
 | **`account list`** | — | Lists all accounts, virtual pin IDs, quotas, and statuses. |
 | **`account add`** | `<id> <name> <tier> <model> <key>` | Adds an account with disk persistence. |
 | **`account delete`** | `<id>` | Deletes an account from the mesh pool. |
-| **`account verify`** | `<key>` | Verifies an API key against Google Gemini API. |
+| **`account verify`** | `<key>` | Verifies an API key against the provider API. |
 | **`account purge`** | — | Shreds credentials from disk and clears memory pools. |
 | **`ide connect`** | `<antigravity\|cursor\|vscode\|all>` | Injects gateway settings into editor. |
 | **`ide disconnect`**| `<antigravity\|cursor\|vscode\|all>` | Reverts editor to default settings. |
 
 ---
 
-## 🚀 Installation & Quickstart
+## 🧪 Production Architecture Files: test-e2e.js, Dockerfile & docker-compose.yml
 
-You can run AiMeshManager **natively on your computer** (zero Docker or Podman required) or inside a container.
+### 1. `test-e2e.js` (End-to-End Regression Validation Suite)
+Runs **18 automated end-to-end assertions** exercising every single subsystem in AiMeshManager:
+1. Health & Resource statistics telemetry (`/api/stats`)
+2. OpenAI-compatible models listing & virtual pins (`/v1/models`)
+3. Micro-syntax task routing (Cursor $\to$ Free Flash)
+4. Strategic architecture task routing (Antigravity $\to$ Paid Pro)
+5. Virtual Pin targeting (`personal-gemini/gemini-2.5-pro`)
+6. Real-time streaming Server-Sent Events (`stream=true`)
+7. 50ms Auto-failover upon simulated 429 quota exhaustion
+8. Hermes-style self-healing repair of malformed JSON tool calls
+9. Multi-IDE request & token accounting split (`/api/ide-accounting`)
+10. Real binary & running process validation (`/api/ides`)
+11. Single Unified Master Telemetry Ledger matrix (`/api/unified-telemetry`)
+12. Resource footprint benchmarks (Heap, RSS, ~0% idle CPU)
+13. Localhost vs LAN network isolation and firewall mode toggling
+14. Semantic task heat & intelligence scoring (Brainstorming $\to$ 88%–96% heat)
+15. Antigravity 2.0 Mock ADC generation and OAuth2 token loopback
+16. Dynamic 4-agent parallel swarm dispatch across multiple accounts
+17. Cryptographic secret shredding & memory key wiping (`/api/accounts/purge`)
+18. Clean Slate zero-account startup, full account editing (`PUT /api/accounts/:id`), and live key verification (`POST /api/accounts/verify`)
 
-### Method 1: Native Run (Zero Docker or Podman Needed) — Recommended
-No container runtime required. Runs directly on Node.js across Windows, macOS, Linux, WSL, or Android Termux.
-
-1. **Clone or Download the Repository:**
-   ```bash
-   git clone https://github.com/ommedical/AiMeshManager.git
-   cd AiMeshManager
-   ```
-2. **Launch AiMeshManager (1-Command):**
-   ```bash
-   npm start
-   ```
-   > ⚡ **Self-Bootstrapping:** If `node_modules` is not yet installed, AiMeshManager automatically detects missing packages and runs `npm install` for you before launching!
-3. **Run as a Background Daemon (Optional):**
-   ```bash
-   node dist/cli.js start --daemon
-   # Check status: node dist/cli.js status
-   # Stop daemon:  node dist/cli.js stop
-   ```
-4. **Global CLI Installation (Optional):**
-   ```bash
-   npm install -g .
-   # Now run anywhere:
-   aimeshmanager start --daemon
-   ```
-5. **Open the Control Center:**
-   Open `http://localhost:20128` in your browser.
+Run the test suite anytime:
+```bash
+npm run test:e2e
+# Output: Summary: 18 Passed, 0 Failed of 18 Tests (100% Pass)
+```
 
 ---
 
-### Method 2: Containerized Run (Podman or Docker)
-
-* **With Podman (Rootless):**
-  ```bash
-  podman compose up -d
-  # Or: podman build -t aimeshmanager . && podman run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager:Z aimeshmanager
-  ```
-* **With Docker:**
-  ```bash
-  docker compose up -d
-  # Or: docker build -t aimeshmanager . && docker run -d -p 20128:20128 -v ~/.aimeshmanager:/root/.aimeshmanager aimeshmanager
-  ```
+### 2. `Dockerfile` (Containerized Lightweight Deployment)
+Multi-stage OCI-compliant recipe based on `node:20-alpine`:
+* **Stage 1 (Builder):** Compiles TypeScript source code to optimized JavaScript.
+* **Stage 2 (Runner):** Strips development dependencies, keeping image footprint to ~60MB.
+* **Healthcheck:** Automatic container health monitoring via `wget http://localhost:20128/api/stats`.
 
 ---
 
-## 🔄 Hermes-Style Self-Healing & Anti-Hallucination Guard
-
-* **Autonomous Tool Call Repair:** Automatically intercepts unescaped Windows paths (`C:\projects`), markdown code fences around JSON, and trailing commas emitted by LLMs, auto-repairing them before they cause IDE crashes.
-* **Context Grounding Guard:** Verifies imported packages, symbols, and paths against local workspace files.
-* **Deterministic Sampling Calibration:** Applies low temperature ($0.1 - 0.2$) for code generation, reserving higher entropy for creative brainstorming.
-
----
-
-## ⚙️ Dynamic Automation vs. Manual Tweaks
-
-| Operational Dimension | What AiMeshManager Does Automatically | What You Can Tweak Manually |
-| :--- | :--- | :--- |
-| **Dependency Setup** | Automatically detects and installs missing `node_modules` on launch. | Run `npm install` manually if preferred. |
-| **Load Balancing** | Automatically routes turns using P2C algorithm; fails over in 50ms upon 429 errors. | Enable/disable accounts, adjust priority weights, or trigger manual cooldowns. |
-| **Model Selection** | Profiles task complexity and dispatches Flash, Thinking, or Pro models dynamically. | Set default models per account or use virtual pins (`accId/modelName`). |
-| **Token Optimization** | Compresses whitespace, prunes duplicate comment blocks, caches identical prompts. | Adjust compression aggressiveness levels. |
-| **IDE Configuration** | Injects gateway endpoints into settings files, auto-creating directories if missing. | Customize IDE config paths or copy JSON snippets directly. |
-
----
-
-## 🔒 Security Architecture
-
-* **Zero Cloud Telemetry:** Prompts and API keys reside strictly on your local machine and communicate only with Google's official endpoints.
-* **Localhost Binding:** Binds strictly to `127.0.0.1`, blocking unauthorized external network access.
-* **Encrypted Local Storage:** Configuration and accounts are stored locally under `~/.aimeshmanager/` (with automatic fallback to `~/.meshmanager/`).
+### 3. `docker-compose.yml` (Single-Command Daemon Orchestration)
+Declarative multi-container configuration with auto-restart policies:
+```yaml
+services:
+  aimeshmanager:
+    build: .
+    container_name: aimeshmanager-mesh
+    ports:
+      - "20128:20128"
+    volumes:
+      - ~/.aimeshmanager:/root/.aimeshmanager
+    restart: always
+```
+Launch with 1 command:
+```bash
+docker compose up -d
+# Or with Podman:
+podman compose up -d
+```
 
 ---
 
 ## 🛑 Graceful Shutdown Architecture & Multi-Scenario Service Termination Guide
 
-AiMeshManager is an enterprise-grade AI Gateway orchestrating live Server-Sent Events (SSE) token streams, autonomous multi-agent swarm tasks, and rolling account quotas. Abruptly killing the process (`kill -9`, forceful taskkill) can drop in-flight IDE turns, corrupt token accounting ledgers, and leave orphaned TCP sockets on port `20128`.
-
-AiMeshManager features an **Autonomous 4-Phase Graceful Shutdown Engine** that safely intercepts all operating system signals, runtime exceptions, and orchestration events.
+AiMeshManager features an **Autonomous 4-Phase Graceful Shutdown Engine** that safely intercepts all operating system signals, runtime exceptions, and orchestration events without dropping in-flight IDE turns or corrupting accounting ledgers:
 
 ```mermaid
 sequenceDiagram
@@ -701,307 +693,15 @@ sequenceDiagram
     Gate->>Gate: process.exit(0)
 ```
 
----
+### The 4-Phase Graceful Shutdown Pipeline:
+1. **Phase 1: Ingestion Freeze & Turn Draining**: Rejects new incoming requests with `HTTP 503` (`Connection: close`, `Retry-After: 5`). Stops accepting new connections (`server.close()`). Drains idle Keep-Alive sockets.
+2. **Phase 2: Atomic State & Ledger Persistence**: Flushes in-memory token counters, rolling RPM/TPM refill windows, and per-account savings to `~/.aimeshmanager/accounts.json`.
+3. **Phase 3: PID Lockfile Cleanup**: Unlinks `~/.aimeshmanager/aimeshmanager.pid` lockfiles, eliminating `EADDRINUSE` port conflict errors on reboot.
+4. **Phase 4: Sockets Closed & Exit**: Closes background intervals and exits with code `0`. A 10-second watchdog timer guarantees the service never hangs indefinitely.
 
-### ⏱️ The 4-Phase Graceful Shutdown Pipeline
-
-| Phase | Internal Action | Guarantee |
-| :--- | :--- | :--- |
-| **Phase 1: Ingestion Freeze & Turn Draining** | Rejects incoming requests with `HTTP 503 Service Unavailable` (`Connection: close`, `Retry-After: 5`). Stops accepting new TCP connections (`server.close()`). Drains idle Keep-Alive sockets (`server.closeIdleConnections()`). | Zero dropped turns; IDE clients receive clean retry hints rather than silent socket drops. |
-| **Phase 2: Atomic State & Ledger Persistence** | Flushes in-memory token counters, rolling RPM/TPM refill windows, and per-account savings to `~/.aimeshmanager/accounts.json`. | Zero accounting drift; paid quota metrics are 100% preserved across service restarts. |
-| **Phase 3: PID Lockfile Cleanup** | Unlinks `~/.aimeshmanager/aimeshmanager.pid` and legacy `.meshmanager.pid` lockfiles. | Eliminates "Address already in use" (`EADDRINUSE`) or ghost daemon errors on reboot. |
-| **Phase 4: Sockets Closed & Exit** | Closes background sync intervals, awaits in-flight active turns to reach `0`, and exits with code `0`. A 10-second watchdog timer guarantees the service never hangs indefinitely. | Safe, non-blocking termination with guaranteed process exit. |
-
----
-
-### 🕹️ Multi-Scenario Service Termination Reference
-
-AiMeshManager handles every execution mode, deployment platform, and runtime event:
-
-#### 1. Interactive Terminal Foreground (`npm start`, `npm run dev`, `ts-node src/server.ts`)
-* **Event: `Ctrl + C` (`SIGINT`)**
-  * When running in an active terminal session, pressing `Ctrl + C` dispatches a POSIX `SIGINT`.
-  * AiMeshManager catches `process.on('SIGINT')`, announces shutdown progress, drains connections, flushes accounts, and terminates cleanly with exit code `0`.
-* **Event: Windows Console Close / Break (`SIGBREAK` / `Ctrl + Break`)**
-  * On Windows Command Prompt or PowerShell, pressing `Ctrl + Break` or clicking the console window's `[X]` button fires a Windows console break event.
-  * AiMeshManager catches `process.on('SIGBREAK')` to cleanly release port `20128` before Windows closes the terminal host.
-* **Event: Terminal Window Closed / Session Disconnect (`SIGHUP`)**
-  * When closing a tab or disconnecting an SSH/WSL session, the parent shell sends `SIGHUP`.
-  * Handled via `process.on('SIGHUP')` to avoid corrupted account state.
-
-#### 2. Background Daemon Run (`aimeshmanager start --daemon`)
-* **Recommended Stop Command:**
-  ```bash
-  aimeshmanager stop
-  # Or with short aliases:
-  aimm stop
-  mesh stop
-  ```
-* **How It Works Under the Hood:**
-  1. The CLI queries the running process via `POST http://127.0.0.1:20128/api/system/shutdown`.
-  2. The server acknowledges, freezes new traffic, drains active streams, and saves disk state.
-  3. The CLI polls for process termination for up to 4.5 seconds.
-  4. If the process is unresponsive (e.g. frozen in synchronous loop), the CLI automatically falls back to OS-level process termination (`taskkill /PID <pid> /T /F` on Windows, or `SIGTERM` $\to$ `SIGKILL` on Unix).
-* **Safe Restart Command:**
-  ```bash
-  aimeshmanager restart
-  ```
-  * Safely awaits the full shutdown of the old process and release of port `20128` before spawning the new instance, eliminating race conditions.
-
-#### 3. Web Control Center (1-Click UI Stop & REST API)
-* **1-Click Web UI Stop:**
-  * Open the Web Control Center at `http://localhost:20128`.
-  * In the top-right header, click **`🛑 Stop Service`**.
-  * Confirms the action and signals the gateway to drain in-flight turns and shut down.
-* **REST API Endpoints:**
-  * **Check Gateway Health & In-Flight Turns:**
-    ```bash
-    curl http://127.0.0.1:20128/api/system/status
-    ```
-    *Response:*
-    ```json
-    {
-      "status": "online",
-      "pid": 14520,
-      "port": 20128,
-      "host": "127.0.0.1",
-      "mode": "localhost",
-      "activeInFlightRequests": 0,
-      "uptimeSeconds": 3600
-    }
-    ```
-  * **Trigger Remote Graceful Shutdown:**
-    ```bash
-    curl -X POST http://127.0.0.1:20128/api/system/shutdown
-    ```
-  * **Trigger Remote Graceful Restart:**
-    ```bash
-    curl -X POST http://127.0.0.1:20128/api/system/restart
-    ```
-
-#### 4. Containerized Deployments (Docker & Podman)
-Containers rely on `SIGTERM` followed by a grace timeout before issuing `SIGKILL`.
-* **Stopping a Container:**
-  ```bash
-  # Docker:
-  docker stop -t 30 aimeshmanager
-  
-  # Podman:
-  podman stop -t 30 aimeshmanager
-  ```
-  *(The `-t 30` flag grants a 30-second grace window to ensure long reasoning turns complete naturally).*
-* **Stopping via Compose:**
-  ```bash
-  docker compose down
-  # Or:
-  podman compose down
-  ```
-* **Production `docker-compose.yml` Grace Configuration:**
-  ```yaml
-  services:
-    aimeshmanager:
-      image: aimeshmanager
-      stop_grace_period: 30s
-      stop_signal: SIGTERM
-  ```
-
-#### 5. Production Process Managers (PM2, systemd, Kubernetes)
-* **PM2 (Node Process Manager):**
-  ```bash
-  pm2 stop aimeshmanager
-  pm2 reload aimeshmanager
-  ```
-  * In addition to POSIX signals, AiMeshManager listens to PM2's inter-process messaging:
-    ```js
-    process.on('message', (msg) => {
-      if (msg === 'shutdown' || msg === 'SIGTERM') gracefulShutdown('IPC');
-    });
-    ```
-* **systemd (Linux / WSL / Ubuntu Service):**
-  ```ini
-  [Unit]
-  Description=AiMeshManager AI Gateway
-  After=network.target
-
-  [Service]
-  Type=simple
-  User=node
-  ExecStart=/usr/bin/node /opt/aimeshmanager/dist/server.js
-  Restart=on-failure
-  KillSignal=SIGTERM
-  TimeoutStopSec=30
-
-  [Install]
-  WantedBy=multi-user.target
-  ```
-  * Stop with:
-    ```bash
-    sudo systemctl stop aimeshmanager
-    ```
-* **Kubernetes Pod Lifecycle:**
-  ```yaml
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: aimeshmanager
-  spec:
-    template:
-      spec:
-        terminationGracePeriodSeconds: 30
-        containers:
-          - name: aimeshmanager
-            image: aimeshmanager:latest
-            lifecycle:
-              preStop:
-                httpGet:
-                  path: /api/system/shutdown
-                  port: 20128
-  ```
-
-#### 6. Windows-Specific Environments (PowerShell & Command Prompt)
-* **PowerShell Graceful Stop:**
-  ```powershell
-  # Graceful HTTP trigger (Recommended):
-  Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:20128/api/system/shutdown"
-
-  # Or by PID lookup:
-  $pidVal = Get-Content "$HOME\.aimeshmanager\aimeshmanager.pid"
-  Stop-Process -Id $pidVal
-  ```
-* **Command Prompt (CMD):**
-  ```cmd
-  :: Graceful HTTP trigger:
-  curl.exe -X POST http://127.0.0.1:20128/api/system/shutdown
-
-  :: Force fallback if unresponsive:
-  taskkill /PID <PID> /T /F
-  ```
-
-#### 7. Resilience Against Runtime Errors & Crash Events
-* **`uncaughtException`:**
-  * If an unhandled exception occurs in runtime code, AiMeshManager logs the stack trace, performs an emergency disk flush of `accounts.json` and security config, unlinks PID files, and exits with code `1`.
-* **`unhandledRejection`:**
-  * Logged with diagnostic context without abruptly crashing the active server, preventing upstream network drops from severing local IDE sessions.
-* **`EADDRINUSE` (Port 20128 Conflict):**
-  * If another instance is already bound to port `20128`, AiMeshManager detects this immediately, issues a clear diagnostic warning, and exits cleanly instead of crashing unhandled.
-* **10-Second Watchdog Timer:**
-  * If an upstream provider hangs or a TCP socket remains in a half-open state during shutdown, the internal watchdog fires after 10 seconds, invokes `server.closeAllConnections()`, and terminates cleanly.
-
----
-
-## 🌐 Universal Multi-Provider Ecosystem: OpenRouter, OmniRoute, FreeLLMAPI & Meta Llama AI
-
-**AiMeshManager is 100% compatible with OpenRouter, OmniRoute, Meta Developer Llama API, and all directory providers listed on FreeLLMAPI.**
-
-Because AiMeshManager features an extensible **Generic OpenAI-Compatible & Multi-Provider Engine**, any service providing a standard REST endpoint (`/v1/chat/completions`) or custom routing proxy can be pooled directly into your local mesh:
-
-| Service / Directory | Official Website | API Format | Free Tier / Models Available | Recommended Models |
-| :--- | :--- | :---: | :---: | :--- |
-| **OpenRouter** | [openrouter.ai](https://openrouter.ai/) | OpenAI-Compatible (`https://openrouter.ai/api/v1`) | ✅ **Yes** (Generous pool of `:free` models) | `deepseek/deepseek-r1:free`<br>`meta-llama/llama-3.3-70b-instruct:free`<br>`google/gemini-2.0-flash-exp:free`<br>`openrouter/auto` |
-| **OmniRoute** | [omniroute.online](https://www.omniroute.online/) | Native Gateway (`https://www.omniroute.online/v1`) | ✅ **Yes** (Automated multi-tier fallback router) | `auto-smart-router`<br>`gemini-2.5-pro`<br>`gpt-4o` |
-| **FreeLLMAPI Directory** | [enterprisedna.co/.../freellmapi](https://enterprisedna.co/directories/open-source/freellmapi/) | Standard OpenAI REST (`/v1/chat/completions`) | ✅ **Yes** (Curated free/freemium API providers) | Groq (`llama-3.3-70b-versatile`)<br>Cerebras (`llama3.3-70b`)<br>SambaNova (`Meta-Llama-3.3-70B`)<br>Hugging Face (`Llama-3.3-70B`) |
-| **Meta Developer AI** | [dev.meta.ai](https://dev.meta.ai/lp/start-building) | Meta Llama REST (`https://api.meta.ai/v1`) | ✅ **Yes** (Developer tier for Llama models) | `meta-llama/llama-3.3-70b-instruct`<br>`meta-llama/llama-3.1-405b-instruct`<br>`meta-llama/llama-3.2-3b-instruct` |
-
----
-
-### 🛠️ Step-by-Step Setup Guides for Each Provider
-
-#### 1. OpenRouter (`https://openrouter.ai/`)
-OpenRouter aggregates hundreds of models under a single API key, including completely free community models (`:free`).
-
-* **Step 1: Get an OpenRouter API Key**
-  * Sign up at [openrouter.ai/keys](https://openrouter.ai/keys) and generate an API key (`sk-or-v1-...`).
-* **Step 2: Add to AiMeshManager via Web UI:**
-  * Open `http://localhost:20128` $\to$ click **`+ Add AI Account`**.
-  * **Service Provider**: Select `OpenRouter (openrouter.ai — 100+ Models & Free Pool)`.
-  * **Endpoint URL**: Defaults automatically to `https://openrouter.ai/api/v1`.
-  * **Default Model**: Select or type `meta-llama/llama-3.3-70b-instruct:free` or `deepseek/deepseek-r1:free`.
-  * **API Key**: Paste your `sk-or-v1-...` key. Click **Save to Mesh**.
-* **Step 3: Or Add via CLI (1-Liner):**
-  ```bash
-  aimeshmanager account add openrouter-free "OpenRouter Free Pool" free "deepseek/deepseek-r1:free" "sk-or-v1-YOUR_KEY" openrouter "https://openrouter.ai/api/v1"
-  ```
-* **Step 4: Pin in Any IDE:**
-  * Target in Cursor, Antigravity, or VS Code using the virtual pin:
-    ```
-    openrouter-free/deepseek/deepseek-r1:free
-    ```
-
----
-
-#### 2. OmniRoute Gateway (`https://www.omniroute.online/`)
-OmniRoute is designed as an enterprise fallback aggregator that automatically balances loads across diverse AI backends.
-
-* **Step 1: Obtain OmniRoute Key:**
-  * Get your access key from [omniroute.online](https://www.omniroute.online/).
-* **Step 2: Add via Web UI:**
-  * In the **+ Add AI Account** modal, choose **OmniRoute Gateway (omniroute.online)**.
-  * **Endpoint URL**: `https://www.omniroute.online/v1` (or your internal enterprise OmniRoute gateway).
-  * **Default Model**: `auto-smart-router`.
-* **Step 3: Or Add via CLI:**
-  ```bash
-  aimeshmanager account add omniroute-mesh "OmniRoute Gateway" enterprise "auto-smart-router" "YOUR_OMNIROUTE_KEY" omniroute "https://www.omniroute.online/v1"
-  ```
-
----
-
-#### 3. FreeLLMAPI Directory Providers (Groq, Cerebras, SambaNova, Hugging Face)
-The [Enterprise DNA FreeLLMAPI Directory](https://enterprisedna.co/directories/open-source/freellmapi/) catalogs open-source and free-tier inference APIs. You can connect any of them into AiMeshManager using the generic OpenAI adapter:
-
-* **Example A: Groq Cloud (Ultra-Fast 500+ Tokens/Sec Llama 3.3)**
-  * Endpoint: `https://api.groq.com/openai/v1`
-  * Model: `llama-3.3-70b-versatile`
-  * CLI command:
-    ```bash
-    aimeshmanager account add groq-cloud "Groq Llama 3.3" free "llama-3.3-70b-versatile" "gsk_YOUR_GROQ_KEY" openai "https://api.groq.com/openai/v1"
-    ```
-* **Example B: Cerebras Inference (World Record Speed)**
-  * Endpoint: `https://api.cerebras.ai/v1`
-  * Model: `llama3.3-70b`
-  * CLI command:
-    ```bash
-    aimeshmanager account add cerebras-fast "Cerebras Fast" free "llama3.3-70b" "csk_YOUR_KEY" openai "https://api.cerebras.ai/v1"
-    ```
-* **Example C: SambaNova Systems (Full Precision Open Weights)**
-  * Endpoint: `https://api.sambanova.ai/v1`
-  * Model: `Meta-Llama-3.3-70B-Instruct`
-  * CLI command:
-    ```bash
-    aimeshmanager account add sambanova-1 "SambaNova Llama" free "Meta-Llama-3.3-70B-Instruct" "YOUR_KEY" openai "https://api.sambanova.ai/v1"
-    ```
-* **Example D: Hugging Face Serverless Inference**
-  * Endpoint: `https://api-inference.huggingface.co/v1`
-  * Model: `meta-llama/Llama-3.3-70B-Instruct`
-  * Key: Your Hugging Face User Access Token (`hf_...`)
-
----
-
-#### 4. Meta Developer Llama AI (`https://dev.meta.ai/lp/start-building`)
-Meta offers official developer access to the state-of-the-art open-weights Llama 3.3 (70B), Llama 3.1 (405B Frontier), and lightweight Llama 3.2 models:
-
-* **Step 1: Sign up at Meta AI Developer Platform:**
-  * Visit [dev.meta.ai/lp/start-building](https://dev.meta.ai/lp/start-building) and register for Meta's developer API or deployed Llama Stack instance.
-* **Step 2: Add via Web UI:**
-  * Select Provider **`Meta Llama API (dev.meta.ai — Llama 3.3/3.1)`**.
-  * **Endpoint URL**: `https://api.meta.ai/v1` (or your assigned Llama Stack endpoint URL).
-  * **Default Model**: `meta-llama/llama-3.3-70b-instruct` or `meta-llama/llama-3.1-405b-instruct`.
-  * **API Key**: Enter your Meta Bearer Token.
-* **Step 3: Or Add via CLI:**
-  ```bash
-  aimeshmanager account add meta-llama-pro "Meta Llama 3.3 70B" paid_pro "meta-llama/llama-3.3-70b-instruct" "YOUR_META_KEY" meta "https://api.meta.ai/v1"
-  ```
-* **Step 4: Pin in Any IDE:**
-  ```
-  meta-llama-pro/meta-llama/llama-3.3-70b-instruct
-  ```
-
----
-
-### 💡 The Multi-Provider Mesh Advantage: Zero Quota Lockout
-
-By combining your Google Gemini subscriptions with OpenRouter, OmniRoute, Meta AI, and FreeLLMAPI providers:
-1. **Never Pay Twice**: Use 100% free models (`deepseek/deepseek-r1:free`, Groq, Ollama) for routine autocomplete, syntax linting, and docstrings.
-2. **Infinite Fallback Chains**: If Google hits a 429 quota limit, AiMeshManager automatically rolls the turn in 50ms over to Groq, Meta Llama 3.3, or DeepSeek R1 without your editor skipping a beat.
-3. **Unified Cost & Token Ledger**: All tokens and cost savings across every provider are recorded in your **Single Unified Master Telemetry Ledger** at `http://localhost:20128`.
-
-
+### How to Stop in Any Environment:
+* **Interactive Terminal**: Press `Ctrl + C` (`SIGINT`) or `Ctrl + Break`.
+* **Background Daemon**: Run `aimeshmanager stop` or `aimm stop`.
+* **Web UI**: Click **`🛑 Stop Service`** in the top-right header of `http://localhost:20128`.
+* **REST API**: Send `POST http://127.0.0.1:20128/api/system/shutdown`.
+* **Docker / Podman**: Run `docker compose down` or `podman compose down`.
