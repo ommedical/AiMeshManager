@@ -144,14 +144,21 @@ Runs directly on Node.js (v18+) across Windows, macOS, Linux, WSL, or Android Te
 
 ### Method 3: Inbuilt 1-Command Self-Upgrade (For Existing Clones)
 
-If you already have an earlier clone of AiMeshManager on your machine (e.g. at `C:\Users\...\AiMeshManager`) and want to upgrade to the latest features:
+If you already cloned AiMeshManager on your machine (e.g. at `C:\Users\...\AiMeshManager`) and want to upgrade to the latest features:
 
+#### Option A: Direct Local Run (Works Immediately — Zero Setup Needed)
+Open PowerShell or terminal inside your cloned folder and run:
 ```bash
-# Direct CLI run inside your repository folder:
 node dist/cli.js upgrade
+```
+*(Or via npm: `npm run cli upgrade`)*
 
-# Or with global CLI (anywhere):
+#### Option B: Global Command (From Any Folder)
+If you ran `npm install -g .` once, you can run directly from any terminal window:
+```bash
 aimeshmanager upgrade
+# Or short alias:
+mesh upgrade
 ```
 
 > ⚡ **Auto-Healing Git Synchronization:** The inbuilt `upgrade` command automatically synchronizes with GitHub (`origin main`), auto-heals divergent commit histories, runs `npm install` for updated dependencies, and recompiles TypeScript (`npm run build`) in one single step.
@@ -698,18 +705,33 @@ aimeshmanager stats
 
 ## 💻 Complete CLI Command Reference
 
-All gateway operations can be executed via the command line through three convenient invocation methods:
-* **Direct Local Run**: `node dist/cli.js <command> [options]`
-* **Via npm Script**: `npm run cli -- <command> [options]`
-* **Global CLI**: `aimeshmanager <command>` *(or short aliases `aimm`, `meshmanager`, `mesh` after running `npm install -g .`)*
+### 🏁 Layman's Quickstart: How to Run CLI Commands (No Confusion)
+
+There are **three convenient ways** to run any CLI command below, depending on whether you linked the shortcuts globally:
+
+| Execution Method | How to Run in Terminal | Requires Prior Setup? | Practical Example |
+| :--- | :--- | :---: | :--- |
+| **Method 1: Direct Node** *(Default / Zero Setup)* | `node dist/cli.js <command>` | ❌ **No setup needed** (Works inside cloned folder) | `node dist/cli.js upgrade`<br>`node dist/cli.js status`<br>`node dist/cli.js start` |
+| **Method 2: Via npm Script** | `npm run cli <command>` | ❌ **No setup needed** (Works inside cloned folder) | `npm run cli upgrade`<br>`npm run cli status` |
+| **Method 3: Global System Command** | `aimeshmanager <command>`<br>*(or short alias `mesh`, `aimm`)* | ✅ **Run `npm install -g .` once** | `mesh upgrade`<br>`aimeshmanager status`<br>`aimm start` |
+
+> [!TIP]
+> #### ❓ Troubleshooting: Why did PowerShell say `"The term 'mesh' (or 'aimeshmanager') is not recognized"?`
+> When you first clone a repository, Windows does not automatically place the shortcut aliases into your system `PATH`.
+> * **Immediate fix**: Simply use the direct command: **`node dist/cli.js <command>`** (e.g. `node dist/cli.js upgrade`).
+> * **Permanent fix**: Run **`npm install -g .`** (or `npm link`) inside your cloned folder once. After this 1-step link, `mesh`, `aimeshmanager`, and `aimm` will work immediately from any PowerShell or terminal window on your machine!
+>
+> *(Note: Never type `npm run --upgrade`. In npm, words starting with `--` are treated as flags, not scripts. Use `node dist/cli.js upgrade` or `npm run cli upgrade`).*
 
 ```bash
+# Global CLI syntax (after npm install -g .):
 aimeshmanager <command> [options]
 # Or short aliases:
 aimm <command>
-meshmanager <command>
 mesh <command>
-# Or direct:
+meshmanager <command>
+
+# Or direct zero-setup syntax (inside repository folder):
 node dist/cli.js <command>
 ```
 
