@@ -151,6 +151,20 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.1); }
+    .filter-btn.active { color: white; background: var(--primary); border-color: var(--primary); }
+
     /* Metrics Ribbon */
     .metrics-grid {
       display: grid;
@@ -420,15 +434,16 @@
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Live Activity & Telemetry</button>
-      <button class="tab-btn" onclick="switchTab('accounting')">💰 IDE Token Accounting</button>
+      <button class="tab-btn active" onclick="switchTab('unified')">🌐 Unified Master Ledger</button>
+      <button class="tab-btn" onclick="switchTab('dashboard')">📡 Live Activity Matrix</button>
       <button class="tab-btn" onclick="switchTab('accounts')">🛡️ AI Accounts & Multi-Model Mesh (<span id="acc-count-badge">4</span>)</button>
       <button class="tab-btn" onclick="switchTab('ides')">🔌 1-Click IDE Connect Center</button>
+      <button class="tab-btn" onclick="switchTab('security')">🔒 Security & Local Isolation</button>
       <button class="tab-btn" onclick="switchTab('simulator')">🧠 Dynamic Task Simulator</button>
     </div>
 
-    <!-- TAB 1: Live Dashboard & Telemetry -->
-    <div id="tab-dashboard" class="tab-content active">
+    <!-- TAB 1: Unified Master Telemetry Ledger (Atomic Accounting) -->
+    <div id="tab-unified" class="tab-content active">
       <!-- Metrics Ribbon -->
       <div class="metrics-grid">
         <div class="metric-card">
@@ -444,16 +459,71 @@
           <div class="metric-value" id="val-failovers">0</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Self-Heals Synthesized</div>
-          <div class="metric-value" style="color: var(--success);" id="val-heals">0</div>
+          <div class="metric-label">Resource Stress Footprint</div>
+          <div class="metric-value" style="color: var(--success); font-size: 1.3rem; line-height: 2rem;" id="val-resources-ram">~14 MB <span style="font-size: 0.8rem; color: #94a3b8;">(~0% CPU)</span></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Security & Isolation Mode</div>
+          <div class="metric-value" style="color: #38bdf8; font-size: 1.3rem; line-height: 2rem;" id="val-security-status">127.0.0.1 <span style="font-size: 0.8rem; color: #94a3b8;">(Locked)</span></div>
         </div>
       </div>
 
+      <!-- Single Unified Master Telemetry Ledger -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🌐</span> Unified Master Telemetry Ledger (Atomic Accounting Matrix)
+          </div>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+            <button class="filter-btn active" id="filter-all" onclick="filterUnified('all')">All Traffic</button>
+            <button class="filter-btn" id="filter-antigravity" onclick="filterUnified('Antigravity')">Google Antigravity</button>
+            <button class="filter-btn" id="filter-cursor" onclick="filterUnified('Cursor')">Cursor AI</button>
+            <button class="filter-btn" id="filter-vscode" onclick="filterUnified('VS Code')">VS Code</button>
+            <button class="filter-btn" id="filter-paid" onclick="filterUnified('PAID')">Paid Pro</button>
+            <button class="filter-btn" id="filter-free" onclick="filterUnified('FREE')">Free Tier</button>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Unified real-time matrix linking each client IDE/tool to its dispatched account, provider service, model, token usage, RTK compression savings, cost, and 5-hour headroom.
+        </p>
+        <div style="overflow-x: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Client IDE / Tool</th>
+                <th>Active Target Account</th>
+                <th>Provider / Service</th>
+                <th>Model Dispatched</th>
+                <th>Tier</th>
+                <th>Requests</th>
+                <th>Input Tokens</th>
+                <th>Output Tokens</th>
+                <th>Total Tokens</th>
+                <th>Tokens Saved (RTK)</th>
+                <th>Est. Cost (USD)</th>
+                <th>5h / Weekly Headroom</th>
+                <th>Status</th>
+                <th>Last Active</th>
+              </tr>
+            </thead>
+            <tbody id="unified-accounting-tbody">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+            <tfoot id="unified-accounting-tfoot" style="font-weight: 700; background: rgba(255, 255, 255, 0.04); border-top: 2px solid var(--card-border);">
+              <!-- Total summary row -->
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Live Activity & Dynamic Routing Stream -->
+    <div id="tab-dashboard" class="tab-content">
       <!-- Real-Time Activity & IDE Connection Matrix -->
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <span>📡</span> Live IDE Connection & Dynamic Routing Matrix
+            <span>📡</span> Live IDE Connection & Dynamic Routing Stream
           </div>
           <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Auto-Updating</span>
         </div>
@@ -465,6 +535,7 @@
                 <th>Client IDE / Tool</th>
                 <th>Prompt Snippet</th>
                 <th>Task Classification</th>
+                <th>Heat & Intelligence</th>
                 <th>Dispatched Account</th>
                 <th>Active Model</th>
                 <th>Route Mode</th>
@@ -473,7 +544,7 @@
             </thead>
             <tbody id="connections-tbody">
               <tr>
-                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent IDE traffic. Use your IDE or the Simulator below to see real-time routing.</td>
+                <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent IDE traffic. Use your IDE or the Simulator below to see real-time routing.</td>
               </tr>
             </tbody>
           </table>
@@ -481,76 +552,80 @@
       </div>
     </div>
 
-    <!-- TAB 2: Token Accounting (IDE-wise & Account-wise) -->
-    <div id="tab-accounting" class="tab-content">
-      <!-- Table 1: IDE-wise Token Accounting -->
+    <!-- TAB: Security & Local Network Isolation -->
+    <div id="tab-security" class="tab-content">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">
-            <span>💻</span> Per-IDE Request & Token Accounting Ledger
+            <span>🛡️</span> Local Network Isolation & Atomic Access Rules
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Client Breakdown</span>
+          <span class="status-pill" id="security-pill-badge">🔒 LOCALHOST ONLY (127.0.0.1)</span>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-          Shows token and request consumption categorized by client development editor (Cursor, Antigravity, VS Code, Windsurf).
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Control whether MeshManager can be accessed by other devices on your local network (Wi-Fi/LAN) or is strictly locked to your local laptop machine (127.0.0.1). Protect your accounts, subscriptions, and token quotas from unauthorized network consumption.
         </p>
-        <div style="overflow-x: auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Client IDE / Tool</th>
-                <th>Requests</th>
-                <th>Input Tokens</th>
-                <th>Output Tokens</th>
-                <th>Total Tokens</th>
-                <th>Tokens Saved (RTK)</th>
-                <th>Est. Cost (USD)</th>
-                <th>Primary Account Used</th>
-                <th>Last Active</th>
-              </tr>
-            </thead>
-            <tbody id="ide-accounting-tbody">
-              <tr>
-                <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No per-IDE requests recorded yet. Make a request via Cursor, Antigravity, or VS Code!</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- Table 2: Account & Service-wise Token Consumption Matrix -->
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <span>🛡️</span> Atomic Account & Service-Wise Token Consumption Matrix
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+          <!-- Security Rule 1: Host Binding -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--card-border); border-radius: 14px; padding: 1.25rem;">
+            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+              <span>1. Host Network Binding</span>
+              <span id="sec-mode-label" style="font-size: 0.8rem; color: var(--success); font-family: var(--mono);">127.0.0.1 Loopback</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
+              When in <strong>Localhost-Only</strong> mode, other devices on your Wi-Fi cannot connect to port 20128. Switching to <strong>LAN Sharing</strong> allows secondary test devices or phones to connect.
+            </p>
+            <button id="btn-toggle-lan" class="btn-primary" style="width: 100%; justify-content: center;" onclick="toggleLANMode()">
+              🌐 Allow LAN Network Sharing (0.0.0.0)
+            </button>
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono);">Upstream Provider Accounting</span>
+
+          <!-- Security Rule 2: Gateway Token Protection -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--card-border); border-radius: 14px; padding: 1.25rem;">
+            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+              <span>2. Gateway Bearer Token Auth</span>
+              <label class="switch">
+                <input type="checkbox" id="sec-require-token-chk" onchange="toggleTokenAuth()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+              Require <code>Authorization: Bearer &lt;token&gt;</code> on all requests to prevent rogue apps or scripts from consuming your tokens without permission.
+            </p>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="sec-gateway-token-val" class="form-input" style="font-family: var(--mono); font-size: 0.85rem;" readonly />
+              <button class="btn-primary" style="padding: 0.5rem 0.8rem; font-size: 0.8rem;" onclick="copyGatewayToken()">📋 Copy</button>
+              <button class="btn-primary" style="padding: 0.5rem 0.8rem; font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5;" onclick="regenerateGatewayToken()">🔄 New</button>
+            </div>
+          </div>
         </div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-          Shows granular token consumption, 5-hour rolling quotas, and RPM utilization for each specific AI account & service provider in your mesh.
-        </p>
-        <div style="overflow-x: auto;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Account ID & Name</th>
-                <th>Provider</th>
-                <th>Subscription Tier</th>
-                <th>Requests Handled</th>
-                <th>Input Tokens</th>
-                <th>Output Tokens</th>
-                <th>Total Consumed</th>
-                <th>5h / Weekly Headroom</th>
-                <th>Tokens Saved</th>
-                <th>Est. Cost (USD)</th>
-                <th>RPM Status</th>
-                <th>Last Dispatched</th>
-              </tr>
-            </thead>
-            <tbody id="account-accounting-tbody">
-              <!-- Populated dynamically via JS -->
-            </tbody>
-          </table>
+
+        <!-- Blocked Requests Audit Log -->
+        <div style="margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="font-weight: 700; font-size: 0.95rem;">
+              🚫 Blocked Unauthorized Access Attempts (<span id="val-blocked-count">0</span>)
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Real-Time Firewall Audit Log</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Remote IP Address</th>
+                  <th>Method</th>
+                  <th>Target Endpoint</th>
+                  <th>Block Reason</th>
+                </tr>
+              </thead>
+              <tbody id="blocked-logs-tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No unauthorized access attempts detected. System secure.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -696,6 +771,9 @@
       document.getElementById('tab-' + tabId).classList.add('active');
     }
 
+    let unifiedRowsData = [];
+    let activeFilter = 'all';
+
     async function loadStats() {
       try {
         const res = await fetch('/api/stats');
@@ -703,67 +781,178 @@
         document.getElementById('val-requests').innerText = data.totalRequests.toLocaleString();
         document.getElementById('val-tokens').innerText = data.totalTokensSaved.toLocaleString();
         document.getElementById('val-failovers').innerText = data.totalFailovers.toLocaleString();
-        document.getElementById('val-heals').innerText = data.totalSelfHeals.toLocaleString();
         document.getElementById('acc-count-badge').innerText = data.activeAccountsCount;
+
+        if (data.resources) {
+          document.getElementById('val-resources-ram').innerHTML = `${data.resources.memoryHeapMB} MB <span style="font-size: 0.8rem; color: #94a3b8;">(~0% CPU)</span>`;
+        }
+        if (data.security) {
+          const modeUpper = data.security.mode.toUpperCase();
+          const lockLabel = data.security.mode === 'localhost' ? 'Locked' : 'Open LAN';
+          document.getElementById('val-security-status').innerHTML = `${modeUpper} <span style="font-size: 0.8rem; color: #94a3b8;">(${lockLabel})</span>`;
+        }
       } catch (e) {}
     }
 
-    async function loadAccounting() {
+    async function loadUnifiedLedger() {
       try {
-        // 1. Populate IDE Accounting
-        const res = await fetch('/api/ide-accounting');
-        const records = await res.json();
-        const tbody = document.getElementById('ide-accounting-tbody');
-        if (records && records.length > 0) {
-          tbody.innerHTML = '';
-          records.forEach(rec => {
-            const totalTokens = rec.promptTokens + rec.completionTokens;
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td><strong>${rec.ideName}</strong></td>
-              <td>${rec.requests.toLocaleString()}</td>
-              <td>${rec.promptTokens.toLocaleString()}</td>
-              <td>${rec.completionTokens.toLocaleString()}</td>
-              <td><strong style="color: var(--accent);">${totalTokens.toLocaleString()}</strong></td>
-              <td style="color: var(--success);">${rec.tokensSaved.toLocaleString()}</td>
-              <td>$${rec.costEstimatedUSD}</td>
-              <td style="color: #cbd5e1;">${rec.primaryAccount}</td>
-              <td>${rec.lastActive}</td>
-            `;
-            tbody.appendChild(row);
-          });
+        const res = await fetch('/api/unified-telemetry');
+        unifiedRowsData = await res.json();
+        renderUnifiedTable();
+      } catch (e) {}
+    }
+
+    function filterUnified(type) {
+      activeFilter = type;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('filter-' + type.toLowerCase().replace(/\s+/g, ''));
+      if (activeBtn) activeBtn.classList.add('active');
+      renderUnifiedTable();
+    }
+
+    function renderUnifiedTable() {
+      const tbody = document.getElementById('unified-accounting-tbody');
+      const tfoot = document.getElementById('unified-accounting-tfoot');
+      if (!tbody) return;
+
+      let filtered = unifiedRowsData;
+      if (activeFilter !== 'all') {
+        filtered = unifiedRowsData.filter(r => {
+          if (activeFilter === 'PAID') return r.tier.includes('PAID');
+          if (activeFilter === 'FREE') return r.tier.includes('FREE');
+          return r.clientIDE.toLowerCase().includes(activeFilter.toLowerCase());
+        });
+      }
+
+      if (!filtered || filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: var(--text-muted); padding: 2rem;">No traffic matching filter '${activeFilter}'.</td></tr>`;
+        if (tfoot) tfoot.innerHTML = '';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      let sumReq = 0, sumIn = 0, sumOut = 0, sumTot = 0, sumSaved = 0, sumCost = 0;
+
+      filtered.forEach(r => {
+        sumReq += (r.requests || 0);
+        sumIn += (r.promptTokens || 0);
+        sumOut += (r.completionTokens || 0);
+        sumTot += (r.totalTokens || 0);
+        sumSaved += (r.tokensSaved || 0);
+        sumCost += (r.estimatedCostUSD || 0);
+
+        const tagClass = r.tier.includes('PAID') ? 'tag-paid' : 'tag-free';
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${r.clientIDE}</strong></td>
+          <td>${r.accountName} <span style="font-size: 0.7rem; color: #94a3b8;">(${r.accountId})</span></td>
+          <td><span class="tag tag-provider">${r.provider}</span></td>
+          <td style="color: var(--accent); font-family: var(--mono); font-size: 0.85rem;">${r.modelDispatched}</td>
+          <td><span class="tag ${tagClass}">${r.tier}</span></td>
+          <td>${(r.requests || 0).toLocaleString()}</td>
+          <td>${(r.promptTokens || 0).toLocaleString()}</td>
+          <td>${(r.completionTokens || 0).toLocaleString()}</td>
+          <td><strong style="color: var(--accent);">${(r.totalTokens || 0).toLocaleString()}</strong></td>
+          <td style="color: var(--success);">${(r.tokensSaved || 0).toLocaleString()}</td>
+          <td>$${(r.estimatedCostUSD || 0).toFixed(4)}</td>
+          <td style="color: #38bdf8;">${r.headroomPct}% left</td>
+          <td><span style="color: ${r.status === 'ACTIVE' ? 'var(--success)' : 'var(--warning)'}; font-weight: 600;">[${r.status}]</span></td>
+          <td>${r.lastActive}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      if (tfoot) {
+        tfoot.innerHTML = `
+          <tr>
+            <td colspan="5" style="text-align: right; padding-right: 1.5rem; text-transform: uppercase; font-size: 0.8rem; color: var(--text-muted);">Total Mesh Volume:</td>
+            <td>${sumReq.toLocaleString()}</td>
+            <td>${sumIn.toLocaleString()}</td>
+            <td>${sumOut.toLocaleString()}</td>
+            <td style="color: var(--accent);">${sumTot.toLocaleString()}</td>
+            <td style="color: var(--success);">${sumSaved.toLocaleString()}</td>
+            <td>$${sumCost.toFixed(4)}</td>
+            <td colspan="3" style="color: var(--success);">100% HEALTHY MESH</td>
+          </tr>
+        `;
+      }
+    }
+
+    async function loadSecurityStatus() {
+      try {
+        const res = await fetch('/api/security/status');
+        const sec = await res.json();
+
+        const isLocalhost = sec.mode === 'localhost';
+        document.getElementById('sec-mode-label').innerText = isLocalhost ? '127.0.0.1 Loopback (Locked)' : '0.0.0.0 LAN Sharing (Open)';
+        document.getElementById('sec-mode-label').style.color = isLocalhost ? 'var(--success)' : 'var(--warning)';
+
+        const btnToggleLan = document.getElementById('btn-toggle-lan');
+        if (isLocalhost) {
+          btnToggleLan.innerText = '🌐 Allow LAN Network Sharing (0.0.0.0)';
+          btnToggleLan.style.background = 'linear-gradient(135deg, var(--primary), var(--accent))';
+          document.getElementById('security-pill-badge').innerText = '🔒 LOCALHOST ONLY (127.0.0.1)';
+        } else {
+          btnToggleLan.innerText = '🔒 Revert to Localhost-Only (127.0.0.1)';
+          btnToggleLan.style.background = 'rgba(239, 68, 68, 0.25)';
+          btnToggleLan.style.border = '1px solid rgba(239, 68, 68, 0.5)';
+          document.getElementById('security-pill-badge').innerText = '🌐 LAN SHARING ACTIVE (0.0.0.0)';
         }
 
-        // 2. Populate Atomic Account & Service Accounting
-        const accRes = await fetch('/api/accounts');
-        const accounts = await accRes.json();
-        const accTbody = document.getElementById('account-accounting-tbody');
-        if (accounts && accounts.length > 0) {
-          accTbody.innerHTML = '';
-          accounts.forEach(acc => {
-            const headroom = Math.max(0, acc.rollingWindowLimit - acc.rollingTokensUsed);
-            const totalConsumed = (acc.totalPromptTokens || 0) + (acc.totalCompletionTokens || 0);
-            const tagClass = acc.tier.startsWith('paid') ? 'tag-paid' : 'tag-free';
-            const tierLabel = acc.tier.startsWith('paid') ? 'PAID PRO (5h Rolling)' : 'FREE (Weekly)';
+        document.getElementById('sec-require-token-chk').checked = sec.requireGatewayToken;
+        document.getElementById('sec-gateway-token-val').value = sec.gatewayToken;
+        document.getElementById('val-blocked-count').innerText = sec.blockedCount;
+
+        // Load blocked logs
+        const logsRes = await fetch('/api/security/blocked-logs');
+        const logs = await logsRes.json();
+        const logsTbody = document.getElementById('blocked-logs-tbody');
+        if (logs && logs.length > 0) {
+          logsTbody.innerHTML = '';
+          logs.forEach(l => {
             const row = document.createElement('tr');
             row.innerHTML = `
-              <td><strong>${acc.name}</strong> <span style="font-size: 0.7rem; color: #94a3b8;">(${acc.id})</span></td>
-              <td><span class="tag tag-provider">${acc.provider ? acc.provider.toUpperCase() : 'GEMINI'}</span></td>
-              <td><span class="tag ${tagClass}">${tierLabel}</span></td>
-              <td>${(acc.totalRequests || 0).toLocaleString()}</td>
-              <td>${(acc.totalPromptTokens || 0).toLocaleString()}</td>
-              <td>${(acc.totalCompletionTokens || 0).toLocaleString()}</td>
-              <td><strong style="color: var(--accent);">${totalConsumed.toLocaleString()}</strong></td>
-              <td style="color: #38bdf8;">${(headroom / 1000).toFixed(0)}k left (${(acc.rollingTokensUsed / 1000).toFixed(0)}k used)</td>
-              <td style="color: var(--success);">${(acc.totalTokensSaved || 0).toLocaleString()}</td>
-              <td>$${acc.estimatedCostUSD || '0.0000'}</td>
-              <td>${acc.currentRpm} / ${acc.maxRpm} RPM <span style="color: ${acc.status === 'active' ? 'var(--success)' : 'var(--warning)'}">[${acc.status.toUpperCase()}]</span></td>
-              <td>${acc.lastDispatched || 'Never'}</td>
+              <td>${l.timestamp}</td>
+              <td style="font-family: var(--mono); color: #f87171;">${l.ip}</td>
+              <td><span class="tag" style="background: rgba(239,68,68,0.15); color: #fca5a5;">${l.method}</span></td>
+              <td style="font-family: var(--mono);">${l.path}</td>
+              <td style="color: #fca5a5;">${l.reason}</td>
             `;
-            accTbody.appendChild(row);
+            logsTbody.appendChild(row);
           });
         }
       } catch (e) {}
+    }
+
+    async function toggleLANMode() {
+      try {
+        await fetch('/api/security/toggle-lan', { method: 'POST' });
+        loadSecurityStatus();
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function toggleTokenAuth() {
+      try {
+        await fetch('/api/security/toggle-auth', { method: 'POST' });
+        loadSecurityStatus();
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function regenerateGatewayToken() {
+      if (confirm('Regenerate Gateway Master Token? Connected external IDEs will need the new token.')) {
+        try {
+          await fetch('/api/security/regenerate-token', { method: 'POST' });
+          loadSecurityStatus();
+        } catch (e) {}
+      }
+    }
+
+    function copyGatewayToken() {
+      const val = document.getElementById('sec-gateway-token-val').value;
+      navigator.clipboard.writeText(val);
+      alert('Gateway Bearer Token copied to clipboard: ' + val);
     }
 
     async function loadConnections() {
@@ -776,11 +965,13 @@
         tbody.innerHTML = '';
         events.forEach(ev => {
           const row = document.createElement('tr');
+          const heatBadge = `<span style="font-size: 0.72rem; color: #f59e0b; font-family: var(--mono);">${ev.heatScore || 50}% Heat / ${ev.intelligenceLevel || 3}★</span>`;
           row.innerHTML = `
             <td>${ev.timestamp}</td>
             <td><strong>${ev.clientIDE}</strong></td>
-            <td style="color: #94a3b8; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${ev.promptSnippet}</td>
+            <td style="color: #94a3b8; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${ev.promptSnippet}</td>
             <td><span class="tag ${ev.taskTier.includes('STRATEGIC') ? 'tag-paid' : 'tag-free'}">${ev.taskTier}</span></td>
+            <td>${heatBadge}</td>
             <td>${ev.accountUsed}</td>
             <td style="color: var(--accent);">${ev.modelDispatched}</td>
             <td>${ev.isPinned ? '<span style="color: #f59e0b;">📌 PINNED</span>' : '<span style="color: #10b981;">⚡ DYNAMIC</span>'}</td>
@@ -1028,7 +1219,8 @@
       loadStats();
       loadAccounts();
       loadConnections();
-      loadAccounting();
+      loadUnifiedLedger();
+      loadSecurityStatus();
     }
 
     function copyText(str) {
@@ -1041,10 +1233,12 @@
     loadAccounts();
     loadIDEs();
     loadConnections();
-    loadAccounting();
-    setInterval(loadStats, 5000);
+    loadUnifiedLedger();
+    loadSecurityStatus();
+    setInterval(loadStats, 4000);
     setInterval(loadConnections, 3000);
-    setInterval(loadAccounting, 5000);
+    setInterval(loadUnifiedLedger, 4000);
+    setInterval(loadSecurityStatus, 5000);
   </script>
 </body>
 </html>

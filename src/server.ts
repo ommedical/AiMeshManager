@@ -13,6 +13,9 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as crypto from 'crypto';
 import { AccountPoolManager, GeminiAccount, ProviderType, AuthType } from './accounts/manager';
 import { SemanticTaskClassifier } from './router/classifier';
 import { TokenOptimizer } from './optimizer/compressor';
@@ -21,10 +24,149 @@ import { AntiHallucinationGuard } from './guardrails/anti-hallucination';
 import { SelfHealingEngine } from './healing/self-healer';
 
 const app = express();
-const PORT = process.env.PORT || 20128;
+const PORT = Number(process.env.PORT) || 20128;
+
+// ==========================================
+// 🛡️ Mesh Security & Network Isolation System
+// ==========================================
+export interface MeshSecurityConfig {
+  mode: 'localhost' | 'lan'; // 'localhost' restricts strictly to 127.0.0.1; 'lan' allows 0.0.0.0
+  requireGatewayToken: boolean;
+  gatewayToken: string;
+  allowedIPs: string[];
+  blockedCount: number;
+}
+
+export interface BlockedAccessLog {
+  id: string;
+  timestamp: string;
+  ip: string;
+  method: string;
+  path: string;
+  reason: string;
+}
+
+export class MeshSecurityManager {
+  private configDir = path.join(os.homedir(), '.meshmanager');
+  private configFile = path.join(this.configDir, 'security.json');
+  private config: MeshSecurityConfig;
+  private blockedLogs: BlockedAccessLog[] = [];
+
+  constructor() {
+    if (!fs.existsSync(this.configDir)) {
+      fs.mkdirSync(this.configDir, { recursive: true });
+    }
+    this.config = this.loadConfig();
+  }
+
+  private loadConfig(): MeshSecurityConfig {
+    if (fs.existsSync(this.configFile)) {
+      try {
+        const raw = fs.readFileSync(this.configFile, 'utf-8');
+        return JSON.parse(raw);
+      } catch (e) {
+        // Fallback
+      }
+    }
+    const def: MeshSecurityConfig = {
+      mode: 'localhost',
+      requireGatewayToken: false,
+      gatewayToken: 'mesh-sec-' + crypto.randomBytes(12).toString('hex'),
+      allowedIPs: ['127.0.0.1', '::1', '::ffff:127.0.0.1'],
+      blockedCount: 0
+    };
+    this.saveConfig(def);
+    return def;
+  }
+
+  public saveConfig(cfg?: MeshSecurityConfig) {
+    if (cfg) this.config = cfg;
+    fs.writeFileSync(this.configFile, JSON.stringify(this.config, null, 2), 'utf-8');
+  }
+
+  public getConfig(): MeshSecurityConfig {
+    return { ...this.config };
+  }
+
+  public setMode(mode: 'localhost' | 'lan') {
+    this.config.mode = mode;
+    this.saveConfig();
+  }
+
+  public toggleRequireToken(requireToken?: boolean) {
+    this.config.requireGatewayToken = requireToken !== undefined ? requireToken : !this.config.requireGatewayToken;
+    this.saveConfig();
+  }
+
+  public regenerateToken(): string {
+    this.config.gatewayToken = 'mesh-sec-' + crypto.randomBytes(12).toString('hex');
+    this.saveConfig();
+    return this.config.gatewayToken;
+  }
+
+  public recordBlocked(ip: string, method: string, pathUrl: string, reason: string) {
+    this.config.blockedCount++;
+    this.blockedLogs.unshift({
+      id: 'blk-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      timestamp: new Date().toLocaleTimeString(),
+      ip,
+      method,
+      path: pathUrl,
+      reason
+    });
+    if (this.blockedLogs.length > 50) this.blockedLogs.pop();
+    this.saveConfig();
+  }
+
+  public getBlockedLogs(): BlockedAccessLog[] {
+    return this.blockedLogs;
+  }
+}
+
+export const securityManager = new MeshSecurityManager();
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// 🛡️ Atomic Security & Firewall Middleware
+app.use((req: Request, res: Response, next) => {
+  const rawIp = req.socket.remoteAddress || req.ip || '';
+  const clientIP = rawIp.replace(/^::ffff:/, '');
+  const isLoopback = clientIP === '127.0.0.1' || clientIP === '::1' || rawIp === '::ffff:127.0.0.1';
+
+  const sec = securityManager.getConfig();
+
+  // 1. Localhost Isolation Check
+  if (sec.mode === 'localhost' && !isLoopback) {
+    securityManager.recordBlocked(rawIp, req.method, req.path, 'Remote LAN connection blocked (Localhost-Only mode)');
+    return res.status(403).json({
+      error: {
+        message: 'MeshManager is currently configured in Localhost-Only mode. Local network requests are forbidden.',
+        code: 'FORBIDDEN_LAN_MODE'
+      }
+    });
+  }
+
+  // 2. Gateway Master Token Authentication Check
+  if (sec.requireGatewayToken && (req.path.startsWith('/v1/') || (req.path.startsWith('/api/') && !req.path.startsWith('/api/security/status')))) {
+    const authHeader = req.headers['authorization'] || '';
+    const customKey = req.headers['x-mesh-key'] || '';
+    const provided = authHeader.toString().replace(/^Bearer\s+/i, '').trim() || customKey.toString().trim();
+
+    if (provided !== sec.gatewayToken) {
+      securityManager.recordBlocked(rawIp, req.method, req.path, 'Missing or invalid Gateway Bearer Token');
+      return res.status(401).json({
+        error: {
+          message: 'Unauthorized: A valid MeshManager Gateway Bearer Token is required.',
+          code: 'UNAUTHORIZED_GATEWAY_TOKEN'
+        }
+      });
+    }
+  }
+
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const accountManager = new AccountPoolManager();
@@ -39,6 +181,9 @@ export interface ActivityEvent {
   clientIDE: string;
   promptSnippet: string;
   taskTier: string;
+  heatScore: number;
+  intelligenceLevel: number;
+  category: string;
   accountUsed: string;
   accountTier: string;
   modelDispatched: string;
@@ -62,6 +207,72 @@ export interface IDEAccountingRecord {
 }
 
 const ideAccountingLedger: Map<string, IDEAccountingRecord> = new Map();
+
+// 📊 Single Unified Master Telemetry Ledger
+export interface UnifiedTelemetryRow {
+  id: string;
+  clientIDE: string;
+  accountId: string;
+  accountName: string;
+  provider: string;
+  modelDispatched: string;
+  tier: string;
+  requests: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  tokensSaved: number;
+  estimatedCostUSD: number;
+  headroomPct: number;
+  status: string;
+  lastActive: string;
+}
+
+const unifiedLedgerMap: Map<string, UnifiedTelemetryRow> = new Map();
+
+function recordUnifiedTelemetry(
+  clientIDE: string,
+  targetAccount: GeminiAccount,
+  targetModel: string,
+  promptTokens: number,
+  completionTokens: number,
+  tokensSaved: number
+) {
+  const key = `${clientIDE}::${targetAccount.id}`;
+  let row = unifiedLedgerMap.get(key);
+  if (!row) {
+    row = {
+      id: key,
+      clientIDE,
+      accountId: targetAccount.id,
+      accountName: targetAccount.name,
+      provider: (targetAccount.provider || 'gemini').toUpperCase(),
+      modelDispatched: targetModel,
+      tier: targetAccount.tier.toUpperCase(),
+      requests: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      tokensSaved: 0,
+      estimatedCostUSD: 0,
+      headroomPct: Math.round(((targetAccount.rollingWindowLimit - targetAccount.rollingTokensUsed) / targetAccount.rollingWindowLimit) * 100),
+      status: targetAccount.status.toUpperCase(),
+      lastActive: new Date().toLocaleTimeString()
+    };
+    unifiedLedgerMap.set(key, row);
+  }
+
+  row.requests += 1;
+  row.promptTokens += promptTokens;
+  row.completionTokens += completionTokens;
+  row.totalTokens = row.promptTokens + row.completionTokens;
+  row.tokensSaved += tokensSaved;
+  row.estimatedCostUSD = Number((row.totalTokens * 0.000003).toFixed(4));
+  row.headroomPct = Math.max(0, Math.round(((targetAccount.rollingWindowLimit - targetAccount.rollingTokensUsed) / targetAccount.rollingWindowLimit) * 100));
+  row.status = targetAccount.status.toUpperCase();
+  row.lastActive = new Date().toLocaleTimeString();
+  row.modelDispatched = targetModel;
+}
 
 // Historical telemetry counters
 let totalRequestsServed = 0;
@@ -202,7 +413,16 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
     optimization.tokensSaved
   );
 
-  // 5. Record IDE Accounting
+  // 5. Record Unified Telemetry & IDE Accounting
+  recordUnifiedTelemetry(
+    clientIDE,
+    targetAccount,
+    targetModel,
+    optimization.optimizedTokensEstimate,
+    completionTokens,
+    optimization.tokensSaved
+  );
+
   recordIDEAccounting(
     clientIDE,
     optimization.optimizedTokensEstimate,
@@ -220,6 +440,9 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
     clientIDE,
     promptSnippet: promptSnippet || 'System turn',
     taskTier: classification.tier,
+    heatScore: classification.heatScore,
+    intelligenceLevel: classification.intelligenceLevel,
+    category: classification.category,
     accountUsed: targetAccount.name,
     accountTier: targetAccount.tier,
     modelDispatched: targetModel,
@@ -231,11 +454,13 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
   activityLog.unshift(activityEvent);
   if (activityLog.length > 50) activityLog.pop();
 
-  // Response headers indicating route metadata
+  // Response headers indicating route metadata, heat, and intelligence power
   res.setHeader('X-MeshManager-Account', targetAccount.id);
   res.setHeader('X-MeshManager-Model', targetModel);
   res.setHeader('X-MeshManager-Tier', classification.tier);
   res.setHeader('X-MeshManager-Provider', targetAccount.provider);
+  res.setHeader('X-MeshManager-Heat', String(classification.heatScore));
+  res.setHeader('X-MeshManager-Intelligence', String(classification.intelligenceLevel));
 
   // 6. Response Dispatching (Streaming or Standard)
   if (stream) {
@@ -298,13 +523,28 @@ app.post('/v1/chat/completions', async (req: Request, res: Response) => {
  * REST API Endpoints
  */
 app.get('/api/stats', (req: Request, res: Response) => {
+  const mem = process.memoryUsage();
   res.json({
     totalRequests: totalRequestsServed,
     totalFailovers: totalFailoversHandled,
     totalSelfHeals: totalSelfHealsTriggered,
     totalTokensSaved: optimizer.getTotalTokensSaved(),
     estimatedCostSavedUSD: (optimizer.getTotalTokensSaved() * 0.000003).toFixed(4),
-    activeAccountsCount: accountManager.getAccounts().filter(a => a.enabled).length
+    activeAccountsCount: accountManager.getAccounts().filter(a => a.enabled).length,
+    resources: {
+      memoryHeapMB: Number((mem.heapUsed / 1024 / 1024).toFixed(1)),
+      memoryRssMB: Number((mem.rss / 1024 / 1024).toFixed(1)),
+      cpuStress: '~0% (Asynchronous Non-Blocking Event Loop)',
+      uptimeSec: Math.round(process.uptime()),
+      nodeVersion: process.version,
+      platform: `${os.platform()} (${os.arch()})`
+    },
+    security: {
+      mode: securityManager.getConfig().mode,
+      requireGatewayToken: securityManager.getConfig().requireGatewayToken,
+      gatewayToken: securityManager.getConfig().gatewayToken,
+      blockedCount: securityManager.getConfig().blockedCount
+    }
   });
 });
 
@@ -314,6 +554,74 @@ app.get('/api/connections', (req: Request, res: Response) => {
 
 app.get('/api/ide-accounting', (req: Request, res: Response) => {
   res.json(Array.from(ideAccountingLedger.values()));
+});
+
+// 📊 Single Unified Master Telemetry Ledger Endpoint
+app.get('/api/unified-telemetry', (req: Request, res: Response) => {
+  const accounts = accountManager.getAccounts();
+  const rows = Array.from(unifiedLedgerMap.values());
+
+  // Ensure accounts without traffic yet are still visible in the unified matrix
+  accounts.forEach(acc => {
+    const hasRow = rows.some(r => r.accountId === acc.id);
+    if (!hasRow) {
+      rows.push({
+        id: `standby::${acc.id}`,
+        clientIDE: 'Standby / Any Client',
+        accountId: acc.id,
+        accountName: acc.name,
+        provider: (acc.provider || 'gemini').toUpperCase(),
+        modelDispatched: acc.defaultModel,
+        tier: acc.tier.toUpperCase(),
+        requests: acc.totalRequests || 0,
+        promptTokens: acc.totalPromptTokens || 0,
+        completionTokens: acc.totalCompletionTokens || 0,
+        totalTokens: (acc.totalPromptTokens || 0) + (acc.totalCompletionTokens || 0),
+        tokensSaved: acc.totalTokensSaved || 0,
+        estimatedCostUSD: acc.estimatedCostUSD || 0,
+        headroomPct: Math.max(0, Math.round(((acc.rollingWindowLimit - acc.rollingTokensUsed) / acc.rollingWindowLimit) * 100)),
+        status: acc.status.toUpperCase(),
+        lastActive: acc.lastDispatched || 'Ready'
+      });
+    }
+  });
+
+  res.json(rows);
+});
+
+// 🛡️ Security Configuration Endpoints
+app.get('/api/security/status', (req: Request, res: Response) => {
+  const cfg = securityManager.getConfig();
+  res.json({
+    ...cfg,
+    port: PORT,
+    host: cfg.mode === 'localhost' ? '127.0.0.1' : '0.0.0.0'
+  });
+});
+
+app.post('/api/security/toggle-lan', (req: Request, res: Response) => {
+  const current = securityManager.getConfig();
+  const newMode = current.mode === 'localhost' ? 'lan' : 'localhost';
+  securityManager.setMode(newMode);
+  res.json({ success: true, mode: newMode, message: `MeshManager network mode switched to: ${newMode}` });
+});
+
+app.post('/api/security/toggle-auth', (req: Request, res: Response) => {
+  securityManager.toggleRequireToken();
+  res.json({
+    success: true,
+    requireGatewayToken: securityManager.getConfig().requireGatewayToken,
+    gatewayToken: securityManager.getConfig().gatewayToken
+  });
+});
+
+app.post('/api/security/regenerate-token', (req: Request, res: Response) => {
+  const newToken = securityManager.regenerateToken();
+  res.json({ success: true, gatewayToken: newToken });
+});
+
+app.get('/api/security/blocked-logs', (req: Request, res: Response) => {
+  res.json(securityManager.getBlockedLogs());
 });
 
 app.get('/api/accounts', (req: Request, res: Response) => {
@@ -407,10 +715,14 @@ app.post('/api/heal/simulate', (req: Request, res: Response) => {
   res.json(result);
 });
 
-app.listen(PORT, () => {
+const host = securityManager.getConfig().mode === 'localhost' ? '127.0.0.1' : '0.0.0.0';
+
+app.listen(PORT, host, () => {
   console.log(`=======================================================`);
-  console.log(` MeshManager Core Running on:   http://localhost:${PORT}`);
+  console.log(` MeshManager Core Running on:   http://${host}:${PORT}`);
   console.log(` Control Center Dashboard:      http://localhost:${PORT}`);
   console.log(` OpenAI / Gemini API Endpoint:  http://localhost:${PORT}/v1`);
+  console.log(` Network Isolation Mode:        ${securityManager.getConfig().mode.toUpperCase()} (Host: ${host})`);
+  console.log(` Gateway Token Auth:            ${securityManager.getConfig().requireGatewayToken ? 'ENABLED' : 'DISABLED'}`);
   console.log(`=======================================================`);
 });

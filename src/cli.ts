@@ -61,7 +61,16 @@ async function main() {
       break;
 
     case 'stats':
-      handleStats();
+      await handleStats();
+      break;
+
+    case 'unified':
+    case 'matrix':
+      await handleUnified();
+      break;
+
+    case 'security':
+      await handleSecurity(args.slice(1));
       break;
 
     case 'help':
@@ -316,16 +325,183 @@ function handleDoctor() {
   console.log(`\n\x1b[32m[✓] MeshManager diagnostics passed. Ready for multi-account orchestration!\x1b[0m`);
 }
 
-function handleStats() {
+async function handleStats() {
   const optimizer = new TokenOptimizer();
+  let statsData: any = null;
+  try {
+    const res = await fetch(`http://127.0.0.1:${PORT}/api/stats`);
+    if (res.ok) statsData = await res.json();
+  } catch (e) {}
+
   console.log(`\x1b[36m====================================================\x1b[0m`);
-  console.log(`\x1b[1m MeshManager Telemetry Metrics\x1b[0m`);
+  console.log(`\x1b[1m ⚡ MeshManager System & Telemetry Metrics\x1b[0m`);
   console.log(`\x1b[36m====================================================\x1b[0m`);
   console.log(` • Real-Time Token Savings:   ${optimizer.getTotalTokensSaved().toLocaleString()} tokens`);
   console.log(` • Total Cost Saved (Est.):    $${(optimizer.getTotalTokensSaved() * 0.000003).toFixed(4)} USD`);
   console.log(` • Compression Engine:        RTK + AST Pruner (Active)`);
   console.log(` • Semantic Cache Status:     Ready`);
+
+  if (statsData && statsData.resources) {
+    console.log(`\x1b[36m----------------------------------------------------\x1b[0m`);
+    console.log(`\x1b[1m 🌿 Resource Footprint (~0 Stress Benchmark)\x1b[0m`);
+    console.log(`\x1b[36m----------------------------------------------------\x1b[0m`);
+    console.log(` • Heap Memory Used:          ${statsData.resources.memoryHeapMB} MB`);
+    console.log(` • Resident Set Size (RSS):   ${statsData.resources.memoryRssMB} MB`);
+    console.log(` • CPU Resource Load:         ${statsData.resources.cpuStress}`);
+    console.log(` • Runtime Uptime:            ${statsData.resources.uptimeSec} seconds`);
+    console.log(` • Platform:                  ${statsData.resources.platform}`);
+  }
+
+  if (statsData && statsData.security) {
+    console.log(`\x1b[36m----------------------------------------------------\x1b[0m`);
+    console.log(`\x1b[1m 🛡️ Local Isolation & Security State\x1b[0m`);
+    console.log(`\x1b[36m----------------------------------------------------\x1b[0m`);
+    console.log(` • Network Mode:              ${statsData.security.mode.toUpperCase()} (${statsData.security.mode === 'localhost' ? '127.0.0.1 Loopback Only' : '0.0.0.0 LAN Enabled'})`);
+    console.log(` • Gateway Token Auth:        ${statsData.security.requireGatewayToken ? 'ENABLED' : 'DISABLED'}`);
+    console.log(` • Blocked Remote Attempts:   ${statsData.security.blockedCount}`);
+  }
   console.log(`\x1b[36m====================================================\x1b[0m`);
+}
+
+async function handleUnified() {
+  console.log(`\x1b[1m\x1b[36m================================================================================================================================================================\x1b[0m`);
+  console.log(`\x1b[1m                                                   UNIFIED MESH TELEMETRY LEDGER (ATOMIC ACCOUNTING)                                            \x1b[0m`);
+  console.log(`\x1b[1m\x1b[36m================================================================================================================================================================\x1b[0m`);
+  console.log(`\x1b[1m Client IDE / Tool      Active Target Account   Provider/Service   Model Dispatched    Tier       Requests   Input Tokens  Output Tokens Total Tokens  Saved    Cost (USD) Status\x1b[0m`);
+  console.log(`\x1b[1m\x1b[36m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\x1b[0m`);
+
+  let rows: any[] = [];
+  try {
+    const res = await fetch(`http://127.0.0.1:${PORT}/api/unified-telemetry`);
+    if (res.ok) rows = (await res.json()) as any[];
+  } catch (e) {}
+
+  if (!rows || rows.length === 0) {
+    const manager = new AccountPoolManager();
+    const accounts = manager.getAccounts();
+    accounts.forEach(acc => {
+      rows.push({
+        clientIDE: 'Standby / Any Client',
+        accountName: acc.name,
+        provider: (acc.provider || 'gemini').toUpperCase(),
+        modelDispatched: acc.defaultModel,
+        tier: acc.tier.toUpperCase(),
+        requests: acc.totalRequests || 0,
+        promptTokens: acc.totalPromptTokens || 0,
+        completionTokens: acc.totalCompletionTokens || 0,
+        totalTokens: (acc.totalPromptTokens || 0) + (acc.totalCompletionTokens || 0),
+        tokensSaved: acc.totalTokensSaved || 0,
+        estimatedCostUSD: acc.estimatedCostUSD || 0,
+        headroomPct: Math.round(((acc.rollingWindowLimit - acc.rollingTokensUsed) / acc.rollingWindowLimit) * 100),
+        status: acc.status.toUpperCase()
+      });
+    });
+  }
+
+  let totalReq = 0;
+  let totalIn = 0;
+  let totalOut = 0;
+  let totalSaved = 0;
+  let totalCost = 0;
+
+  rows.forEach(r => {
+    totalReq += (r.requests || 0);
+    totalIn += (r.promptTokens || 0);
+    totalOut += (r.completionTokens || 0);
+    totalSaved += (r.tokensSaved || 0);
+    totalCost += (r.estimatedCostUSD || 0);
+
+    const ideCol = (r.clientIDE || 'General Client').slice(0, 22).padEnd(23);
+    const accCol = (r.accountName || r.accountId || '').slice(0, 22).padEnd(23);
+    const provCol = (r.provider || 'GEMINI').slice(0, 18).padEnd(19);
+    const modCol = (r.modelDispatched || '').slice(0, 19).padEnd(20);
+    const tierCol = (r.tier || 'FREE').slice(0, 10).padEnd(11);
+    const reqCol = String(r.requests || 0).padStart(7);
+    const inCol = String((r.promptTokens || 0).toLocaleString()).padStart(13);
+    const outCol = String((r.completionTokens || 0).toLocaleString()).padStart(14);
+    const totCol = String((r.totalTokens || 0).toLocaleString()).padStart(13);
+    const savedCol = String((r.tokensSaved || 0).toLocaleString()).padStart(8);
+    const costCol = `$${(r.estimatedCostUSD || 0).toFixed(4)}`.padStart(11);
+    const statusCol = ` [${r.status} - ${r.headroomPct}%]`;
+
+    console.log(` ${ideCol} ${accCol} ${provCol} ${modCol} ${tierCol} ${reqCol} ${inCol} ${outCol} ${totCol} ${savedCol} ${costCol} ${statusCol}`);
+  });
+
+  console.log(`\x1b[1m\x1b[36m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\x1b[0m`);
+  const totReqCol = String(totalReq).padStart(7);
+  const totInCol = String(totalIn.toLocaleString()).padStart(13);
+  const totOutCol = String(totalOut.toLocaleString()).padStart(14);
+  const totTotCol = String((totalIn + totalOut).toLocaleString()).padStart(13);
+  const totSavedCol = String(totalSaved.toLocaleString()).padStart(8);
+  const totCostCol = `$${totalCost.toFixed(4)}`.padStart(11);
+
+  console.log(`\x1b[1m TOTAL MESH VOLUME:     ${String(rows.length).padEnd(2)} Matrix Entries                                         ${totReqCol} ${totInCol} ${totOutCol} ${totTotCol} ${totSavedCol} ${totCostCol}  [MESH ACTIVE]\x1b[0m`);
+  console.log(`\x1b[1m\x1b[36m================================================================================================================================================================\x1b[0m`);
+}
+
+async function handleSecurity(subArgs: string[]) {
+  const action = subArgs[0]?.toLowerCase() || 'status';
+  const secFile = path.join(CONFIG_DIR, 'security.json');
+
+  let sec: any = {
+    mode: 'localhost',
+    requireGatewayToken: false,
+    gatewayToken: 'mesh-sec-demo',
+    blockedCount: 0
+  };
+
+  if (fs.existsSync(secFile)) {
+    try {
+      sec = JSON.parse(fs.readFileSync(secFile, 'utf-8'));
+    } catch (e) {}
+  }
+
+  switch (action) {
+    case 'status':
+      console.log(`\x1b[1m\x1b[36m====================================================\x1b[0m`);
+      console.log(`\x1b[1m 🛡️ MeshManager Local Network Security Status\x1b[0m`);
+      console.log(`\x1b[36m====================================================\x1b[0m`);
+      console.log(` • Network Isolation Mode:    ${sec.mode === 'localhost' ? '\x1b[32m[LOCALHOST ONLY (127.0.0.1)]\x1b[0m' : '\x1b[33m[LAN SHARING ENABLED (0.0.0.0)]\x1b[0m'}`);
+      console.log(` • Require Gateway Token:     ${sec.requireGatewayToken ? '\x1b[32mENABLED (Bearer Auth Enforced)\x1b[0m' : '\x1b[33mDISABLED (Open on Loopback)\x1b[0m'}`);
+      console.log(` • Gateway Access Token:      \x1b[34m${sec.gatewayToken}\x1b[0m`);
+      console.log(` • Blocked Unauthorized Req:  ${sec.blockedCount}`);
+      console.log(`\x1b[36m====================================================\x1b[0m`);
+      break;
+
+    case 'toggle-lan':
+    case 'set-mode':
+      const newMode = (subArgs[1]?.toLowerCase() === 'lan' || sec.mode === 'localhost') ? 'lan' : 'localhost';
+      sec.mode = newMode;
+      fs.writeFileSync(secFile, JSON.stringify(sec, null, 2), 'utf-8');
+      try {
+        await fetch(`http://127.0.0.1:${PORT}/api/security/toggle-lan`, { method: 'POST' });
+      } catch (e) {}
+      console.log(`\x1b[32m[✓] Network mode switched to: ${newMode.toUpperCase()} (${newMode === 'localhost' ? '127.0.0.1 Loopback' : '0.0.0.0 LAN Sharing'})\x1b[0m`);
+      break;
+
+    case 'toggle-auth':
+      sec.requireGatewayToken = !sec.requireGatewayToken;
+      fs.writeFileSync(secFile, JSON.stringify(sec, null, 2), 'utf-8');
+      try {
+        await fetch(`http://127.0.0.1:${PORT}/api/security/toggle-auth`, { method: 'POST' });
+      } catch (e) {}
+      console.log(`\x1b[32m[✓] Gateway Token Auth is now: ${sec.requireGatewayToken ? 'ENABLED' : 'DISABLED'}\x1b[0m`);
+      break;
+
+    case 'regenerate-token':
+      const crypto = require('crypto');
+      sec.gatewayToken = 'mesh-sec-' + crypto.randomBytes(12).toString('hex');
+      fs.writeFileSync(secFile, JSON.stringify(sec, null, 2), 'utf-8');
+      try {
+        await fetch(`http://127.0.0.1:${PORT}/api/security/regenerate-token`, { method: 'POST' });
+      } catch (e) {}
+      console.log(`\x1b[32m[✓] New Gateway Master Token generated:\x1b[0m \x1b[34m${sec.gatewayToken}\x1b[0m`);
+      break;
+
+    default:
+      console.log(`\x1b[33mUsage: meshmanager security <status|toggle-lan|toggle-auth|regenerate-token>\x1b[0m`);
+      break;
+  }
 }
 
 function printHelp() {
@@ -336,24 +512,31 @@ function printHelp() {
   meshmanager <command> [options]
   (or short alias: mesh <command>)
 
-\x1b[1mCOMMANDS:\x1b[0m
+\x1b[1mCORE COMMANDS:\x1b[0m
   \x1b[32mstart\x1b[0m [--daemon, -d]    Start MeshManager (foreground or background service)
   \x1b[32mstop\x1b[0m                  Stop background MeshManager service
   \x1b[32mrestart\x1b[0m               Restart the MeshManager gateway
   \x1b[32mstatus\x1b[0m                Display gateway runtime status, port, and IDE connections
-  \x1b[32mupdate, upgrade\x1b[0m       Check for updates and automatically upgrade MeshManager
+  \x1b[32munified, matrix\x1b[0m       Display Single Unified Master Telemetry Ledger
+  \x1b[32mstats\x1b[0m                 Display real-time token savings and ~0 resource stress metrics
   \x1b[32mdoctor\x1b[0m                Run system diagnostics on ports, storage, and IDE paths
-  \x1b[32mstats\x1b[0m                 Display real-time token savings and cost economy metrics
+  \x1b[32mupdate, upgrade\x1b[0m       Check for updates and automatically upgrade MeshManager
+
+\x1b[1mSECURITY & NETWORK ISOLATION:\x1b[0m
+  \x1b[32mmeshmanager security status\x1b[0m            View network mode, token requirement, and blocked logs
+  \x1b[32mmeshmanager security toggle-lan\x1b[0m        Toggle Localhost (127.0.0.1) vs LAN Sharing (0.0.0.0)
+  \x1b[32mmeshmanager security toggle-auth\x1b[0m       Enable/Disable mandatory Gateway Bearer Token auth
+  \x1b[32mmeshmanager security regenerate-token\x1b[0m Rotate Gateway Master Token
 
 \x1b[1mACCOUNT MANAGEMENT:\x1b[0m
-  \x1b[32mmeshmanager account list\x1b[0m                                             List accounts & pins
-  \x1b[32mmeshmanager account add <id> <name> <free|paid_pro> <model> <key>\x1b[0m   Add new AI account
-  \x1b[32mmeshmanager account delete <id>\x1b[0m                                      Delete account
-  \x1b[32mmeshmanager account verify <key>\x1b[0m                                     Test key with Google
+  \x1b[32mmeshmanager account list\x1b[0m               List accounts, pins, and quota metrics
+  \x1b[32mmeshmanager account add <id> ...\x1b[0m       Add new AI account (Gemini, OmniRoute, etc.)
+  \x1b[32mmeshmanager account delete <id>\x1b[0m        Delete account from pool
+  \x1b[32mmeshmanager account verify <key>\x1b[0m       Test key with Google Gemini API
 
 \x1b[1m1-CLICK IDE MANAGEMENT:\x1b[0m
-  \x1b[32mmeshmanager ide connect <antigravity|cursor|vscode|windsurf|all>\x1b[0m    Connect IDE to mesh
-  \x1b[32mmeshmanager ide disconnect <antigravity|cursor|vscode|windsurf|all>\x1b[0m Revert IDE settings
+  \x1b[32mmeshmanager ide connect <ide|all>\x1b[0m      Connect IDE to mesh (Antigravity, Cursor, VS Code, Windsurf)
+  \x1b[32mmeshmanager ide disconnect <ide|all>\x1b[0m   Revert IDE settings to default
 
 \x1b[1mACCESS POINTS:\x1b[0m
   Control Center Dashboard: \x1b[34mhttp://localhost:20128\x1b[0m

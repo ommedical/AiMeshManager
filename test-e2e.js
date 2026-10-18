@@ -180,6 +180,56 @@ async function runTests() {
     if (!hasValidation) throw new Error('isInstalled boolean field missing from scan result');
   });
 
+  // Test 11: Single Unified Master Telemetry Ledger
+  await test('Unified Ledger: GET /api/unified-telemetry returns unified matrix', async () => {
+    const res = await request('GET', '/api/unified-telemetry');
+    if (res.status !== 200 || !Array.isArray(res.data) || res.data.length === 0) {
+      throw new Error('Unified telemetry endpoint failed or returned empty array');
+    }
+    const first = res.data[0];
+    if (!first.clientIDE || !first.accountId || !first.provider || typeof first.totalTokens !== 'number') {
+      throw new Error('Unified telemetry row missing required composite fields');
+    }
+  });
+
+  // Test 12: Resource Footprint Telemetry (~0 Stress Benchmark)
+  await test('Resource Metrics: GET /api/stats reports heap, RSS & ~0 CPU load', async () => {
+    const res = await request('GET', '/api/stats');
+    if (res.status !== 200 || !res.data.resources) {
+      throw new Error('Resources telemetry missing from /api/stats');
+    }
+    if (typeof res.data.resources.memoryHeapMB !== 'number' || res.data.resources.memoryHeapMB <= 0) {
+      throw new Error('Invalid memoryHeapMB telemetry');
+    }
+  });
+
+  // Test 13: Local Network Security & Isolation Controls
+  await test('Security: GET /api/security/status & toggle LAN mode', async () => {
+    const statusRes = await request('GET', '/api/security/status');
+    if (statusRes.status !== 200 || !statusRes.data.gatewayToken) {
+      throw new Error('Security status endpoint failed');
+    }
+    const toggleRes = await request('POST', '/api/security/toggle-lan');
+    if (toggleRes.status !== 200 || !toggleRes.data.success) {
+      throw new Error('Failed to toggle LAN mode');
+    }
+    // Toggle back to localhost mode for isolation
+    await request('POST', '/api/security/toggle-lan');
+  });
+
+  // Test 14: Dynamic Task Heat & Intelligence Power Routing
+  await test('Task Heat: Brainstorming & Architecture -> High Heat & Intelligence', async () => {
+    const res = await request('POST', '/v1/chat/completions', {
+      messages: [{ role: 'user', content: 'Brainstorm architectural tradeoffs between event-driven microservices vs monolith' }],
+      model: 'auto-smart-router'
+    }, { 'x-client-ide': 'Google Antigravity' });
+    if (res.status !== 200) throw new Error(`Failed: HTTP ${res.status}`);
+    const heat = res.headers['x-meshmanager-heat'];
+    const intelligence = res.headers['x-meshmanager-intelligence'];
+    if (!heat || parseInt(heat) < 80) throw new Error(`Expected heat >= 80%, got ${heat}%`);
+    if (!intelligence || parseInt(intelligence) < 4) throw new Error(`Expected intelligence >= 4/5, got ${intelligence}`);
+  });
+
   console.log('\n\x1b[36m====================================================\x1b[0m');
   console.log(`\x1b[1mSummary: \x1b[32m${passed} Passed\x1b[0m, \x1b[${failed > 0 ? '31m' : '32m'}${failed} Failed\x1b[0m of ${passed + failed} Tests`);
   console.log('\x1b[36m====================================================\x1b[0m');
