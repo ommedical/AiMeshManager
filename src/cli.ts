@@ -282,9 +282,14 @@ function handleUpgrade() {
   try {
     const repoDir = path.resolve(__dirname, '..');
     if (fs.existsSync(path.join(repoDir, '.git'))) {
-      console.log(`Executing: git pull --rebase...`);
-      const gitOut = execSync('git pull --rebase', { cwd: repoDir, encoding: 'utf-8' });
-      console.log(gitOut.trim());
+      console.log(`Synchronizing with remote repository...`);
+      try {
+        const gitOut = execSync('git pull --rebase', { cwd: repoDir, encoding: 'utf-8' });
+        console.log(gitOut.trim());
+      } catch (pullErr: any) {
+        console.log(`\x1b[33m[!] Divergent history detected. Synchronizing directly with origin/main...\x1b[0m`);
+        execSync('git fetch origin && git reset --hard origin/main', { cwd: repoDir, stdio: 'inherit' });
+      }
       console.log(`Executing: npm install && npm run build...`);
       execSync('npm install && npm run build', { cwd: repoDir, stdio: 'inherit' });
       console.log(`\x1b[32m[✓] AiMeshManager upgraded successfully to the latest commit!\x1b[0m`);
