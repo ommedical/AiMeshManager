@@ -238,7 +238,7 @@ async function handleAccount(subArgs: string[]) {
         authType: 'api_key',
         tier: (tier === 'paid_pro' || tier === 'paid_ultra') ? tier : 'free',
         defaultModel: defaultModel || (tier?.startsWith('paid') ? 'gemini-2.5-pro' : 'gemini-2.5-flash'),
-        apiKey: apiKey || 'DEMO_KEY',
+        apiKey: apiKey || '',
         enabled: true,
         maxRpm: tier?.startsWith('paid') ? 120 : 15,
         maxTpm: tier?.startsWith('paid') ? 5000000 : 1000000,
@@ -543,46 +543,31 @@ async function handlePurge() {
 
 async function handleAntigravity(subArgs: string[]) {
   const action = subArgs[0]?.toLowerCase() || 'setup';
-  if (action === 'mock-adc' || action === 'setup') {
+  const detector = new IDEDetector();
+
+  if (action === 'mock-adc' || action === 'setup' || action === 'connect') {
     const configDir = path.join(os.homedir(), '.meshmanager');
     const adcPath = path.join(configDir, 'meshmanager-service-account.json');
     
-    try {
-      const res = await fetch(`http://127.0.0.1:${PORT}/api/antigravity/generate-mock-adc`, { method: 'POST' });
-      if (res.ok) {
-        const data: any = await res.json();
-        console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
-        console.log(`\x1b[1m 🛠️ Google Antigravity 2.0 Local Service Account Bypass (Mock ADC)\x1b[0m`);
-        console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
-        console.log(`\x1b[32m[✓] ${data.message}\x1b[0m\n`);
-        console.log(`Generated Mock ADC File: \x1b[34m${data.filePath}\x1b[0m\n`);
-        console.log(`\x1b[1mRun the following command before starting Antigravity 2.0:\x1b[0m`);
-        console.log(`\x1b[33m# PowerShell (Windows):\x1b[0m`);
-        console.log(`  ${data.envInstructions.powershell}\n`);
-        console.log(`\x1b[33m# Bash / Zsh (Linux/macOS):\x1b[0m`);
-        console.log(`  ${data.envInstructions.bash}\n`);
-        console.log(`\x1b[36mOnce set, Antigravity 2.0 will connect to MeshManager without asking for a corporate Google Cloud Service Account!\x1b[0m`);
-        console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
-        return;
-      }
-    } catch (e) {}
+    // Auto provision via IDEDetector
+    const toggleRes = detector.toggleIDE('antigravity', true);
 
-    // Fallback if offline
-    const mockServiceAccount = {
-      type: 'service_account',
-      project_id: 'meshmanager-local',
-      private_key_id: 'mesh-local-adc-key',
-      private_key: 'MOCK_PRIVATE_KEY_EPHEMERAL_ADC',
-      client_email: 'meshmanager-agent@meshmanager-local.iam.gserviceaccount.com',
-      client_id: '100201280000000000000',
-      auth_uri: `http://127.0.0.1:${PORT}/auth`,
-      token_uri: `http://127.0.0.1:${PORT}/oauth2/token`
-    };
-    fs.writeFileSync(adcPath, JSON.stringify(mockServiceAccount, null, 2), 'utf-8');
-    console.log(`\x1b[32m[✓] Generated Mock ADC file at: ${adcPath}\x1b[0m`);
-    console.log(`Run: $env:GOOGLE_APPLICATION_CREDENTIALS="${adcPath}"; $env:GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:${PORT}/v1"`);
+    console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
+    console.log(`\x1b[1m 🛠️ Google Antigravity 2.0 Local Service Account Bypass (Mock ADC)\x1b[0m`);
+    console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
+    console.log(`\x1b[32m${toggleRes.message}\x1b[0m\n`);
+    console.log(`Generated Mock ADC File: \x1b[34m${adcPath}\x1b[0m\n`);
+    console.log(`\x1b[1mStatus:\x1b[0m Automatic default ADC has been provisioned.`);
+    console.log(`Antigravity 2.0 will connect without asking for a corporate Google Cloud Service Account!\n`);
+    console.log(`\x1b[33mOptional manual overrides (if running in isolated subshells):\x1b[0m`);
+    console.log(`  PowerShell: $env:GOOGLE_APPLICATION_CREDENTIALS="${adcPath}"; $env:GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:${PORT}/v1"`);
+    console.log(`  Bash:       export GOOGLE_APPLICATION_CREDENTIALS="${adcPath}" && export GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:${PORT}/v1"`);
+    console.log(`\x1b[1m\x1b[36m========================================================================\x1b[0m`);
+  } else if (action === 'disconnect') {
+    const res = detector.toggleIDE('antigravity', false);
+    console.log(`\x1b[32m${res.message}\x1b[0m`);
   } else {
-    console.log(`\x1b[33mUsage: meshmanager antigravity <setup|mock-adc>\x1b[0m`);
+    console.log(`\x1b[33mUsage: meshmanager antigravity <setup|connect|disconnect>\x1b[0m`);
   }
 }
 

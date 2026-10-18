@@ -7,6 +7,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as crypto from 'crypto';
 import { execSync } from 'child_process';
 
 export interface IDEScanResult {
@@ -15,9 +16,13 @@ export interface IDEScanResult {
   isInstalled: boolean;
   installedPath?: string;
   configPath: string;
+  allConfigPaths?: string[];
   isRoutedToProxy: boolean;
   configSnippet: string;
   downloadUrl: string;
+  isRunning?: boolean;
+  runningPid?: number;
+  mockAdcProvisioned?: boolean;
 }
 
 export class IDEDetector {
@@ -34,6 +39,63 @@ export class IDEDetector {
       this.scanVSCode(),
       this.scanWindsurf()
     ];
+  }
+
+  public isProcessRunning(names: string[]): { running: boolean; pid?: number; processName?: string } {
+    try {
+      if (process.platform === 'win32') {
+        const out = execSync('tasklist /FO CSV /NH', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] });
+        const lines = out.split('\n');
+        for (const line of lines) {
+          const parts = line.split('","').map(s => s.replace(/"/g, '').trim());
+          if (parts.length >= 2) {
+            const pName = parts[0].toLowerCase();
+            const pid = parseInt(parts[1], 10);
+            for (const target of names) {
+              if (pName.includes(target.toLowerCase())) {
+                return { running: true, pid, processName: parts[0] };
+              }
+            }
+          }
+        }
+      } else {
+        for (const target of names) {
+          try {
+            const pidStr = execSync(`pgrep -i "${target}"`, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+            if (pidStr) {
+              const pid = parseInt(pidStr.split('\n')[0], 10);
+              return { running: true, pid, processName: target };
+            }
+          } catch (e) {}
+        }
+      }
+    } catch (e) {}
+    return { running: false };
+  }
+
+  public getMockServiceAccountADC(port: number = 20128) {
+    let privateKeyPem = '';
+    try {
+      const { privateKey } = crypto.generateKeyPairSync('rsa', {
+        modulusLength: 2048,
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+      });
+      privateKeyPem = privateKey;
+    } catch (e) {
+      privateKeyPem = 'MOCK_RSA_KEY';
+    }
+
+    return {
+      type: 'service_account',
+      project_id: 'meshmanager-local',
+      private_key_id: 'mesh-local-adc-key',
+      private_key: privateKeyPem,
+      client_email: 'meshmanager-agent@meshmanager-local.iam.gserviceaccount.com',
+      client_id: '100201280000000000000',
+      auth_uri: `http://127.0.0.1:${port}/auth`,
+      token_uri: `http://127.0.0.1:${port}/oauth2/token`
+    };
   }
 
   private checkExecutable(possiblePaths: string[], commandName?: string): { installed: boolean; foundPath?: string } {
@@ -60,37 +122,72 @@ export class IDEDetector {
   }
 
   private scanAntigravity(): IDEScanResult {
-    const configPath = path.join(this.homeDir, '.gemini', 'antigravity-cli', 'settings.json');
+    const possibleConfigs = [
+      path.join(this.appData, 'Antigravity IDE', 'User', 'settings.json'),
+      path.join(this.appData, 'Antigravity', 'User', 'settings.json'),
+      path.join(this.homeDir, '.gemini', 'antigravity-ide', 'settings.json'),
+      path.join(this.homeDir, '.gemini', 'antigravity-cli', 'settings.json')
+    ];
+
+    const configPath = possibleConfigs.find(p => fs.existsSync(p)) || possibleConfigs[0];
+
     const possibleExes = [
+      path.join(this.localAppData, 'Programs', 'Antigravity IDE', 'Antigravity IDE.exe'),
       path.join(this.localAppData, 'Programs', 'Antigravity', 'Antigravity.exe'),
       path.join(this.localAppData, 'antigravity-ide', 'Antigravity.exe'),
+      path.join(this.programFiles, 'Antigravity IDE', 'Antigravity IDE.exe'),
       path.join(this.programFiles, 'Antigravity', 'Antigravity.exe'),
-      path.join(this.homeDir, '.gemini', 'antigravity-ide', 'antigravity.exe')
+      path.join(this.homeDir, '.gemini', 'antigravity-ide', 'antigravity.exe'),
+      path.join(this.homeDir, '.gemini', 'antigravity-ide', 'Antigravity IDE.exe')
     ];
 
     const exeCheck = this.checkExecutable(possibleExes, 'agy');
+    const procCheck = this.isProcessRunning(['Antigravity IDE', 'Antigravity', 'agy']);
     const hasGeminiDir = fs.existsSync(path.join(this.homeDir, '.gemini'));
-    const isInstalled = exeCheck.installed || hasGeminiDir;
+    const isInstalled = exeCheck.installed || procCheck.running || hasGeminiDir;
 
-    let isRouted = false;
-    if (fs.existsSync(configPath)) {
+    // Check default Google Cloud ADC
+    const gcloudDir = process.platform === 'win32'
+      ? path.join(this.appData, 'gcloud')
+      : path.join(this.homeDir, '.config', 'gcloud');
+    const defaultAdcPath = path.join(gcloudDir, 'application_default_credentials.json');
+
+    let mockAdcProvisioned = false;
+    if (fs.existsSync(defaultAdcPath)) {
       try {
-        const content = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-        if (content.apiEndpoint && content.apiEndpoint.includes('20128')) {
-          isRouted = true;
+        const adc = JSON.parse(fs.readFileSync(defaultAdcPath, 'utf-8'));
+        if (adc.project_id === 'meshmanager-local' || (adc.token_uri && adc.token_uri.includes('20128'))) {
+          mockAdcProvisioned = true;
         }
       } catch (e) {}
+    }
+
+    let isRouted = mockAdcProvisioned;
+    for (const cp of possibleConfigs) {
+      if (fs.existsSync(cp)) {
+        try {
+          const content = JSON.parse(fs.readFileSync(cp, 'utf-8'));
+          if (content.apiEndpoint?.includes('20128') || content['google.gemini.endpoint']?.includes('20128')) {
+            isRouted = true;
+            break;
+          }
+        } catch (e) {}
+      }
     }
 
     return {
       id: 'antigravity',
       name: 'Google Antigravity 2.0 & IDE',
       isInstalled,
-      installedPath: exeCheck.foundPath || (hasGeminiDir ? path.join(this.homeDir, '.gemini') : undefined),
+      installedPath: exeCheck.foundPath || (procCheck.running ? `Running Process (PID ${procCheck.pid})` : (hasGeminiDir ? path.join(this.homeDir, '.gemini') : undefined)),
       configPath,
+      allConfigPaths: possibleConfigs,
       isRoutedToProxy: isRouted,
       configSnippet: JSON.stringify({ modelProvider: 'gemini', apiEndpoint: 'http://localhost:20128/v1' }, null, 2),
-      downloadUrl: 'https://antigravity.google'
+      downloadUrl: 'https://antigravity.google',
+      isRunning: procCheck.running,
+      runningPid: procCheck.pid,
+      mockAdcProvisioned
     };
   }
 
@@ -232,11 +329,92 @@ export class IDEDetector {
       }
 
       if (ideId === 'antigravity') {
+        const gcloudDir = process.platform === 'win32'
+          ? path.join(this.appData, 'gcloud')
+          : path.join(this.homeDir, '.config', 'gcloud');
+        const defaultAdcPath = path.join(gcloudDir, 'application_default_credentials.json');
+        const bakAdcPath = path.join(gcloudDir, 'application_default_credentials.json.bak');
+        const localMeshAdc = path.join(this.homeDir, '.meshmanager', 'meshmanager-service-account.json');
+
         if (enable) {
-          current.modelProvider = 'gemini';
-          current.apiEndpoint = 'http://localhost:20128/v1';
+          // 1. Provision Mock ADC in ~/.meshmanager
+          const meshDir = path.dirname(localMeshAdc);
+          if (!fs.existsSync(meshDir)) fs.mkdirSync(meshDir, { recursive: true });
+          const mockAdc = this.getMockServiceAccountADC();
+          fs.writeFileSync(localMeshAdc, JSON.stringify(mockAdc, null, 2), 'utf-8');
+
+          // 2. Provision default Google Cloud ADC (%APPDATA%\gcloud\application_default_credentials.json)
+          if (!fs.existsSync(gcloudDir)) fs.mkdirSync(gcloudDir, { recursive: true });
+          if (fs.existsSync(defaultAdcPath)) {
+            try {
+              const existing = JSON.parse(fs.readFileSync(defaultAdcPath, 'utf-8'));
+              if (existing.project_id !== 'meshmanager-local') {
+                fs.copyFileSync(defaultAdcPath, bakAdcPath);
+              }
+            } catch (e) {}
+          }
+          fs.writeFileSync(defaultAdcPath, JSON.stringify(mockAdc, null, 2), 'utf-8');
+
+          // 3. Inject settings across all found Antigravity configs
+          const targetConfigs = scan.allConfigPaths || [scan.configPath];
+          targetConfigs.forEach(cp => {
+            try {
+              const cDir = path.dirname(cp);
+              if (fs.existsSync(cDir) || cp.includes('Antigravity') || cp.includes('antigravity-cli')) {
+                if (!fs.existsSync(cDir)) fs.mkdirSync(cDir, { recursive: true });
+                let cfg: any = {};
+                if (fs.existsSync(cp)) {
+                  try { cfg = JSON.parse(fs.readFileSync(cp, 'utf-8')); } catch (e) { cfg = {}; }
+                }
+                cfg.modelProvider = 'gemini';
+                cfg.apiEndpoint = 'http://localhost:20128/v1';
+                cfg['google.gemini.endpoint'] = 'http://localhost:20128/v1';
+                cfg['antigravity.proxyUrl'] = 'http://localhost:20128/v1';
+                fs.writeFileSync(cp, JSON.stringify(cfg, null, 2), 'utf-8');
+              }
+            } catch (e) {}
+          });
+
+          const proc = this.isProcessRunning(['Antigravity IDE', 'Antigravity', 'agy']);
+          const runningMsg = proc.running
+            ? ` Running Antigravity instance detected (PID: ${proc.pid}).`
+            : ` Ready for launch.`;
+          return {
+            success: true,
+            message: `[✓] Connected Google Antigravity 2.0 & IDE to MeshManager! Default Google Cloud ADC provisioned at: ${defaultAdcPath}.${runningMsg} Antigravity will now authenticate error-free without service account prompts.`
+          };
         } else {
-          delete current.apiEndpoint;
+          // Revert settings
+          const targetConfigs = scan.allConfigPaths || [scan.configPath];
+          targetConfigs.forEach(cp => {
+            if (fs.existsSync(cp)) {
+              try {
+                const cfg = JSON.parse(fs.readFileSync(cp, 'utf-8'));
+                delete cfg.apiEndpoint;
+                delete cfg['google.gemini.endpoint'];
+                delete cfg['antigravity.proxyUrl'];
+                fs.writeFileSync(cp, JSON.stringify(cfg, null, 2), 'utf-8');
+              } catch (e) {}
+            }
+          });
+
+          // Restore or clean default ADC
+          if (fs.existsSync(bakAdcPath)) {
+            fs.copyFileSync(bakAdcPath, defaultAdcPath);
+            fs.unlinkSync(bakAdcPath);
+          } else if (fs.existsSync(defaultAdcPath)) {
+            try {
+              const currentAdc = JSON.parse(fs.readFileSync(defaultAdcPath, 'utf-8'));
+              if (currentAdc.project_id === 'meshmanager-local') {
+                fs.unlinkSync(defaultAdcPath);
+              }
+            } catch (e) {}
+          }
+
+          return {
+            success: true,
+            message: `[✓] Disconnected Google Antigravity 2.0 & IDE. Restored original settings and credentials.`
+          };
         }
       } else if (ideId === 'cursor') {
         if (enable) {

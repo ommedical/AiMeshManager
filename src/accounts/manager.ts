@@ -104,7 +104,7 @@ export class AccountPoolManager {
       provider: 'gemini',
       authType: 'api_key',
       tier: 'free',
-      apiKey: process.env.GEMINI_KEY_FREE_1 || 'DEMO_FREE_KEY_1',
+      apiKey: process.env.GEMINI_KEY_FREE_1 || '',
       defaultModel: 'gemini-2.5-flash',
       enabled: true,
       maxRpm: 15,
@@ -130,7 +130,7 @@ export class AccountPoolManager {
       provider: 'gemini',
       authType: 'api_key',
       tier: 'paid_pro',
-      apiKey: process.env.GEMINI_KEY_PAID_1 || 'DEMO_PAID_KEY_1',
+      apiKey: process.env.GEMINI_KEY_PAID_1 || '',
       defaultModel: 'gemini-2.5-pro',
       enabled: true,
       maxRpm: 120,
@@ -156,7 +156,7 @@ export class AccountPoolManager {
       provider: 'gemini',
       authType: 'oauth_bearer',
       tier: 'paid_pro',
-      apiKey: process.env.GEMINI_OAUTH_TOKEN || 'DEMO_OAUTH_BEARER_TOKEN',
+      apiKey: process.env.GEMINI_OAUTH_TOKEN || '',
       defaultModel: 'gemini-3.8-flash',
       enabled: true,
       maxRpm: 120,
@@ -183,7 +183,7 @@ export class AccountPoolManager {
       authType: 'api_key',
       endpointUrl: 'http://localhost:20128/v1',
       tier: 'enterprise',
-      apiKey: 'omniroute-local-key',
+      apiKey: process.env.OMNIROUTE_API_KEY || '',
       defaultModel: 'auto-smart-router',
       enabled: true,
       maxRpm: 200,
@@ -255,7 +255,7 @@ export class AccountPoolManager {
 
     // 1. Clear keys from in-memory account pool
     this.accounts.forEach(acc => {
-      acc.apiKey = 'PURGED';
+      acc.apiKey = '';
       count++;
     });
 
@@ -276,7 +276,28 @@ export class AccountPoolManager {
       }
     }
 
-    // 3. Re-seed clean mock placeholders with no real credentials
+    // 3. Cryptographically shred any meshmanager mock ADC
+    const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+    const gcloudAdc = process.platform === 'win32'
+      ? path.join(appData, 'gcloud', 'application_default_credentials.json')
+      : path.join(os.homedir(), '.config', 'gcloud', 'application_default_credentials.json');
+    const meshAdc = path.join(this.configDir, 'meshmanager-service-account.json');
+
+    [gcloudAdc, meshAdc].forEach(p => {
+      if (fs.existsSync(p)) {
+        try {
+          const parsed = JSON.parse(fs.readFileSync(p, 'utf-8'));
+          if (parsed.project_id === 'meshmanager-local') {
+            const stats = fs.statSync(p);
+            if (stats.size > 0) fs.writeFileSync(p, Buffer.alloc(stats.size, 0));
+            fs.unlinkSync(p);
+            filesWiped.push(p);
+          }
+        } catch (e) {}
+      }
+    });
+
+    // 4. Re-seed clean placeholders with no credentials
     this.initializeDefaultSeed();
     return { purgedAccounts: count, filesWiped };
   }

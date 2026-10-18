@@ -733,27 +733,29 @@ app.post('/api/antigravity/generate-mock-adc', (req: Request, res: Response) => 
   const configDir = path.join(os.homedir(), '.meshmanager');
   const adcPath = path.join(configDir, 'meshmanager-service-account.json');
   
-  const mockServiceAccount = {
-    type: 'service_account',
-    project_id: 'meshmanager-local',
-    private_key_id: 'mesh-local-adc-key',
-    private_key: 'MOCK_PRIVATE_KEY_EPHEMERAL_ADC',
-    client_email: 'meshmanager-agent@meshmanager-local.iam.gserviceaccount.com',
-    client_id: '100201280000000000000',
-    auth_uri: `http://127.0.0.1:${PORT}/auth`,
-    token_uri: `http://127.0.0.1:${PORT}/oauth2/token`
-  };
+  const mockServiceAccount = ideDetector.getMockServiceAccountADC(PORT);
 
   fs.writeFileSync(adcPath, JSON.stringify(mockServiceAccount, null, 2), 'utf-8');
+
+  // Auto-provision into standard Google Cloud ADC path so Antigravity picks it up automatically
+  const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+  const gcloudDir = process.platform === 'win32'
+    ? path.join(appData, 'gcloud')
+    : path.join(os.homedir(), '.config', 'gcloud');
+  const defaultAdcPath = path.join(gcloudDir, 'application_default_credentials.json');
+
+  if (!fs.existsSync(gcloudDir)) fs.mkdirSync(gcloudDir, { recursive: true });
+  fs.writeFileSync(defaultAdcPath, JSON.stringify(mockServiceAccount, null, 2), 'utf-8');
 
   res.json({
     success: true,
     filePath: adcPath,
+    defaultAdcPath,
     envInstructions: {
       powershell: `$env:GOOGLE_APPLICATION_CREDENTIALS="${adcPath}"; $env:GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:${PORT}/v1"`,
       bash: `export GOOGLE_APPLICATION_CREDENTIALS="${adcPath}" && export GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:${PORT}/v1"`
     },
-    message: 'Mock Google Service Account ADC generated! Antigravity 2.0 will connect without corporate Google Cloud login.'
+    message: 'Mock Google Service Account ADC generated and auto-provisioned! Antigravity 2.0 will connect without corporate Google Cloud login.'
   });
 });
 

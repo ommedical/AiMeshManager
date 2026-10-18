@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  oaaam:
+  meshmanager:
     build: .
-    container_name: oaaam-mesh
+    container_name: meshmanager-mesh
     restart: always
     ports:
       - "20128:20128"
@@ -11,7 +11,7 @@ services:
       - PORT=20128
       - NODE_ENV=production
     volumes:
-      - ~/.oaaam:/root/.oaaam
+      - ~/.meshmanager:/root/.meshmanager
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:20128/api/stats"]
       interval: 15s

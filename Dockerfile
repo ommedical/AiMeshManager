@@ -1,4 +1,4 @@
-# OAAAM (OmniAutoAiAgentMesh) Dockerfile
+# MeshManager Dockerfile
 FROM node:20-alpine AS builder
 
 WORKDIR /app

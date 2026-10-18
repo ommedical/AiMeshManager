@@ -188,19 +188,33 @@ Or open `http://localhost:20128` $\to$ **Dynamic Task Simulator** $\to$ click **
 ### The Challenge with Antigravity 2.0:
 Google Antigravity 2.0 is designed for enterprise environments where it forcefully demands a **Google Cloud Platform (GCP) Service Account** or Application Default Credentials (ADC) with corporate IAM roles. If you only have personal `@gmail.com` accounts, Google AI Studio API keys, or standard Google AI Pro subscriptions, Antigravity 2.0 blocks access.
 
-### The MeshManager Solution: Local Loopback Mock ADC
+### The MeshManager Solution: Local Loopback Mock ADC & Dynamic Auto-Handling
 MeshManager solves this cleanly by acting as a **local mock Google Cloud OAuth Provider**:
-1. **Generates Local Service Account ADC JSON (`meshmanager-service-account.json`)**: Configures `token_uri` to point to `http://127.0.0.1:20128/oauth2/token`.
-2. **Local OAuth Token Loopback**: When Antigravity 2.0 requests an OAuth token, MeshManager returns an instant mock Google Bearer token (`ya29.meshmanager-antigravity-local-session`).
-3. **Transparent Proxying**: Antigravity routes all model traffic to `GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:20128/v1"`, which MeshManager transparently translates, optimizes, and routes to your pooled accounts!
+1. **Dynamic Ephemeral RSA Key Generation**: At runtime, MeshManager creates an in-memory 2048-bit RSA key pair for the local service account without storing hardcoded private keys in the repo.
+2. **Auto-Provisioning to Standard Google Cloud ADC Path**: In addition to `~/.meshmanager/meshmanager-service-account.json`, MeshManager provisions the ADC file directly into Google's standard location:
+   * **Windows**: `%APPDATA%\gcloud\application_default_credentials.json`
+   * **Linux/macOS**: `~/.config/gcloud/application_default_credentials.json`
+   *(Any existing user credentials are automatically backed up to `application_default_credentials.json.bak`)*.
+3. **Local OAuth Token Loopback**: When Antigravity 2.0 requests an OAuth token, MeshManager returns an instant mock Google Bearer token (`ya29.meshmanager-antigravity-local-session`) on `http://127.0.0.1:20128/oauth2/token`.
+4. **Transparent Proxying**: Antigravity routes all model traffic to `http://127.0.0.1:20128/v1`, which MeshManager transparently translates, optimizes, and routes to your pooled accounts!
 
-### 1-Click Setup:
+### How MeshManager Handles All Startup Scenarios Dynamically:
+
+| Scenario | What Happens | Action Needed |
+| :--- | :--- | :--- |
+| **Scenario A: MeshManager Starts First, Antigravity Starts Second** | MeshManager auto-provisions the mock ADC in `%APPDATA%\gcloud\` and injects proxy settings into Antigravity `settings.json`. When Antigravity starts, it finds the ADC naturally. | **Zero manual steps.** Start Antigravity normally. |
+| **Scenario B: Antigravity Starts First, MeshManager Starts Second** | Antigravity is already running and waiting or prompting. Starting MeshManager or clicking the UI toggle detects the active `Antigravity IDE.exe` process (PID), writes the ADC, and flushes token loopback. | Click **Connect** toggle in Web UI or run `meshmanager antigravity setup`. |
+| **Scenario C: User Toggles Disconnect or Stops MeshManager** | MeshManager reverts Antigravity `settings.json` and restores original `application_default_credentials.json.bak` if a backup existed, leaving zero residual files. | Click **Disconnect** in UI or run `meshmanager ide disconnect antigravity`. |
+
+### 1-Click Setup Commands:
 ```bash
-# Generate Mock ADC configuration:
+# Auto-provision ADC and connect Antigravity:
 meshmanager antigravity setup
+# (or connect command)
+meshmanager ide connect antigravity
 ```
 
-### Environment Variables to Set:
+### Optional Manual Shell Overrides (For isolated subshells or containers):
 * **PowerShell (Windows)**:
   ```powershell
   $env:GOOGLE_APPLICATION_CREDENTIALS="$HOME\.meshmanager\meshmanager-service-account.json"
@@ -211,8 +225,6 @@ meshmanager antigravity setup
   export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.meshmanager/meshmanager-service-account.json"
   export GOOGLE_GEMINI_ENDPOINT="http://127.0.0.1:20128/v1"
   ```
-
-Once set, launch Antigravity 2.0. It will start instantly without asking for a corporate Google Cloud Service Account login!
 
 ---
 

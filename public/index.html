@@ -1106,7 +1106,8 @@
               <div>
                 <div class="ide-title">${ide.name}</div>
                 <div style="font-size: 0.75rem; color: ${ide.isInstalled ? 'var(--success)' : 'var(--warning)'}; font-family: var(--mono); margin-top: 0.2rem;">
-                  ${ide.isInstalled ? (ide.isRoutedToProxy ? '● Connected to MeshManager' : '○ Installed (Direct Google)') : '⚠ Not Installed on this system'}
+                  ${ide.isInstalled ? (ide.isRoutedToProxy ? (ide.mockAdcProvisioned ? '● Connected (Mock ADC Provisioned)' : '● Connected to MeshManager') : '○ Installed (Direct Google)') : '⚠ Not Installed on this system'}
+                  ${ide.isRunning ? ` <span style="color: #38bdf8; font-weight: 600;">[PID: ${ide.runningPid} RUNNING]</span>` : ''}
                 </div>
               </div>
               <label class="switch">
