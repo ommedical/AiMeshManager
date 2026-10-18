@@ -606,7 +606,7 @@ mesh <command>
 ## 🧪 Production Architecture Files: test-e2e.js, Dockerfile & docker-compose.yml
 
 ### 1. `test-e2e.js` (End-to-End Regression Validation Suite)
-Runs **18 automated end-to-end assertions** exercising every single subsystem in AiMeshManager:
+Runs **19 automated end-to-end assertions** exercising every single subsystem in AiMeshManager:
 1. Health & Resource statistics telemetry (`/api/stats`)
 2. OpenAI-compatible models listing & virtual pins (`/v1/models`)
 3. Micro-syntax task routing (Cursor $\to$ Free Flash)
@@ -623,13 +623,14 @@ Runs **18 automated end-to-end assertions** exercising every single subsystem in
 14. Semantic task heat & intelligence scoring (Brainstorming $\to$ 88%–96% heat)
 15. Antigravity 2.0 Mock ADC generation and OAuth2 token loopback
 16. Dynamic 4-agent parallel swarm dispatch across multiple accounts
-17. Cryptographic secret shredding & memory key wiping (`/api/accounts/purge`)
-18. Clean Slate zero-account startup, full account editing (`PUT /api/accounts/:id`), and live key verification (`POST /api/accounts/verify`)
+17. Autonomous Execution Arbiter (dynamic Swarm vs. Sequential auto-decision) & Live Topology streaming (`GET /api/topology/live`)
+18. Cryptographic secret shredding & memory key wiping (`/api/accounts/purge`)
+19. Clean Slate zero-account startup, full account editing (`PUT /api/accounts/:id`), and live key verification (`POST /api/accounts/verify`)
 
 Run the test suite anytime:
 ```bash
 npm run test:e2e
-# Output: Summary: 18 Passed, 0 Failed of 18 Tests (100% Pass)
+# Output: Summary: 19 Passed, 0 Failed of 19 Tests (100% Pass)
 ```
 
 ---

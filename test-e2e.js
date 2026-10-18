@@ -265,7 +265,35 @@ async function runTests() {
     }
   });
 
-  // Test 17: Zero-Residual Secret Purge
+  // Test 17: Autonomous Execution Arbiter & Live Topology Stage
+  await test('Autonomous Arbiter: Auto-decides execution mode & streams live topology graph', async () => {
+    // 1. Check live topology endpoint
+    const topoRes = await request('GET', '/api/topology/live');
+    if (topoRes.status !== 200 || !topoRes.data.topology) {
+      throw new Error('GET /api/topology/live failed');
+    }
+
+    // 2. Dispatch a high-complexity prompt via /v1/chat/completions (heat >= 75%)
+    const compRes = await request('POST', '/v1/chat/completions', {
+      messages: [{ role: 'user', content: 'Architect, implement, and refactor a distributed multi-tenant microservices event broker across multiple repositories with strict type safety and unit tests.' }],
+      model: 'auto-smart-router'
+    });
+
+    if (compRes.status !== 200) {
+      throw new Error(`Chat completion returned HTTP ${compRes.status}`);
+    }
+
+    // 3. Verify live topology updated with the autonomous decision
+    const updatedTopo = await request('GET', '/api/topology/live');
+    if (!updatedTopo.data.topology || !updatedTopo.data.topology.executionMode) {
+      throw new Error('Topology state missing executionMode');
+    }
+    if (!Array.isArray(updatedTopo.data.topology.branches) || updatedTopo.data.topology.branches.length === 0) {
+      throw new Error('Topology state missing active execution branches');
+    }
+  });
+
+  // Test 18: Zero-Residual Secret Purge
   await test('Zero-Residual Purge: Cryptographically shreds credentials and clears in-memory keys', async () => {
     const res = await request('POST', '/api/accounts/purge');
     if (res.status !== 200 || !res.data.success) {
@@ -276,7 +304,7 @@ async function runTests() {
     }
   });
 
-  // Test 18: System Status & Graceful Shutdown Readiness
+  // Test 19: System Status & Graceful Shutdown Readiness
   await test('System Status: GET /api/system/status reports online state & zero in-flight turns', async () => {
     const res = await request('GET', '/api/system/status');
     if (res.status !== 200 || !res.data) throw new Error(`HTTP ${res.status}`);

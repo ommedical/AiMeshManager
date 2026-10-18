@@ -428,6 +428,79 @@
       overflow-wrap: anywhere;
       line-height: 1.45;
     }
+
+    /* Live Autonomous Topology Canvas */
+    .topo-canvas {
+      background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08), transparent 40%),
+                  radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.06), transparent 40%),
+                  rgba(12, 17, 29, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .topo-pipeline {
+      display: grid;
+      grid-template-columns: 280px auto 1fr auto 1fr;
+      align-items: center;
+      gap: 1rem;
+    }
+    @media (max-width: 1100px) {
+      .topo-pipeline {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+      .topo-connector { transform: rotate(90deg); margin: 0.5rem auto; }
+    }
+    .topo-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(8px);
+      border-radius: 14px;
+      padding: 1.2rem;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+    .topo-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+      transform: translateY(-2px);
+    }
+    .topo-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-size: 1.4rem;
+      position: relative;
+      user-select: none;
+    }
+    .flow-pulse {
+      animation: pulseFlow 1.8s infinite ease-in-out;
+    }
+    @keyframes pulseFlow {
+      0% { opacity: 0.4; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.08); color: #38bdf8; }
+      100% { opacity: 0.4; transform: scale(0.95); }
+    }
+    .swarm-branch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+    .branch-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      padding: 0.85rem;
+      transition: all 0.2s ease;
+    }
+    .branch-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(99, 102, 241, 0.35);
+    }
   </style>
 </head>
 <body>
@@ -458,7 +531,7 @@
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
       <button class="tab-btn active" onclick="switchTab('unified')">🌐 Unified Master Ledger</button>
-      <button class="tab-btn" onclick="switchTab('dashboard')">📡 Live Activity Matrix</button>
+      <button class="tab-btn" onclick="switchTab('dashboard')">🌐 Live Topology & Activity Matrix</button>
       <button class="tab-btn" onclick="switchTab('accounts')">🛡️ AI Accounts & Multi-Model Mesh (<span id="acc-count-badge">4</span>)</button>
       <button class="tab-btn" onclick="switchTab('ides')">🔌 1-Click IDE Connect Center</button>
       <button class="tab-btn" onclick="switchTab('models')">🤖 Model Intelligence & Local Engines</button>
@@ -543,6 +616,33 @@
 
     <!-- TAB 2: Live Activity & Dynamic Routing Stream -->
     <div id="tab-dashboard" class="tab-content">
+      <!-- 🌐 Live Autonomous Execution Topology & Decision Canvas -->
+      <div class="panel" style="background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12), transparent 40%), var(--card-bg); border: 1px solid var(--card-border); margin-bottom: 2rem;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title" style="display: flex; align-items: center; gap: 0.6rem;">
+              <span>🌐</span> Live Autonomous Execution Topology & Decision Canvas
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.35rem;">
+              Autonomous Decision Arbiter: Automatically balances between <strong>Sequential Single Turn</strong> and <strong>Dynamic Parallel Swarm</strong> based on live task heat, available accounts, and quota limits — <em>Zero human intervention required</em>.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div id="topo-mode-badge" class="status-pill" style="background: rgba(99, 102, 241, 0.18); border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc; font-weight: 700;">
+              ⚡ SEQUENTIAL FAST
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono); display: flex; align-items: center; gap: 0.4rem;">
+              <span class="status-dot" style="background: var(--success); width: 7px; height: 7px;"></span> AUTO-STREAMING
+            </span>
+          </div>
+        </div>
+
+        <!-- Visual Stage Area: Interactive Graph / Pipeline -->
+        <div id="topology-stage-canvas" class="topo-canvas">
+          <!-- Dynamically populated via renderTopologyCanvas() -->
+        </div>
+      </div>
+
       <!-- Real-Time Activity & IDE Connection Matrix -->
       <div class="panel">
         <div class="panel-header">
@@ -1744,6 +1844,152 @@
       }
     }
 
+    async function loadLiveTopology() {
+      try {
+        const res = await fetch('/api/topology/live');
+        const data = await res.json();
+        if (data && data.topology) {
+          renderTopologyCanvas(data.topology);
+        }
+      } catch (e) {
+        console.error('Failed to load topology:', e);
+      }
+    }
+
+    function renderTopologyCanvas(topo) {
+      const stage = document.getElementById('topology-stage-canvas');
+      const modeBadge = document.getElementById('topo-mode-badge');
+      if (!stage || !topo) return;
+
+      if (modeBadge) {
+        if (topo.executionMode === 'SWARM_PARALLEL') {
+          modeBadge.style.background = 'linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(99, 102, 241, 0.25))';
+          modeBadge.style.borderColor = 'rgba(168, 85, 247, 0.6)';
+          modeBadge.style.color = '#e9d5ff';
+          modeBadge.innerHTML = '🚀 AUTONOMOUS SWARM (4 Loops)';
+        } else if (topo.executionMode === 'SEQUENTIAL_PINNED') {
+          modeBadge.style.background = 'rgba(56, 189, 248, 0.18)';
+          modeBadge.style.borderColor = 'rgba(56, 189, 248, 0.5)';
+          modeBadge.style.color = '#7dd3fc';
+          modeBadge.innerHTML = '📌 SEQUENTIAL PINNED';
+        } else if (topo.executionMode === 'SEQUENTIAL_SINGLE_ACCOUNT') {
+          modeBadge.style.background = 'rgba(245, 158, 11, 0.18)';
+          modeBadge.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+          modeBadge.style.color = '#fde68a';
+          modeBadge.innerHTML = '🛡️ SEQUENTIAL (Rate-Limit Guard)';
+        } else {
+          modeBadge.style.background = 'rgba(16, 185, 129, 0.18)';
+          modeBadge.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+          modeBadge.style.color = '#6ee7b7';
+          modeBadge.innerHTML = '⚡ SEQUENTIAL FAST';
+        }
+      }
+
+      const branches = topo.branches || [];
+      const isSwarm = topo.executionMode === 'SWARM_PARALLEL';
+
+      let branchesHtml = '';
+      if (branches.length > 0) {
+        branchesHtml = `
+          <div class="swarm-branch-grid">
+            ${branches.map(b => `
+              <div class="branch-card" style="border-left: 3px solid ${b.tier === 'PAID_PRO' ? 'var(--accent)' : 'var(--success)'};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                  <span style="font-weight: 700; font-size: 0.8rem; color: ${b.tier === 'PAID_PRO' ? '#a5b4fc' : '#86efac'};">${b.role}</span>
+                  <span class="tag ${b.tier === 'PAID_PRO' ? 'tag-pro' : 'tag-free'}">${b.tier}</span>
+                </div>
+                <div style="font-family: var(--mono); font-size: 0.78rem; font-weight: 600; color: var(--text);">${b.accountName}</div>
+                <div style="font-family: var(--mono); font-size: 0.72rem; color: #94a3b8; margin: 0.2rem 0;">Model: <strong>${b.model}</strong></div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.3rem;">
+                  <span>Tokens: <strong>${b.tokens}</strong></span>
+                  <span style="color: var(--success);">Saved: <strong>${b.saved}</strong></span>
+                  <span style="color: #38bdf8;">Headroom: <strong>${b.headroomPct}%</strong></span>
+                </div>
+                <div style="font-size: 0.65rem; color: #86efac; margin-top: 0.25rem;">${b.errorShield}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        branchesHtml = `
+          <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 1.5rem; text-align: center; color: var(--text-muted);">
+            <div style="font-size: 1.2rem; margin-bottom: 0.4rem;">🤖 Ready for Incoming Turns</div>
+            <div style="font-size: 0.78rem;">Awaiting first request from Antigravity, Cursor, or the Simulator below.</div>
+          </div>
+        `;
+      }
+
+      stage.innerHTML = `
+        <div class="topo-pipeline">
+          <!-- 1. Client Node -->
+          <div class="topo-card" style="border-top: 3px solid #38bdf8;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #38bdf8;">💻 Client IDE Turn</span>
+              <span style="font-size: 0.7rem; font-family: var(--mono); color: var(--text-muted);">${topo.timestamp}</span>
+            </div>
+            <div style="font-size: 1.05rem; font-weight: 700; color: var(--text);">${topo.clientIDE}</div>
+            <div style="font-family: var(--mono); font-size: 0.75rem; color: #94a3b8; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px; margin: 0.6rem 0; font-style: italic;">
+              "${topo.promptSnippet}"
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+              <span>Latency: <strong style="color: #a5b4fc;">${topo.durationMs}ms</strong></span>
+              <span>Errors: <strong style="color: var(--success);">${topo.errorRate}</strong></span>
+            </div>
+          </div>
+
+          <!-- Connector 1 -->
+          <div class="topo-connector flow-pulse">➔</div>
+
+          <!-- 2. Decision Arbiter Node -->
+          <div class="topo-card" style="border-top: 3px solid var(--accent); min-width: 250px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--accent);">🧠 Autonomous Decision</span>
+              <span class="tag ${isSwarm ? 'tag-pro' : 'tag-free'}">${isSwarm ? 'SWARM' : 'SEQUENTIAL'}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <span style="font-size: 1.15rem; font-weight: 700; color: ${topo.heatScore >= 70 ? '#f43f5e' : '#10b981'};">
+                🔥 ${topo.heatScore}% Heat
+              </span>
+              <span style="font-size: 0.75rem; color: #94a3b8; font-family: var(--mono);">[${topo.taskCategory}]</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 0.6rem; line-height: 1.4;">
+              ${topo.decisionRationale}
+            </div>
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 6px; padding: 0.4rem 0.6rem; font-size: 0.7rem; color: #86efac; display: flex; align-items: center; gap: 0.4rem;">
+              <span>🛡️</span> RTK Token Optimization & Hermes Reflexion Active
+            </div>
+          </div>
+
+          <!-- Connector 2 -->
+          <div class="topo-connector flow-pulse">➔</div>
+
+          <!-- 3. Execution Branches Container -->
+          <div class="topo-card" style="border-top: 3px solid ${isSwarm ? '#a855f7' : '#10b981'};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+              <span style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: ${isSwarm ? '#c084fc' : '#86efac'};">
+                ${isSwarm ? '🚀 Parallel Subagent Execution (Multi-Account)' : '⚡ Dedicated Single Turn (Token Preserved)'}
+              </span>
+              <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--mono);">${branches.length} ${branches.length === 1 ? 'Node' : 'Nodes'}</span>
+            </div>
+            ${branchesHtml}
+          </div>
+        </div>
+
+        <!-- Synthesis Ribbon -->
+        <div style="margin-top: 1rem; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="font-size: 0.78rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--accent); font-weight: 700;">✨ Synthesis:</span>
+            <span>${topo.synthesis}</span>
+          </div>
+          <div style="display: flex; gap: 1rem; font-family: var(--mono); font-size: 0.75rem;">
+            <span>Optimized: <strong style="color: var(--text);">${topo.tokensOptimized}</strong></span>
+            <span>Saved: <strong style="color: var(--success);">${topo.tokensSaved}</strong></span>
+            <span>Error Rate: <strong style="color: #38bdf8;">${topo.errorRate}</strong></span>
+          </div>
+        </div>
+      `;
+    }
+
     // Initialize & polling
     loadStats();
     loadAccounts();
@@ -1753,10 +1999,12 @@
     loadSecurityStatus();
     loadLocalServers();
     loadModelKnowledge();
+    loadLiveTopology();
     setInterval(loadStats, 4000);
     setInterval(loadConnections, 3000);
     setInterval(loadUnifiedLedger, 4000);
     setInterval(loadSecurityStatus, 5000);
+    setInterval(loadLiveTopology, 2500);
   </script>
 </body>
 </html>
