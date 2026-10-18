@@ -89,10 +89,15 @@ AiMeshManager features an active **Model Performance & Capability Registry** tha
 | **Tier 2: Tactical** *(Balanced Workhorse)* | ⭐⭐⭐ (3-4/5) | **30% – 75%** | 64k – 1M tokens | • **Gemini:** `gemini-2.5-flash`<br>• **OpenAI:** `gpt-4o-mini`<br>• **Claude:** `claude-3-5-haiku`<br>• **DeepSeek:** `deepseek-chat` (V3)<br>• **Local:** `qwen2.5-coder:7b/14b` | Feature implementation, writing functions, unit test generation, Git commit generation. |
 | **Tier 1: Micro / Free** *(Sub-second / Low Cost)* | ⭐ (1-2/5) | **0% – 30%** | 32k – 1M tokens | • **Gemini:** Free `gemini-2.5-flash`<br>• **OpenRouter:** `:free` models<br>• **Local (Ollama/LM Studio):** `llama3.2:3b`, `qwen2.5-coder:1.5b` | Tab autocomplete, adding comments, variable renaming, syntax linting, formatting. |
 
-### How It Automatically Discovers Latest Models:
-1. **Dynamic Upstream Catalog Sync:** AiMeshManager queries `/models` from Google, OpenAI, Anthropic, DeepSeek, and OpenRouter to discover new model IDs on startup.
-2. **Instant Fallback on 429:** If a tier-3 model faces rate-limits, AiMeshManager fails over in 50ms to an alternative frontier model in your pool without dropping IDE context.
-3. **Web UI Inspection:** Open `http://localhost:20128` $\to$ **Model Intelligence & Local Engines** tab to view the live capability matrix with token costs and context limits.
+### How It Automatically Fetches & Keeps Updated with Latest Models:
+1. **Dynamic Upstream Catalog Sync (`POST /api/models/sync`)**:
+   * On startup (and automatically every 6 hours), AiMeshManager queries official model endpoints from connected cloud providers (Google Gemini `v1beta/models`, OpenAI `/v1/models`, DeepSeek `/models`) using configured keys.
+   * Any newly announced models (e.g. `gemini-3.8-flash-high`, `o3-mini`, `deepseek-r1`) are automatically discovered, classified into the intelligence matrix, and added to your routing pool without restarting.
+   * **1-Click Manual Sync:** In the Web Control Center $\to$ **Model Intelligence** tab, click **`🔄 Sync Latest Cloud Models`** to fetch new upstream models on demand.
+2. **Dynamic Local Model Auto-Discovery:**
+   * Automatically polls local Ollama (`/api/tags`), LM Studio (`/v1/models`), and vLLM (`/v1/models`) and imports newly pulled local weights in 1 click.
+3. **Instant Fallback on 429:** If a tier-3 model faces rate-limits, AiMeshManager fails over in 50ms to an alternative frontier model in your pool without dropping IDE context.
+4. **Web UI Inspection:** Open `http://localhost:20128` $\to$ **Model Intelligence & Local Engines** tab to view the live capability matrix with token costs and context limits.
 
 ---
 
@@ -534,6 +539,18 @@ These three core files provide production reliability, continuous integration ve
   podman compose up -d
   # (or: podman-compose up -d)
   ```
+
+### 4. Direct `docker/podman run` vs. `compose up -d`: Issues, Gotchas & Which is Best?
+
+| Operational Dimension | Direct `run` Command (`docker/podman run`) | Compose Orchestrator (`docker/podman compose up -d`) |
+| :--- | :--- | :--- |
+| **System Reboot Recovery** | ❌ **Does NOT restart** after reboot unless you manually append `--restart always`. | ✅ **Auto-restarts automatically** (`restart: always` specified in YAML). |
+| **Rebuild & Upgrade Collisions** | ❌ **Fails with name conflict:** `The container name "aimeshmanager" is already in use`. Requires manual `stop` & `rm`. | ✅ **Zero conflicts:** Automatically stops old container, recreates with new image, and resumes. |
+| **Typo-Prone Command Length** | ❌ **120+ character command:** Easy to forget `-d`, port mapping `-p`, or volume mount `-v`. | ✅ **Clean 1-liner:** `docker compose up -d` or `podman compose up -d`. |
+| **SELinux Labeling on Linux** | ⚠️ Requires remembering `:Z` flag on Podman (`-v ~/.aimeshmanager:/root/.aimeshmanager:Z`). | ✅ Handled cleanly across platforms. |
+| **Multi-Service Networking** | ⚠️ Runs on default bridge without container DNS resolution. | ✅ Isolated custom mesh network with DNS resolution. |
+
+> **Recommendation:** **`docker compose up -d` (or `podman compose up -d`) is by far preferable and best practice.** It guarantees your AI gateway stays running 24/7 across reboots, upgrades seamlessly with `--build`, and eliminates container naming conflicts.
 
 ---
 
